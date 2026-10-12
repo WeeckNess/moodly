@@ -17,11 +17,14 @@ Base de départ du projet étudiant : React Native + Expo + TypeScript, avec un 
 
 Prérequis : Node.js 24 LTS, npm et Expo Go sur un téléphone compatible, ou un simulateur configuré.
 
+Depuis la racine du dépôt `moodly-starter` :
+
 ```sh
-cd mobile
 npm ci
 npm start
 ```
+
+L’installation à la racine installe automatiquement les dépendances de `mobile`. Le serveur Strapi reste indépendant. Les commandes dans `mobile` fonctionnent aussi.
 
 Scanner le QR code dans Expo Go, sur le même réseau que le PC. `npm run web` ouvre la version web. `npm run android` ou `npm run ios` utilise un émulateur/simulateur disponible.
 

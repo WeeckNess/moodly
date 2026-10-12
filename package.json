@@ -1,0 +1,19 @@
+{
+  "name": "moodly-starter",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Moodly mobile demo and Strapi starter",
+  "scripts": {
+    "postinstall": "npm ci --prefix mobile",
+    "start": "npm --prefix mobile start",
+    "web": "npm --prefix mobile run web",
+    "android": "npm --prefix mobile run android",
+    "ios": "npm --prefix mobile run ios",
+    "typecheck": "npm --prefix mobile run typecheck",
+    "backend:install": "npm ci --prefix backend",
+    "backend:dev": "npm --prefix backend run develop"
+  },
+  "engines": {
+    "node": ">=24 <25"
+  }
+}
