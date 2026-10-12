@@ -1,0 +1,34 @@
+{
+  "kind": "collectionType",
+  "collectionName": "mood_entrys",
+  "info": {
+    "singularName": "mood-entry",
+    "pluralName": "mood-entrys",
+    "displayName": "Mood Entry"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "score": {
+      "type": "integer",
+      "required": true,
+      "min": 1,
+      "max": 5
+    },
+    "day": {
+      "type": "date",
+      "required": true
+    },
+    "team": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::team.team"
+    },
+    "tags": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::tag.tag"
+    }
+  }
+}

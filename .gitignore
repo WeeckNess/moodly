@@ -1,0 +1,14 @@
+node_modules/
+.env
+.env.*
+!.env.example
+.expo/
+dist/
+build/
+.cache/
+.tmp/
+.strapi/
+*.tsbuildinfo
+.DS_Store
+backend/public/uploads/*
+!backend/public/uploads/.gitkeep

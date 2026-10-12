@@ -1,0 +1,30 @@
+{
+  "kind": "collectionType",
+  "collectionName": "submission_logs",
+  "info": {
+    "singularName": "submission-log",
+    "pluralName": "submission-logs",
+    "displayName": "Submission Log"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "user": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user",
+      "private": true
+    },
+    "day": {
+      "type": "date",
+      "required": true
+    },
+    "deduplicationKey": {
+      "type": "string",
+      "required": true,
+      "unique": true,
+      "private": true
+    }
+  }
+}
