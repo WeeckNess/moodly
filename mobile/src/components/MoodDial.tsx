@@ -5,6 +5,7 @@ import Svg, { Circle, Defs, LinearGradient, Path, Stop } from 'react-native-svg'
 import { weathers } from '../weather';
 import Animated, { Easing, ReduceMotion, runOnJS, useAnimatedReaction, useAnimatedProps, useAnimatedStyle, useSharedValue, withSpring, withTiming, interpolateColor, type SharedValue } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { WeatherHalo } from './WeatherHalo';
 import { WeatherMorph } from './WeatherMorph';
 import { mono, moodPalette } from '../theme';
 import { continuousValueFromPoint, crossedStops, pointForValue, sweepDuration, valueFromPoint } from '../dialMath';
@@ -104,6 +105,7 @@ export function MoodDial({ score, onChange, motion, compact = false }: { score: 
         <ACircle animatedProps={thumbProps} r={3} fill="#354134" />
       </Svg>
       <View pointerEvents="none" style={[styles.center, { top: cy - orbSize / 2, left: cx - orbSize / 2, width: orbSize }]}>
+        <WeatherHalo value={motion} size={orbSize} />
         <Animated.View style={[styles.orb, { width: orbSize, height: orbSize, borderRadius: orbSize / 2 }, orbStyle]}><WeatherMorph value={motion} size={(compact ? 65 : 78) * 1.25} /></Animated.View>
       </View>
       <View pointerEvents="none" style={[styles.value, { top: cy + orbSize / 2 + 6, width }]}><Text style={styles.valueTitle}>{weather.label}</Text><Text style={styles.weatherName}>{weather.title.toUpperCase()} · {score}/5</Text></View>
@@ -112,7 +114,7 @@ export function MoodDial({ score, onChange, motion, compact = false }: { score: 
   </View>;
 }
 const styles = StyleSheet.create({
-  wrapper: { width: '100%', maxWidth: 360, alignSelf: 'center' }, touchArea: { width: '100%' },
+  wrapper: { width: '100%', maxWidth: 360, alignSelf: 'center' }, touchArea: { width: '100%', overflow: 'hidden' },
   center: { position: 'absolute', width: 130, alignItems: 'center' }, orb: { alignItems: 'center', justifyContent: 'center' },
   value: { position: 'absolute', left: 0, alignItems: 'center', gap: 7 }, valueTitle: { color: '#f8f5e9', fontSize: 28, lineHeight: 34, fontWeight: '500', letterSpacing: -0.8 }, weatherName: { fontFamily: mono, color: '#d1d5c8', fontSize: 10, letterSpacing: 1.5 },
   ends: { flexDirection: 'row', justifyContent: 'space-between', marginTop: -4, paddingHorizontal: 8 }, endButton: { minHeight: 44, minWidth: 72, justifyContent: 'center' }, endLabel: { color: '#deded0', fontSize: 12 },
