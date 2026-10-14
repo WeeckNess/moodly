@@ -11,7 +11,10 @@
     "ios": "npm --prefix mobile run ios",
     "typecheck": "npm --prefix mobile run typecheck",
     "backend:install": "npm ci --prefix backend",
-    "backend:dev": "npm --prefix backend run develop"
+    "backend:dev": "npm --prefix backend run develop",
+    "backend:demo": "npm --prefix backend run demo",
+    "backend:test": "npm --prefix backend test",
+    "backend:test:api": "npm --prefix backend run test:api"
   },
   "engines": {
     "node": ">=24 <25"

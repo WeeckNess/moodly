@@ -1,33 +1,55 @@
-# Contrat API cible — à implémenter
+# API Éclaircie
 
-Ce fichier décrit les routes métier à développer. Elles ne sont pas livrées par le starter.
+Toutes les routes métier exigent un JWT Strapi valide. Les rôles et permissions sont initialisés au démarrage. Aucun paramètre client ne permet de changer l’équipe consultée ou la date d’une saisie.
 
 ## POST /api/auth/local
 
-Route native Users & Permissions : `{ "identifier": "…", "password": "…" }` → jeton JWT et utilisateur. Résoudre le rôle et l’équipe depuis le serveur ; ne jamais faire confiance au rôle choisi dans l’interface.
+Authentification native Users & Permissions :
+
+```json
+{ "identifier": "collaborateur1@eclaircie.test", "password": "EclaircieDemo2026!" }
+```
+
+Renvoie un JWT de 8 heures. L’auto-inscription publique est désactivée.
+
+## GET /api/session
+
+Compte avec rôle Moodly et équipe requis. Renvoie uniquement le prénom/nom d’affichage, le rôle, le nom de l’équipe, le jour courant Europe/Paris et un booléen indiquant si le compte a répondu aujourd’hui. Aucune note n’est renvoyée.
 
 ## POST /api/mood-entries
 
-Collaborateur authentifié seulement. Corps cible : `{ "data": { "score": 4, "tags": ["Charge"] } }`.
+Rôle Collaborateur uniquement :
 
-- Valider score entier 1–5 et tags existants (le contrôleur résout leurs relations).
-- Déduire l’équipe et la date depuis le serveur, avec une convention de fuseau horaire définie.
-- Créer SubmissionLog avec une clé unique utilisateur/jour et MoodEntry dans la même transaction.
-- Ne jamais mettre de relation utilisateur dans MoodEntry.
-- Aucun texte libre, aucun horaire dans la réponse. Renvoi minimal de confirmation.
-- Retourner 409 si une réponse existe déjà ce jour-là.
-- Garder la lecture des saisies et des journaux fermée pour tous les utilisateurs de l’app.
+```json
+{ "data": { "score": 4, "tags": ["Charge", "Ambiance"] } }
+```
+
+Score entier 1–5, tags fermés. Les champs supplémentaires sont refusés. L’équipe et la date sont déduites côté serveur. Une transaction crée le journal unique utilisateur/jour, la réponse sans relation User et la mise à jour de l’agrégat collectif. Réponse minimale :
+
+```json
+{ "data": { "submitted": true, "day": "2026-10-14" } }
+```
+
+201 : saisie créée. 400 : contenu invalide. 401/403 : accès refusé. 409 : réponse déjà enregistrée. Les réponses ne sont jamais retournées au client.
 
 ## GET /api/team-stats?days=30
 
-Manager authentifié seulement, uniquement pour sa propre équipe. Le serveur renvoie les 30 dates, même sans réponse, et un résultat agrégé :
+Rôle Manager uniquement. La fenêtre est fixée à 30 jours. Seule l’équipe affectée au compte et dont il est le manager est accessible, même si le client ajoute un paramètre `team`.
 
 ```json
-{ "data": [{ "day": "2026-10-12", "average": null }] }
+{
+  "data": [{ "day": "2026-10-14", "average": null }],
+  "meta": {
+    "team": "Studio · Démonstration",
+    "threshold": 5,
+    "participation": 88,
+    "maskedDays": 5
+  }
+}
 ```
 
-Moyenne nulle lorsque moins de 5 réponses ; ne jamais renvoyer les réponses individuelles ni les métadonnées permettant un recoupement. L’interface ne doit pas relier les jours masqués.
+La réponse réelle contient 30 dates. `average` vaut `null` sous 5 réponses ou sans données. Aucun nombre exact de réponses par jour, auteur, tag individuel ou horodatage technique n’est exposé. Le taux de participation porte sur les 7 derniers jours et vaut `null` sous 5 participants distincts.
 
-## Confidentialité à finaliser
+## Accès fermés
 
-Définir conservation et purge. Traiter les horodatages automatiques Strapi, les logs de requêtes, les accès administrateur et les possibilités de recoupement entre journal et saisie. La séparation des tables et le seuil seuls ne prouvent pas un anonymat garanti.
+Aucune route REST générique de lecture, modification ou suppression de MoodEntry, SubmissionLog ou DailyAggregate. Les comptes applicatifs n’ont pas d’accès à l’administration Strapi.

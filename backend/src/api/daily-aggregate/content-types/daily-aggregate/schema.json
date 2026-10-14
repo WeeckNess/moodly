@@ -1,0 +1,37 @@
+{
+  "kind": "collectionType",
+  "collectionName": "daily_aggregates",
+  "info": {
+    "singularName": "daily-aggregate",
+    "pluralName": "daily-aggregates",
+    "displayName": "Daily Aggregate"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "day": {
+      "type": "date",
+      "required": true
+    },
+    "team": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::team.team"
+    },
+    "aggregateKey": {
+      "type": "string",
+      "required": true,
+      "unique": true,
+      "private": true
+    },
+    "scoreSum": {
+      "type": "integer",
+      "required": true
+    },
+    "responseCount": {
+      "type": "integer",
+      "required": true
+    }
+  }
+}

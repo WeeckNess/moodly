@@ -12,7 +12,13 @@
     "start": "strapi start",
     "strapi": "strapi",
     "upgrade": "npx @strapi/upgrade latest",
-    "upgrade:dry": "npx @strapi/upgrade latest --dry"
+    "upgrade:dry": "npx @strapi/upgrade latest --dry",
+    "demo": "node scripts/demo.cjs",
+    "test": "node --test tests/*.test.cjs",
+    "setup": "node scripts/setup.cjs",
+    "predevelop": "node scripts/setup.cjs",
+    "prestart": "node scripts/setup.cjs",
+    "test:api": "node scripts/test-api.cjs"
   },
   "dependencies": {
     "@strapi/database": "5.57.0",

@@ -1,89 +1,120 @@
-# Moodly — micro base mobile
+# Éclaircie — la météo du collectif
 
-Base de départ du projet étudiant : React Native + Expo + TypeScript, avec un serveur Strapi v5 et SQLite. **React Native remplace ici Vue 3 + Capacitor à la demande du porteur du projet. Cet écart au brief est à valider avec l’encadrant.**
+Application mobile du projet Moodly. Chaque collaborateur partage son moral sous forme de météo, de l’orage au soleil. Le manager consulte un seul graphique collectif sur 30 jours.
 
-## Ce qui est prêt
+**React Native + Expo + TypeScript · Strapi v5 · SQLite.** React Native remplace Vue 3 + Capacitor à la demande du porteur du projet. Cet écart au brief reste à valider avec l’encadrant.
 
-- Deux parcours de **démo**, collaborateur et manager, sans authentification réelle.
-- Saisie 1 à 5, tags facultatifs et confirmation. Blocage d’une deuxième saisie le même jour dans la session uniquement.
-- Un graphique sur 30 jours de données fictives, avec des trous pour les jours sous 5 réponses, accompagné d’un résumé texte.
-- Écran d’information sur les données.
-- Projet Strapi v5 installable et quatre modèles : Team, MoodEntry, Tag, SubmissionLog.
-- Client API préparé dans `mobile/src/strapi.ts`, non connecté aux écrans.
+## Lancer l’application
 
-**Ce dépôt est un starter, pas le MVP terminé.** Aucun moral réel n’est envoyé ou conservé. Le choix du parcours ne constitue pas un contrôle d’accès. Le graphique ne reflète pas les saisies de la démo.
+Prérequis : Node.js 24, npm, Expo Go compatible avec le SDK 57 ou un simulateur.
 
-## Démarrer l’app
-
-Prérequis : Node.js 24 LTS, npm et Expo Go sur un téléphone compatible, ou un simulateur configuré.
-
-Depuis la racine du dépôt `moodly-starter` :
+Depuis la racine :
 
 ```sh
 npm ci
 npm start
 ```
 
-L’installation à la racine installe automatiquement les dépendances de `mobile`. Le serveur Strapi reste indépendant. Les commandes dans `mobile` fonctionnent aussi.
+Scanner le QR code sur téléphone, ou utiliser `npm run web`. La démo fonctionne sans serveur via « Explorer la démo » ou « Découvrir la vue manager ».
 
-Scanner le QR code dans Expo Go, sur le même réseau que le PC. `npm run web` ouvre la version web. `npm run android` ou `npm run ios` utilise un émulateur/simulateur disponible.
+## Lancer le serveur et les comptes fictifs
 
-Le mode démo fonctionne sans serveur et ne demande aucun compte.
-
-## Démarrer Strapi
-
-Dans un autre terminal :
+Dans un second terminal, depuis la racine :
 
 ```sh
-cd backend
-npm ci
-cp .env.example .env
-npm run develop
+npm run backend:install
+npm run backend:demo
 ```
 
-Remplacer les valeurs d’exemple de `.env` par des secrets aléatoires différents avant de lancer le serveur. Créer le compte administrateur sur http://localhost:1337/admin. Les modèles sont consultables dans le Content Manager. Ne pas ouvrir les permissions de lecture de MoodEntry ou SubmissionLog.
+Le premier démarrage crée automatiquement `backend/.env` avec des secrets aléatoires, sans écraser un fichier existant. Le seed est explicite, idempotent et interdit en production. Il crée les rôles, une équipe, un manager, huit collaborateurs et 29 jours de données fictives. Aujourd’hui reste disponible pour tester la saisie.
 
-L’authentification native Strapi existe via Users & Permissions. Les routes métier personnalisées de saisie et de statistiques **ne sont pas encore implémentées**.
+| Compte fictif | Identifiant | Mot de passe local par défaut |
+| --- | --- | --- |
+| Manager | `manager@eclaircie.test` | `EclaircieDemo2026!` |
+| Collaborateur 1 | `collaborateur1@eclaircie.test` | `EclaircieDemo2026!` |
+| Collaborateur 2 à 8 | `collaborateur2@eclaircie.test` à `collaborateur8@eclaircie.test` | `EclaircieDemo2026!` |
 
-Pour le futur raccordement mobile : copier `mobile/.env.example` en `mobile/.env`, remplacer `localhost` par l’IP du PC sur téléphone, puis redémarrer Expo. Cette configuration est actuellement inutilisée par les écrans de démo. En production, utiliser HTTPS.
+`MOODLY_DEMO_PASSWORD` permet de choisir un autre mot de passe **avant la première création**. Les mots de passe des comptes existants ne sont pas réinitialisés. Ces comptes sont réservés à une démonstration locale avec des données fictives.
+
+Pour lancer le serveur sans créer les comptes fictifs : `npm run backend:dev`.
+
+Administration : http://localhost:1337/admin. Le compte administrateur est distinct des comptes de l’app et doit être créé à la première ouverture.
+
+### Sur un téléphone physique
+
+Créer `mobile/.env` à partir de `mobile/.env.example`, puis remplacer `localhost` par l’IP du PC sur le réseau local :
+
+```env
+EXPO_PUBLIC_API_URL=http://192.168.1.20:1337
+```
+
+Téléphone et PC doivent être sur le même réseau. Redémarrer Expo après modification. Utiliser HTTPS pour un déploiement. Les navigateurs web nécessitent aussi une origine autorisée dans `CORS_ORIGINS` ; l’app native n’est pas soumise au CORS navigateur.
+
+## Fonctionnalités livrées
+
+- Identité Éclaircie : fond sombre, grands titres, filets fins, accents sauge et jaune, cinq météos Phosphor.
+- Interface adaptée au mobile et au web : barre de navigation mobile, navigation latérale sur grand écran.
+- Connexion réelle Strapi, rôle et équipe résolus côté serveur.
+- JWT conservé dans le stockage sécurisé système sur mobile ; en mémoire uniquement sur le web. Expiration après 8 heures et suppression à la déconnexion.
+- Saisie 1 à 5, tags prédéfinis facultatifs, confirmation et contrôle serveur d’une réponse par jour, selon le fuseau Europe/Paris.
+- Journal et réponse créés dans une transaction ; contrainte unique pour bloquer les requêtes concurrentes.
+- Vue manager : un graphique sur 30 jours, moyennes masquées sous 5 réponses et résumé texte.
+- Participation collective sur 7 jours, masquée sous 5 participants distincts.
+- Routes manager limitées à l’équipe gérée par le compte ; aucune route de lecture des réponses ou journaux.
+- Écrans « Mes données » et « Comment ça marche ».
+- Mode démo explicitement fictif ; seule sa date de saisie est conservée localement, indépendamment du serveur.
+- Purge des réponses et journaux après 45 jours par défaut, au démarrage et quotidiennement à 3 h, avec conservation séparée des agrégats.
 
 ## Structure
 
 ```text
-mobile/App.tsx          Écrans de démo
-mobile/src/demo.ts      Données fictives et tags
-mobile/src/strapi.ts    Client pour les futures routes
-backend/config/        Configuration Strapi
-backend/src/api/       Modèles de données, sans routes publiques
-docs/api.md            Contrat et règles à implémenter
+mobile/App.tsx                       Parcours et écrans
+mobile/src/weather.ts                Météos et tags Phosphor
+mobile/src/theme.ts                  Palette et typographie
+mobile/src/components/MoodChart.tsx   Graphique accessible
+mobile/src/strapi.ts                  Client API et stockage du jeton
+backend/src/api/                     Modèles, routes et contrôleurs
+backend/src/lib/                     Validation, seed et conservation
+backend/tests/                       Règles métier et intégration API
+docs/                               Conception, API et état du serveur
 ```
 
-## Prochaines étapes pour le MVP
+## Vérifications
 
-1. Créer les rôles Collaborateur et Manager, affecter chaque utilisateur à une équipe, connecter l’écran de login et gérer le jeton avec un stockage adapté.
-2. Implémenter la saisie serveur : équipe et date dérivées côté serveur, validation, transaction entre journal unique utilisateur/jour et réponse sans auteur.
-3. Implémenter la route de statistiques, limitée à l’équipe du manager et aux seuls agrégats, avec seuil de 5 réponses appliqué côté serveur.
-4. Tester les accès interdits, les doubles saisies concurrentes et les risques de recoupement par métadonnées/journaux. Définir la purge et documenter la confidentialité.
-5. Ajouter un seed explicitement fictif, tester sur téléphone, préparer la note de conception et la vidéo.
+```sh
+npm run typecheck
+npm run backend:test
+npm run build --prefix backend
+```
 
-Les modèles seuls ne garantissent pas l’anonymat. Les horodatages et logs techniques doivent être pris en compte dans la conception. Ne pas utiliser cette base avec des données réelles avant de terminer ces étapes.
-
-## Vérification
+Exports de contrôle :
 
 ```sh
 cd mobile
-npm run typecheck
 npx expo export --platform web
+npx expo export --platform android
+npx expo export --platform ios
 ```
+
+Les exports vérifient les bundles ; ils ne constituent pas une installation sur téléphone ou un APK signé.
+
+Les tests API utilisent automatiquement une base SQLite temporaire et un port libre, avec des comptes fictifs :
 
 ```sh
-cd backend
-npm run build
+npm run backend:test:api
 ```
 
-Les dépendances générées présentent des alertes npm audit ; leur revue reste à faire avant déploiement.
+Le script compile le serveur, démarre l’instance isolée, exécute les tests et supprime uniquement sa base temporaire. Voir `docs/validation.md`.
 
-## Documentation
+## Limites avant utilisation réelle
 
-- [Expo](https://docs.expo.dev/more/create-expo/)
+Le MVP limite ce que voit le manager ; ce n’est pas une preuve d’anonymat absolu. Les accès administrateur, horodatages, identifiants internes et journaux techniques peuvent permettre des recoupements. Une validation de confidentialité et de conformité reste nécessaire avant une utilisation avec de vrais salariés. Voir `docs/conception.md`.
+
+Les dépendances du starter présentent des alertes npm audit : leur revue reste à mener avant un déploiement. Notifications locales, historique personnel et export CSV ne font pas partie de cette version.
+
+## Références visuelles et techniques
+
+- [ArtCraft — inspiration de la structure visuelle](https://getartcraft.com/apps) : contraste sombre, titres généreux, repères numérotés, filets et accents colorés. Aucun logo, visuel ou texte ArtCraft réutilisé.
+- [Phosphor React Native](https://github.com/duongdev/phosphor-react-native)
+- [Expo](https://docs.expo.dev/)
 - [Strapi v5](https://docs.strapi.io/cms/quick-start)

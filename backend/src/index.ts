@@ -1,20 +1,11 @@
-// import type { Core } from '@strapi/strapi';
-
+import type { Core } from '@strapi/strapi';
+import { setup } from './lib/seed';
+import { purgeExpired } from './lib/retention';
 export default {
-  /**
-   * An asynchronous register function that runs before
-   * your application is initialized.
-   *
-   * This gives you an opportunity to extend code.
-   */
-  register(/* { strapi }: { strapi: Core.Strapi } */) {},
-
-  /**
-   * An asynchronous bootstrap function that runs before
-   * your application gets started.
-   *
-   * This gives you an opportunity to set up your data model,
-   * run jobs, or perform some special logic.
-   */
-  bootstrap(/* { strapi }: { strapi: Core.Strapi } */) {},
+  register() {},
+  async bootstrap({ strapi }: { strapi: Core.Strapi }) {
+    await setup(strapi);
+    await purgeExpired(strapi);
+    strapi.cron.add({ moodlyRetention: { task: () => purgeExpired(strapi), options: { rule: '0 0 3 * * *', tz: 'Europe/Paris' } } });
+  },
 };
