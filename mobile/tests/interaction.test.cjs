@@ -48,3 +48,24 @@ test('Le retour haptique coïncide avec les points, pas les demi-paliers', () =>
   assert.deepEqual(crossedStops(2, 2.1), []);
   assert.deepEqual(crossedStops(2, 2), []);
 });
+
+const { weatherMorphPath } = load('weatherMorphGeometry');
+const { weatherContours } = load('weatherContours');
+test('Les vrais contours Phosphor se déforment continûment avec une topologie stable', () => {
+  for (const layer of ['fill', 'ink']) {
+    const count = weatherContours[0][layer].length;
+    for (const frame of weatherContours) {
+      assert.equal(frame[layer].length, count);
+      assert.ok(frame[layer].every(ring => ring.length === 96));
+    }
+    for (let value = 1; value <= 5; value += 0.125) {
+      const d = weatherMorphPath(value, weatherContours, layer);
+      assert.equal((d.match(/M/g) || []).length, count);
+      assert.ok(!d.includes('NaN')); assert.ok(!d.includes('Infinity'));
+    }
+    assert.notEqual(weatherMorphPath(4.5, weatherContours, layer), weatherMorphPath(4, weatherContours, layer));
+    assert.notEqual(weatherMorphPath(4.5, weatherContours, layer), weatherMorphPath(5, weatherContours, layer));
+    assert.equal(weatherMorphPath(0, weatherContours, layer), weatherMorphPath(1, weatherContours, layer));
+    assert.equal(weatherMorphPath(6, weatherContours, layer), weatherMorphPath(5, weatherContours, layer));
+  }
+});

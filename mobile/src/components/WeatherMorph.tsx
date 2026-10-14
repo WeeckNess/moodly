@@ -1,18 +1,14 @@
-import { StyleSheet, View } from 'react-native';
-import Animated, { useAnimatedStyle, type SharedValue } from 'react-native-reanimated';
-import { weathers } from '../weather';
+import Animated, { useAnimatedProps, type SharedValue } from 'react-native-reanimated';
+import Svg, { Path } from 'react-native-svg';
+import { weatherContours } from '../weatherContours';
+import { weatherMorphPath } from '../weatherMorphGeometry';
+const APath = Animated.createAnimatedComponent(Path);
 
-function WeatherLayer({ index, value, size }: { index: number; value: SharedValue<number>; size: number }) {
-  const Icon = weathers[index].icon;
-  const style = useAnimatedStyle(() => {
-    const blend = Math.max(0, 1 - Math.abs(value.value - (index + 1)));
-    // Smooth blending preserves the actual Phosphor artwork and a fixed, upright centre.
-    return { opacity: blend * blend * (3 - 2 * blend) };
-  });
-  return <Animated.View style={[StyleSheet.absoluteFill, style]}><Icon size={size} color="#25352a" weight="duotone" /></Animated.View>;
-}
 export function WeatherMorph({ value, size = 96 }: { value: SharedValue<number>; size?: number }) {
-  return <View pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ width: size, height: size }}>
-    {weathers.map((weather, index) => <WeatherLayer key={weather.score} index={index} value={value} size={size} />)}
-  </View>;
+  const fill = useAnimatedProps(() => ({ d: weatherMorphPath(value.value, weatherContours, 'fill') }));
+  const ink = useAnimatedProps(() => ({ d: weatherMorphPath(value.value, weatherContours, 'ink') }));
+  return <Svg width={size} height={size} viewBox="0 0 256 256" pointerEvents="none" accessibilityElementsHidden>
+    <APath animatedProps={fill} fill="#25352a" opacity={0.2} fillRule="evenodd" />
+    <APath animatedProps={ink} fill="#25352a" fillRule="evenodd" />
+  </Svg>;
 }
