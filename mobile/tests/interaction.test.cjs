@@ -83,3 +83,18 @@ test('Le graphe manager ne relie jamais les jours masqués et ne les assimile pa
   assert.deepEqual(chartSegments([{ day: '2026-10-10', average: null }], 240, 216), []);
   assert.equal(visibleMean([]), null);
 });
+
+const { haloFrame } = load('haloMotion');
+test('Les ondes 2D partent du centre, atteignent le bord et bouclent sans flash', () => {
+  const size = 157.5, reach = Math.hypot(390, 844);
+  assert.equal(haloFrame(0, size, reach).opacity, 0);
+  assert.equal(haloFrame(1, size, reach).opacity, 0);
+  let last = 0;
+  for (let p = 0; p <= 1; p += 0.01) {
+    const frame = haloFrame(p, size, reach);
+    assert.ok(frame.scale >= last); last = frame.scale;
+    assert.ok(frame.opacity >= 0 && frame.opacity <= 0.06);
+  }
+  const endRadius = haloFrame(1, size, reach).scale * size * 2.6 * 0.57 / 2;
+  assert.ok(Math.abs(endRadius - reach) < 1e-8);
+});

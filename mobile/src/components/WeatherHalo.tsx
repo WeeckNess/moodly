@@ -1,7 +1,8 @@
 import { useEffect, useId, useState } from 'react';
-import { AccessibilityInfo, View } from 'react-native';
-import Animated, { cancelAnimation, Easing, interpolate, interpolateColor, useAnimatedProps, useAnimatedStyle, useSharedValue, withRepeat, withTiming, type SharedValue } from 'react-native-reanimated';
+import { AccessibilityInfo, View, useWindowDimensions } from 'react-native';
+import Animated, { cancelAnimation, Easing, interpolateColor, useAnimatedProps, useAnimatedStyle, useSharedValue, withRepeat, withTiming, type SharedValue } from 'react-native-reanimated';
 import Svg, { Defs, Ellipse, Mask, RadialGradient, Stop } from 'react-native-svg';
+import { haloFrame } from '../haloMotion';
 import { moodPalette } from '../theme';
 const AEllipse = Animated.createAnimatedComponent(Ellipse);
 
@@ -15,15 +16,18 @@ function LightField({ value, size, ring = false }: { value: SharedValue<number>;
     <AEllipse animatedProps={tint} cx={size / 2} cy={size / 2} rx={size / 2} ry={size / 2} mask={`url(#haloMask${id})`} />
   </Svg>;
 }
-function LightWave({ value, phase, offset, size }: { value: SharedValue<number>; phase: SharedValue<number>; offset: number; size: number }) {
+function LightWave({ value, phase, offset, size, reach }: { value: SharedValue<number>; phase: SharedValue<number>; offset: number; size: number; reach: number }) {
   const diameter = size * 2.6;
   const style = useAnimatedStyle(() => {
     const progress = (phase.value + offset) % 1;
-    return { opacity: interpolate(progress, [0, 0.16, 0.6, 1], [0, 0.18, 0.1, 0]), transform: [{ scaleX: 0.8 + progress * 1.6 }, { scaleY: 0.7 + progress * 0.95 }] };
+    const frame = haloFrame(progress, size, reach);
+    return { opacity: frame.opacity, transform: [{ scale: frame.scale }] };
   });
   return <Animated.View style={[{ position: 'absolute', width: diameter, height: diameter, left: (size - diameter) / 2, top: (size - diameter) / 2 }, style]}><LightField value={value} size={diameter} ring /></Animated.View>;
 }
 export function WeatherHalo({ value, size }: { value: SharedValue<number>; size: number }) {
+  const { width, height } = useWindowDimensions();
+  const reach = Math.hypot(width, height);
   const phase = useSharedValue(0);
   const [reduced, setReduced] = useState(true);
   useEffect(() => {
@@ -33,13 +37,13 @@ export function WeatherHalo({ value, size }: { value: SharedValue<number>; size:
     return () => { active = false; listener.remove(); };
   }, []);
   useEffect(() => {
-    if (!reduced) phase.value = withRepeat(withTiming(1, { duration: 4800, easing: Easing.linear }), -1, false);
+    if (!reduced) phase.value = withRepeat(withTiming(1, { duration: 8000, easing: Easing.linear }), -1, false);
     else { cancelAnimation(phase); phase.value = 0; }
     return () => cancelAnimation(phase);
   }, [reduced, phase]);
   const diameter = size * 3.2;
   return <View pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ position: 'absolute', width: size, height: size, left: 0, top: 0 }}>
-    <View style={{ position: 'absolute', width: diameter, height: diameter, left: (size - diameter) / 2, top: (size - diameter) / 2, opacity: 0.13, transform: [{ scaleY: 0.75 }] }}><LightField value={value} size={diameter} /></View>
-    {!reduced && [0, 1 / 3, 2 / 3].map(offset => <LightWave key={offset} value={value} phase={phase} offset={offset} size={size} />)}
+    <View style={{ position: 'absolute', width: diameter, height: diameter, left: (size - diameter) / 2, top: (size - diameter) / 2, opacity: 0.045 }}><LightField value={value} size={diameter} /></View>
+    {!reduced && [0, 0.25, 0.5, 0.75].map(offset => <LightWave key={offset} value={value} phase={phase} offset={offset} size={size} reach={reach} />)}
   </View>;
 }
