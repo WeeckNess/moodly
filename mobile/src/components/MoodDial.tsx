@@ -7,7 +7,7 @@ import Animated, { Easing, ReduceMotion, runOnJS, useAnimatedReaction, useAnimat
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { WeatherMorph } from './WeatherMorph';
 import { mono } from '../theme';
-import { continuousValueFromPoint, pointForValue, sweepDuration, valueFromPoint } from '../dialMath';
+import { continuousValueFromPoint, crossedStops, pointForValue, sweepDuration, valueFromPoint } from '../dialMath';
 
 export const moodBackgrounds = ['#251e32', '#1c2b3b', '#202e29', '#363022', '#3c2b23'];
 export const moodAccents = ['#d4c5f0', '#b7d4ed', '#c9dfbd', '#f4da8c', '#f5be8e'];
@@ -31,13 +31,23 @@ export function MoodDial({ score, onChange, motion, compact = false }: { score: 
   const raw = useSharedValue(score);
   const reduced = useReducedMotion();
   const radius = width * 0.405, cx = width / 2, cy = width * 0.455;
-  const height = width * 0.84;
-  const orbSize = compact ? 106 : 126;
+  const orbSize = (compact ? 106 : 126) * 1.25;
+  const height = Math.max(width * 0.84, cy + orbSize / 2 + 62);
+  const lastTick = useSharedValue(0);
   const reportStep = useCallback((value: number) => {
     onChange(value);
-    if (Platform.OS !== 'web') void Haptics.selectionAsync().catch(() => {});
   }, [onChange]);
-  // Selection and feedback follow the cursor crossing a stop, never the tap target.
+  const tick = useCallback(() => {
+    if (Platform.OS !== 'web') void Haptics.selectionAsync().catch(() => {});
+  }, []);
+  // Haptics follow integer marker crossings, independently from the nearest-label threshold.
+  useAnimatedReaction(() => motion.value, (next, previous) => {
+    if (previous === null) return;
+    if (lastTick.value && Math.abs(next - lastTick.value) > 0.12) lastTick.value = 0;
+    for (const stop of crossedStops(previous, next)) {
+      if (lastTick.value !== stop) { lastTick.value = stop; runOnJS(tick)(); }
+    }
+  }, [tick]);
   useAnimatedReaction(() => Math.round(motion.value), (next, previous) => {
     if (previous !== null && next !== previous) runOnJS(reportStep)(next);
   }, [reportStep]);
@@ -94,9 +104,9 @@ export function MoodDial({ score, onChange, motion, compact = false }: { score: 
         <ACircle animatedProps={thumbProps} r={3} fill="#354134" />
       </Svg>
       <View pointerEvents="none" style={[styles.center, { top: cy - orbSize / 2, left: cx - orbSize / 2, width: orbSize }]}>
-        <Animated.View style={[styles.orb, { width: orbSize, height: orbSize, borderRadius: orbSize / 2 }, orbStyle]}><WeatherMorph value={motion} size={compact ? 65 : 78} /></Animated.View>
+        <Animated.View style={[styles.orb, { width: orbSize, height: orbSize, borderRadius: orbSize / 2 }, orbStyle]}><WeatherMorph value={motion} size={(compact ? 65 : 78) * 1.25} /></Animated.View>
       </View>
-      <View pointerEvents="none" style={[styles.value, { top: cy + radius * 0.44, width }]}><Text style={styles.valueTitle}>{weather.label}</Text><Text style={styles.weatherName}>{weather.title.toUpperCase()} · {score}/5</Text></View>
+      <View pointerEvents="none" style={[styles.value, { top: cy + orbSize / 2 + 6, width }]}><Text style={styles.valueTitle}>{weather.label}</Text><Text style={styles.weatherName}>{weather.title.toUpperCase()} · {score}/5</Text></View>
     </View></GestureDetector>
     <View style={styles.ends}><Pressable accessibilityRole="button" accessibilityLabel="Choisir Très mal" onPress={() => change(1)} style={styles.endButton}><Text style={styles.endLabel}>Très mal</Text></Pressable><Pressable accessibilityRole="button" accessibilityLabel="Choisir Très bien" onPress={() => change(5)} style={styles.endButton}><Text style={styles.endLabel}>Très bien</Text></Pressable></View>
   </View>;

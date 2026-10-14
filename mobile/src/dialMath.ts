@@ -27,3 +27,15 @@ export function sweepDuration(from: number, to: number, reduced = false) {
   'worklet';
   return reduced ? 120 : 160 + Math.abs(to - from) * 200;
 }
+
+// The interval excludes the departure point and includes the arrival point.
+export function crossedStops(from: number, to: number): number[] {
+  'worklet';
+  const stops: number[] = [];
+  if (to > from) {
+    for (let stop = 1; stop <= 5; stop++) if (from < stop && to >= stop) stops.push(stop);
+  } else if (to < from) {
+    for (let stop = 5; stop >= 1; stop--) if (from > stop && to <= stop) stops.push(stop);
+  }
+  return stops;
+}

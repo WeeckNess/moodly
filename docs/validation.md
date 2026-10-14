@@ -32,7 +32,8 @@ Le dernier script crée sa propre base temporaire sous `backend/.tmp/`, utilise 
 - Clic Très mal → Très bien : observation des cinq valeurs successives et du curseur passant par le haut de l’arc ; aucune rotation du logo.
 - Phrase encourageante adaptée à chaque palier, sans déplacement du centre.
 - Centre du visuel identique entre soleil et orage, vérifié dans le rendu navigateur.
-- Contours à huit courbes compatibles : la forme intermédiaire est différente des deux extrémités.
+- Icônes Phosphor en duotone avec fondu progressif, disque et icône agrandis de 25 %, phrase au-dessus de l’arc.
+- Détection des points entiers dans les deux sens, y compris les extrémités ; aucun déclenchement aux demi-paliers ni au départ d’un point.
 - Maintien de la bonne extrémité lors du passage dans l’ouverture inférieure de l’arc.
 - Parcours en deux étapes, ajout/édition d’une note privée, sélection de tags et envoi.
 - Trois jours très bas déclenchent une seule invitation ; les répétitions du même jour ne gonflent pas le compteur ; les dates hors fenêtre sont écartées.
