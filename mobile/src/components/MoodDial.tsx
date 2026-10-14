@@ -1,19 +1,20 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AccessibilityInfo, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import Svg, { Circle, Defs, LinearGradient, Path, Stop } from 'react-native-svg';
 import { weathers } from '../weather';
-import Animated, { runOnJS, useAnimatedProps, useAnimatedStyle, useSharedValue, withSpring, interpolateColor, type SharedValue } from 'react-native-reanimated';
+import Animated, { Easing, ReduceMotion, runOnJS, useAnimatedReaction, useAnimatedProps, useAnimatedStyle, useSharedValue, withSpring, withTiming, interpolateColor, type SharedValue } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { WeatherMorph } from './WeatherMorph';
 import { mono } from '../theme';
-import { continuousValueFromPoint, pointForValue, valueFromPoint } from '../dialMath';
+import { continuousValueFromPoint, pointForValue, sweepDuration, valueFromPoint } from '../dialMath';
 
 export const moodBackgrounds = ['#251e32', '#1c2b3b', '#202e29', '#363022', '#3c2b23'];
 export const moodAccents = ['#d4c5f0', '#b7d4ed', '#c9dfbd', '#f4da8c', '#f5be8e'];
 const INPUT = [1, 2, 3, 4, 5];
 const ACircle = Animated.createAnimatedComponent(Circle);
 const FOLLOW = { damping: 40, stiffness: 600, mass: 0.65, overshootClamping: true };
-const SETTLE = { damping: 30, stiffness: 260, mass: 0.8, overshootClamping: true };
+const SWEEP = { easing: Easing.inOut(Easing.cubic), reduceMotion: ReduceMotion.Never };
 export function useReducedMotion() {
   const [reduced, setReduced] = useState(false);
   useEffect(() => {
@@ -28,12 +29,18 @@ export { WeatherMorph } from './WeatherMorph';
 export function MoodDial({ score, onChange, motion, compact = false }: { score: number; onChange: (value: number) => void; motion: SharedValue<number>; compact?: boolean }) {
   const [width, setWidth] = useState(320);
   const raw = useSharedValue(score);
-  const committed = useSharedValue(score);
   const reduced = useReducedMotion();
   const radius = width * 0.405, cx = width / 2, cy = width * 0.455;
   const height = width * 0.84;
   const orbSize = compact ? 106 : 126;
-  useEffect(() => { committed.value = score; }, [score, committed]);
+  const reportStep = useCallback((value: number) => {
+    onChange(value);
+    if (Platform.OS !== 'web') void Haptics.selectionAsync().catch(() => {});
+  }, [onChange]);
+  // Selection and feedback follow the cursor crossing a stop, never the tap target.
+  useAnimatedReaction(() => Math.round(motion.value), (next, previous) => {
+    if (previous !== null && next !== previous) runOnJS(reportStep)(next);
+  }, [reportStep]);
   const orbStyle = useAnimatedStyle(() => ({ backgroundColor: interpolateColor(motion.value, INPUT, moodAccents) }));
   const thumbProps = useAnimatedProps(() => {
     const point = pointForValue(motion.value, radius, cx, cy);
@@ -45,30 +52,30 @@ export function MoodDial({ score, onChange, motion, compact = false }: { score: 
       if (Math.hypot(x - cx, y - cy) < radius * 0.35) return;
       const value = begin ? valueFromPoint(x, y, cx, cy) : continuousValueFromPoint(x, y, cx, cy, raw.value);
       raw.value = value;
-      motion.value = reduced ? value : withSpring(value, FOLLOW);
-      const next = Math.round(value);
-      if (committed.value !== next) { committed.value = next; runOnJS(onChange)(next); }
+      motion.value = begin
+        ? withTiming(value, { ...SWEEP, duration: sweepDuration(motion.value, value, reduced) })
+        : reduced ? withTiming(value, { ...SWEEP, duration: 60 }) : withSpring(value, { ...FOLLOW, reduceMotion: ReduceMotion.Never });
     }
     return Gesture.Pan().minDistance(0)
       .onBegin(event => { raw.value = motion.value; follow(event.x, event.y, true); })
       .onUpdate(event => follow(event.x, event.y, false))
       .onFinalize(() => {
         const next = Math.round(raw.value);
-        motion.value = reduced ? next : withSpring(next, SETTLE);
-        committed.value = next; runOnJS(onChange)(next);
+        if (next === Math.round(motion.value)) runOnJS(onChange)(next);
+        motion.value = withTiming(next, { ...SWEEP, duration: sweepDuration(motion.value, next, reduced) });
       });
-  }, [cx, cy, radius, reduced, onChange, motion, raw, committed]);
+  }, [cx, cy, radius, reduced, motion, raw, onChange]);
   const start = pointForValue(1, radius, cx, cy), end = pointForValue(5, radius, cx, cy);
   const path = `M ${start.x} ${start.y} A ${radius} ${radius} 0 1 1 ${end.x} ${end.y}`;
   const weather = weathers[score - 1];
-  function change(value: number) { raw.value = value; committed.value = value; onChange(value); motion.value = reduced ? value : withSpring(value, SETTLE); }
+  function change(value: number) { if (value === Math.round(motion.value)) onChange(value); raw.value = value; motion.value = withTiming(value, { ...SWEEP, duration: sweepDuration(motion.value, value, reduced) }); }
   const keyboardProps = Platform.OS === 'web' ? {
     tabIndex: 0 as const,
     onKeyDown: (event: { nativeEvent: { key: string }; preventDefault: () => void }) => {
       const key = event.nativeEvent.key;
       if (!['ArrowRight', 'ArrowUp', 'ArrowLeft', 'ArrowDown', 'Home', 'End'].includes(key)) return;
       event.preventDefault();
-      change(key === 'Home' ? 1 : key === 'End' ? 5 : Math.max(1, Math.min(5, score + (['ArrowRight', 'ArrowUp'].includes(key) ? 1 : -1))));
+      change(key === 'Home' ? 1 : key === 'End' ? 5 : Math.max(1, Math.min(5, Math.round(raw.value) + (['ArrowRight', 'ArrowUp'].includes(key) ? 1 : -1))));
     },
   } : {};
   return <View style={styles.wrapper}>

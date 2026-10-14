@@ -29,6 +29,8 @@ Le dernier script crée sa propre base temporaire sous `backend/.tmp/`, utilise 
 - Contrôle visuel à 320 × 568, 390 × 844 et sur grand écran.
 - Correspondance des coordonnées du geste avec les cinq valeurs de l’arc et clamp dans l’ouverture inférieure.
 - Glissement, flèches clavier et valeur ARIA du curseur.
+- Clic Très mal → Très bien : observation des cinq valeurs successives et du curseur passant par le haut de l’arc ; aucune rotation du logo.
+- Phrase encourageante adaptée à chaque palier, sans déplacement du centre.
 - Centre du visuel identique entre soleil et orage, vérifié dans le rendu navigateur.
 - Contours à huit courbes compatibles : la forme intermédiaire est différente des deux extrémités.
 - Maintien de la bonne extrémité lors du passage dans l’ouverture inférieure de l’arc.
@@ -38,4 +40,4 @@ Le dernier script crée sa propre base temporaire sous `backend/.tmp/`, utilise 
 
 ## Limites
 
-La validation navigateur ne remplace pas un test Android/iOS sur téléphone réel. Un export Expo n’est ni un APK signé ni une publication sur les stores. Ces contrôles ne constituent pas un audit de conformité ou une preuve d’anonymat absolu.
+La validation navigateur ne remplace pas un test Android/iOS sur téléphone réel. Le retour haptique est intégré avec expo-haptics ; sa sensation et sa disponibilité restent à vérifier sur un téléphone compatible. Un export Expo n’est ni un APK signé ni une publication sur les stores. Ces contrôles ne constituent pas un audit de conformité ou une preuve d’anonymat absolu.

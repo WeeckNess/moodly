@@ -14,7 +14,7 @@ function Ray({ angle, value }: { angle: number; value: SharedValue<number> }) {
 function Drop({ x, value }: { x: number; value: SharedValue<number> }) {
   const props = useAnimatedProps(() => {
     const rain = Math.max(0, 1 - Math.abs(value.value - 2));
-    return { opacity: rain, x1: x, y1: 80, x2: x - rain * 3, y2: 80 + rain * 9 };
+    return { opacity: rain, x1: x, y1: 80, x2: x, y2: 80 + rain * 9 };
   });
   return <ALine animatedProps={props} stroke="#25352a" strokeWidth={2.4} strokeLinecap="round" />;
 }

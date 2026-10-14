@@ -21,3 +21,9 @@ export function continuousValueFromPoint(x: number, y: number, centerX: number, 
   if (angle > 30 && angle < 150) return previous >= 3 ? 5 : 1;
   return valueFromPoint(x, y, centerX, centerY);
 }
+
+// A distant tap travels the entire arc; reduced motion keeps a short continuous sweep.
+export function sweepDuration(from: number, to: number, reduced = false) {
+  'worklet';
+  return reduced ? 120 : 160 + Math.abs(to - from) * 200;
+}
