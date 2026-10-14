@@ -29,6 +29,9 @@ Le dernier script crée sa propre base temporaire sous `backend/.tmp/`, utilise 
 - Contrôle visuel à 320 × 568, 390 × 844 et sur grand écran.
 - Correspondance des coordonnées du geste avec les cinq valeurs de l’arc et clamp dans l’ouverture inférieure.
 - Glissement, flèches clavier et valeur ARIA du curseur.
+- Centre du visuel identique entre soleil et orage, vérifié dans le rendu navigateur.
+- Contours à huit courbes compatibles : la forme intermédiaire est différente des deux extrémités.
+- Maintien de la bonne extrémité lors du passage dans l’ouverture inférieure de l’arc.
 - Parcours en deux étapes, ajout/édition d’une note privée, sélection de tags et envoi.
 - Trois jours très bas déclenchent une seule invitation ; les répétitions du même jour ne gonflent pas le compteur ; les dates hors fenêtre sont écartées.
 - Fenêtre d’accompagnement facultative, message à copier et absence d’envoi automatique.

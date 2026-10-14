@@ -33,3 +33,19 @@ test('Le compteur respecte les trente jours et ne compte pas les autres météos
   const result = nextSupportState(old, '2026-10-14', 1); assert.deepEqual(result.state.lowDays, ['2026-10-14']); assert.equal(result.shouldPrompt, false);
   assert.deepEqual(nextSupportState(result.state, '2026-10-15', 4).state.lowDays, ['2026-10-14']);
 });
+const { continuousValueFromPoint } = load('dialMath');
+const { weatherPath } = load('weatherGeometry');
+test('L’ouverture de l’arc ne fait pas sauter le curseur à l’extrémité opposée', () => {
+  assert.equal(continuousValueFromPoint(80, 300, 160, 146, 4.8), 5);
+  assert.equal(continuousValueFromPoint(240, 300, 160, 146, 1.2), 1);
+});
+test('La météo se déforme avec huit courbes compatibles, sans permutation d’icône', () => {
+  const cloud = weatherPath(3), midway = weatherPath(4), sun = weatherPath(5);
+  for (const path of [cloud, midway, sun]) {
+    assert.equal((path.match(/ C/g) || []).length, 8);
+    assert.ok(!path.includes('NaN')); assert.ok(path.endsWith(' Z'));
+  }
+  assert.notEqual(midway, cloud); assert.notEqual(midway, sun);
+  assert.equal(weatherPath(1), cloud);
+  assert.equal(weatherPath(7), sun);
+});

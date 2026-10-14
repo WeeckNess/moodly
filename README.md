@@ -57,7 +57,7 @@ Téléphone et PC doivent être sur le même réseau. Redémarrer Expo après mo
 - Connexion réelle Strapi, rôle et équipe résolus côté serveur.
 - JWT conservé dans le stockage sécurisé système sur mobile ; en mémoire uniquement sur le web. Expiration après 8 heures et suppression à la déconnexion.
 - Sélecteur gestuel en arc de 240° : un cercle ouvert en bas, parcouru de Très mal à Très bien, également utilisable au clavier et avec les actions d’accessibilité natives.
-- Transitions de météo par fondu, rotation et variation d’échelle ; fond et disque central changent de couleur. Réduction des animations lorsque le réglage système le demande.
+- Véritable déformation vectorielle soleil/nuage sur huit courbes compatibles, autour d’un centre fixe ; rayons, pluie, éclair et expression évoluent progressivement. Fond et disque central changent de couleur. Le curseur et la scène sont animés par Reanimated, avec Gesture Handler sur le thread UI natif : aucune mise à jour React à chaque image, uniquement lors du changement de note. Réduction des animations lorsque le réglage système le demande.
 - Parcours collaborateur épuré en deux écrans fixes : météo, puis raisons facultatives. Contrôle serveur d’une réponse par jour, selon le fuseau Europe/Paris.
 - Bouton « + Ma propre raison » : brouillon privé de 80 caractères maximum, non envoyé et effacé après la saisie. Seuls les tags prédéfinis sont transmis.
 - Invitation privée après trois « Très mal » sur trois jours distincts dans les 30 derniers jours, comptés sur cet appareil uniquement. Aucune alerte individuelle au manager. Le message proposé doit être copié et envoyé volontairement par l’utilisateur.

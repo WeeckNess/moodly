@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Animated, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, Animated as NativeAnimated, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { ArrowLeftIcon, ArrowRightIcon, ArrowUpRightIcon, CheckIcon, CheckCircleIcon, CloudSunIcon, PlusCircleIcon, ShieldCheckIcon, SignOutIcon, XIcon, ChatsCircleIcon } from '../icons';
 import { moodTags } from '../weather';
+import Animated, { interpolateColor, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import { mono } from '../theme';
 import { MoodDial, moodAccents, moodBackgrounds, useReducedMotion, WeatherMorph } from './MoodDial';
 
@@ -27,10 +28,10 @@ export function MoodFlow(props: Props) {
   const [manualSupport, setManualSupport] = useState(false);
   const [prepareMessage, setPrepareMessage] = useState(false);
   const reduced = useReducedMotion();
-  const motion = useRef(new Animated.Value(props.score ?? 3)).current;
-  const entrance = useRef(new Animated.Value(1)).current;
-  const background = motion.interpolate({ inputRange: INPUT, outputRange: moodBackgrounds });
-  const accent = motion.interpolate({ inputRange: INPUT, outputRange: moodAccents });
+  const motion = useSharedValue(props.score ?? 3);
+  const entrance = useRef(new NativeAnimated.Value(1)).current;
+  const backgroundStyle = useAnimatedStyle(() => ({ backgroundColor: interpolateColor(motion.value, INPUT, moodBackgrounds) }));
+  const accentStyle = useAnimatedStyle(() => ({ backgroundColor: interpolateColor(motion.value, INPUT, moodAccents) }));
   const done = props.submitted;
   const supportVisible = props.supportPrompt || manualSupport;
   useEffect(() => {
@@ -42,14 +43,14 @@ export function MoodFlow(props: Props) {
     if (props.score === null) props.onScore(3);
     setStep(next);
     entrance.setValue(reduced ? 1 : 0);
-    Animated.timing(entrance, { toValue: 1, duration: reduced ? 0 : 280, useNativeDriver: true }).start();
+    NativeAnimated.timing(entrance, { toValue: 1, duration: reduced ? 0 : 280, useNativeDriver: true }).start();
   }
   function dismissSupport() { props.onDismissSupport(); setManualSupport(false); setPrepareMessage(false); }
   function replay() {
     setStep('mood'); setPrivateReason(''); setReasonDraft(''); props.onReplay();
-    motion.setValue(3); props.onScore(3);
+    motion.value = 3; props.onScore(3);
   }
-  return <Animated.View style={[styles.background, { backgroundColor: background }]}>
+  return <Animated.View style={[styles.background, backgroundStyle]}>
     <StatusBar style="light" /><SafeAreaView style={styles.safe}>
       <View style={[styles.header, compact && { height: 54 }]}>
         <View style={styles.brand}><CloudSunIcon color="#f6f2e7" size={25} /><Text style={styles.brandText}>éclaircie.</Text></View>
@@ -58,9 +59,9 @@ export function MoodFlow(props: Props) {
           <Pressable accessibilityRole="button" accessibilityLabel="Se déconnecter" onPress={props.onLogout} style={styles.iconButton}><SignOutIcon size={19} color="#e7e4d9" /></Pressable>
         </View>
       </View>
-      <Animated.View style={[styles.body, { maxWidth: width >= 660 ? 520 : 430, opacity: entrance, transform: [{ translateY: entrance.interpolate({ inputRange: [0, 1], outputRange: [12, 0] }) }] }]}>
+      <NativeAnimated.View style={[styles.body, { maxWidth: width >= 660 ? 520 : 430, opacity: entrance, transform: [{ translateY: entrance.interpolate({ inputRange: [0, 1], outputRange: [12, 0] }) }] }]}>
         {done ? <View style={styles.done}>
-          <Animated.View style={[styles.doneOrb, { backgroundColor: accent }]}><CheckCircleIcon color="#26372a" size={66} weight="duotone" /></Animated.View>
+          <Animated.View style={[styles.doneOrb, accentStyle]}><CheckCircleIcon color="#26372a" size={66} weight="duotone" /></Animated.View>
           <Text style={styles.eyebrow}>{props.sentNow ? 'C’EST PARTAGÉ' : 'DÉJÀ PARTAGÉE AUJOURD’HUI'}</Text><Text accessibilityRole="header" style={styles.doneTitle}>Ta météo compte.</Text><Text style={styles.doneBody}>{props.demo ? 'Ta réponse de démo reste sur cet appareil.' : 'Merci pour ton retour. Il contribue à la météo collective.'}{'\n'}On se retrouve demain.</Text>
           <Pressable accessibilityRole="button" style={styles.supportLink} onPress={() => setManualSupport(true)}><ChatsCircleIcon size={19} color="#e9e6d9" /><Text style={styles.supportLinkText}>Besoin d’en parler ?</Text></Pressable>
           {props.demo && <Pressable accessibilityRole="button" onPress={replay} style={styles.replay}><Text style={styles.secondaryText}>Rejouer la démo</Text></Pressable>}
@@ -69,13 +70,13 @@ export function MoodFlow(props: Props) {
           <View style={[styles.dialSpace, tiny && { minHeight: 230 }]}><View style={{ width: '100%', maxWidth: tiny ? 230 : compact ? 280 : 350 }}><MoodDial compact={compact} score={props.score ?? 3} onChange={props.onScore} motion={motion} /></View><Text style={styles.gestureHint}>Un geste sur l’arc pour choisir.</Text></View>
           <View style={styles.bottom}><Pressable accessibilityRole="button" accessibilityLabel="Continuer vers les raisons" onPress={() => go('reasons')} style={styles.primary}><Text style={styles.primaryText}>Continuer</Text><ArrowRightIcon size={21} color="#27352c" /></Pressable><Text style={styles.footnote}>Volontaire · Sans nom sur ta réponse</Text></View>
         </> : <>
-          <View style={[styles.intro, compact && { paddingTop: 5, gap: 8 }]}><View style={styles.stepHeader}><Pressable accessibilityRole="button" accessibilityLabel="Retour à ma météo" onPress={() => go('mood')} style={styles.back}><ArrowLeftIcon size={18} color="#ede9de" /></Pressable><Text style={styles.eyebrow}>02 / CE QUI JOUE</Text><Animated.View style={[styles.smallOrb, { backgroundColor: accent }]}><WeatherMorph value={motion} size={23} /></Animated.View></View><Text accessibilityRole="header" style={[styles.title, compact && { fontSize: tiny ? 26 : 29, lineHeight: tiny ? 31 : 34 }]}>{tiny ? 'Ce qui joue aujourd’hui' : <>Qu’est-ce qui{ '\n' }fait la différence ?</>}</Text><Text style={styles.optional}>Tu peux aussi passer cette étape.</Text></View>
+          <View style={[styles.intro, compact && { paddingTop: 5, gap: 8 }]}><View style={styles.stepHeader}><Pressable accessibilityRole="button" accessibilityLabel="Retour à ma météo" onPress={() => go('mood')} style={styles.back}><ArrowLeftIcon size={18} color="#ede9de" /></Pressable><Text style={styles.eyebrow}>02 / CE QUI JOUE</Text><Animated.View style={[styles.smallOrb, accentStyle]}><WeatherMorph value={motion} size={23} /></Animated.View></View><Text accessibilityRole="header" style={[styles.title, compact && { fontSize: tiny ? 26 : 29, lineHeight: tiny ? 31 : 34 }]}>{tiny ? 'Ce qui joue aujourd’hui' : <>Qu’est-ce qui{ '\n' }fait la différence ?</>}</Text><Text style={styles.optional}>Tu peux aussi passer cette étape.</Text></View>
           <View style={[styles.reasonSpace, compact && { gap: 8, paddingVertical: tiny ? 8 : 14 }]}><View style={styles.reasonGrid}>{moodTags.map(tag => { const active = props.tags.includes(tag.label); return <Pressable key={tag.label} accessibilityRole="checkbox" accessibilityLabel={tag.label} accessibilityState={{ checked: active }} aria-checked={active} onPress={() => props.onTags(active ? props.tags.filter(t => t !== tag.label) : [...props.tags, tag.label])} style={[styles.reason, active && styles.reasonSelected, compact && { minHeight: tiny ? 48 : 58, padding: tiny ? 12 : 14, gap: tiny ? 8 : 10 }]}><tag.icon style={{ flexShrink: 0 }} size={tiny ? 20 : 24} color={active ? '#eff4dd' : '#d5d9cc'} weight={active ? 'fill' : 'regular'} /><Text numberOfLines={2} style={[styles.reasonText, tiny && { fontSize: 10 }]}>{tag.label}</Text>{active && <CheckIcon style={{ position: 'absolute', right: 7, top: 6 }} size={11} color="#eff4dd" />}</Pressable>; })}</View>
             <Pressable accessibilityRole="button" accessibilityLabel={privateReason ? 'Modifier ma raison personnelle' : 'Ajouter ma propre raison'} onPress={() => { setReasonDraft(privateReason); setReasonModal(true); }} style={[styles.addReason, compact && { minHeight: tiny ? 56 : 60 }]}><PlusCircleIcon size={25} color="#eeeadd" /><View style={{ flex: 1, gap: 4 }}><Text style={styles.reasonText}>{privateReason || 'Ma propre raison'}</Text><Text style={styles.privateLabel}>Note personnelle · non partagée</Text></View>{privateReason ? <CheckIcon size={16} color="#e8edd7" /> : null}</Pressable>
           </View>
           <View style={styles.bottom}>{props.error ? <Text accessibilityRole="alert" style={styles.error}>{props.error}</Text> : null}<Pressable accessibilityRole="button" accessibilityLabel="Partager ma météo" disabled={props.busy} onPress={props.onSubmit} style={[styles.primary, props.busy && { opacity: 0.65 }]}><Text style={styles.primaryText}>{props.tags.length ? 'Partager ma météo' : 'Partager sans raison collective'}</Text>{props.busy ? <ActivityIndicator size="small" color="#27352c" /> : <ArrowRightIcon size={21} color="#27352c" />}</Pressable><Text style={styles.footnote}>Seuls les tags prédéfinis sont transmis.</Text></View>
         </>}
-      </Animated.View>
+      </NativeAnimated.View>
     </SafeAreaView>
     <Modal visible={reasonModal} transparent animationType={reduced ? 'none' : 'fade'} onRequestClose={() => setReasonModal(false)}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={[styles.overlay, { padding: 0 }]}><ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.modalScroll}><View style={styles.sheet} accessibilityViewIsModal role="dialog" aria-modal={true}><View style={styles.sheetHeader}><Text style={styles.sheetKicker}>JUSTE POUR TOI</Text><Pressable accessibilityRole="button" accessibilityLabel="Fermer la raison personnelle" onPress={() => setReasonModal(false)} style={styles.iconButton}><XIcon size={21} color="#eae7dd" /></Pressable></View><Text accessibilityRole="header" style={styles.sheetTitle}>Ta propre raison.</Text><Text style={styles.sheetBody}>Ce brouillon reste sur cet écran. Il n’est envoyé ni au serveur ni à ton manager, puis il est effacé après l’envoi.</Text><TextInput accessibilityLabel="Ma raison personnelle" placeholder="Ce qui joue pour moi…" placeholderTextColor="#949f95" value={reasonDraft} onChangeText={setReasonDraft} maxLength={80} multiline style={styles.noteInput} /><Text style={styles.counter}>{reasonDraft.length}/80</Text><Pressable accessibilityRole="button" style={styles.primary} onPress={() => { setPrivateReason(reasonDraft.trim()); setReasonModal(false); }}><Text style={styles.primaryText}>{reasonDraft.trim() ? 'Ajouter à mon écran' : 'Retirer ma note'}</Text><CheckIcon size={19} color="#27352c" /></Pressable></View></ScrollView></KeyboardAvoidingView>
