@@ -15,6 +15,7 @@ Mis à jour le 14 octobre 2026.
 - Purge des réponses/journaux après 45 jours et agrégats conservés séparément.
 - Seed local optionnel : un manager, huit collaborateurs et historique fictif.
 - Application mobile reliée au serveur ; mode démo autonome distinct.
+- Clé opaque dans la session pour isoler le compteur privé local par compte. Le serveur ne calcule ni ne transmet d’alerte individuelle au manager ; les raisons personnelles ne sont pas envoyées.
 
 ## Vérifié
 

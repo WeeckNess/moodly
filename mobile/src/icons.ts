@@ -22,3 +22,5 @@ export { ScalesIcon } from 'phosphor-react-native/src/icons/Scales';
 export { HeartIcon } from 'phosphor-react-native/src/icons/Heart';
 export { WrenchIcon } from 'phosphor-react-native/src/icons/Wrench';
 export { BookOpenIcon } from 'phosphor-react-native/src/icons/BookOpen';
+export { PlusCircleIcon } from 'phosphor-react-native/src/icons/PlusCircle';
+export { XIcon } from 'phosphor-react-native/src/icons/X';

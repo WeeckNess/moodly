@@ -6,6 +6,7 @@ Depuis la racine :
 
 ```sh
 npm run typecheck
+npm test
 npm run backend:test
 npm run backend:test:api
 ```
@@ -25,7 +26,12 @@ Le dernier script crée sa propre base temporaire sous `backend/.tmp/`, utilise 
 - Statistiques limitées à l’équipe du compte même avec un paramètre d’équipe ajouté.
 - Statistiques sans auteur ni horodatage technique.
 - Parcours web : démo, sélection météo/tags, confirmation, navigation, connexion et saisie réelles.
-- Contrôle visuel à 390 × 844 et sur grand écran.
+- Contrôle visuel à 320 × 568, 390 × 844 et sur grand écran.
+- Correspondance des coordonnées du geste avec les cinq valeurs de l’arc et clamp dans l’ouverture inférieure.
+- Glissement, flèches clavier et valeur ARIA du curseur.
+- Parcours en deux étapes, ajout/édition d’une note privée, sélection de tags et envoi.
+- Trois jours très bas déclenchent une seule invitation ; les répétitions du même jour ne gonflent pas le compteur ; les dates hors fenêtre sont écartées.
+- Fenêtre d’accompagnement facultative, message à copier et absence d’envoi automatique.
 
 ## Limites
 

@@ -14,7 +14,7 @@ Renvoie un JWT de 8 heures. L’auto-inscription publique est désactivée.
 
 ## GET /api/session
 
-Compte avec rôle Moodly et équipe requis. Renvoie uniquement le prénom/nom d’affichage, le rôle, le nom de l’équipe, le jour courant Europe/Paris et un booléen indiquant si le compte a répondu aujourd’hui. Aucune note n’est renvoyée.
+Compte avec rôle Moodly et équipe requis. Renvoie uniquement le prénom/nom d’affichage, le rôle, le nom de l’équipe, le jour courant Europe/Paris et un booléen indiquant si le compte a répondu aujourd’hui. Aucune note n’est renvoyée. Une `privateSupportKey` opaque, propre au compte, permet de séparer les compteurs d’accompagnement sur un appareil partagé ; elle ne contient aucune réponse et n’est jamais exposée dans les statistiques manager.
 
 ## POST /api/mood-entries
 

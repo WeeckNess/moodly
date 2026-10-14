@@ -4,12 +4,14 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StatusBar } from 'expo-status-bar';
 import type { Icon } from 'phosphor-react-native';
-import { ArrowRightIcon, ArrowUpRightIcon, BookOpenIcon, CheckCircleIcon, CheckIcon, CloudSunIcon, EyeSlashIcon, InfoIcon, LockSimpleIcon, ShieldCheckIcon, SignOutIcon, SunIcon, UsersThreeIcon } from './src/icons';
+import { ArrowRightIcon, ArrowUpRightIcon, BookOpenIcon, CloudSunIcon, ChatsCircleIcon, EyeSlashIcon, InfoIcon, LockSimpleIcon, ShieldCheckIcon, SignOutIcon, SunIcon, UsersThreeIcon } from './src/icons';
 import { colors as c, mono } from './src/theme';
-import { moodTags, weathers } from './src/weather';
+import { weathers } from './src/weather';
 import { ApiError, strapiApi, tokenStore, type Role, type Session, type TeamStats } from './src/strapi';
 import { demoSession, demoStats, localDay } from './src/demo';
 import { MoodChart } from './src/components/MoodChart';
+import { MoodFlow } from './src/components/MoodFlow';
+import { clearSupportMemory, recordPrivateMood } from './src/support';
 
 type Page = 'home' | 'privacy' | 'guide';
 const friendlyNumber = (value: number) => value.toFixed(1).replace('.', ',');
@@ -21,14 +23,6 @@ function Action({ label, onPress, secondary = false, disabled = false, busy = fa
 function Kicker({ children, light = false }: { children: ReactNode; light?: boolean }) { return <Text style={[s.kicker, light && { color: c.ink }]}>{children}</Text>; }
 function Brand({ compact = false }: { compact?: boolean }) {
   return <View style={s.brandRow}><CloudSunIcon color={c.accent} weight="duotone" size={compact ? 26 : 32} /><Text style={[s.brand, compact && { fontSize: 24 }]}>éclaircie<Text style={{ color: c.accent }}>.</Text></Text></View>;
-}
-function WeatherArt({ small = false }: { small?: boolean }) {
-  return <View style={[s.art, small && { height: 180 }]} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-    <View style={[s.orbit, { width: small ? 170 : 230, height: small ? 170 : 230, borderRadius: 200 }]} />
-    <View style={[s.orbit, { width: small ? 125 : 175, height: small ? 125 : 175, borderRadius: 150 }]} />
-    <SunIcon size={small ? 110 : 150} color={c.ink} weight="thin" />
-    <View style={s.artCloud}><CloudSunIcon size={small ? 46 : 62} weight="fill" color={c.ink} /></View>
-  </View>;
 }
 function InfoRow({ icon: I, title, children }: { icon: Icon; title: string; children: ReactNode }) {
   return <View style={s.infoRow}><View style={s.infoIcon}><I size={22} color={c.accent} /></View><View style={{ flex: 1, gap: 7 }}><Text style={s.infoTitle}>{title}</Text><Text style={s.body}>{children}</Text></View></View>;
@@ -51,10 +45,9 @@ function Eclaircie() {
   const [statsError, setStatsError] = useState('');
   const [statsLoading, setStatsLoading] = useState(false);
   const [sentNow, setSentNow] = useState(false);
-  const [showTags, setShowTags] = useState(false);
+  const [supportPrompt, setSupportPrompt] = useState(false);
   const requestVersion = useRef(0);
   const scroll = useRef<ScrollView>(null);
-  const selected = weathers.find(weather => weather.score === score);
 
   useEffect(() => {
     let active = true;
@@ -99,7 +92,7 @@ function Eclaircie() {
     requestVersion.current++; setStats(null); setError(''); setSentNow(false); setScore(null); setTags([]); setDemo(true); setJwt(null);
     const info = demoSession(role);
     info.submitted = role === 'collaborateur' && await AsyncStorage.getItem('eclaircie.demo.day') === localDay();
-    setSession(info); navigate('home');
+    setSession(info); setSupportPrompt(false); navigate('home');
   }
   async function login() {
     if (!identifier.trim() || !password) { setError('Renseigne ton adresse et ton mot de passe.'); return; }
@@ -108,20 +101,25 @@ function Eclaircie() {
       const result = await strapiApi.login(identifier.trim(), password);
       const info = await strapiApi.session(result.jwt);
       await tokenStore.write(result.jwt);
-      requestVersion.current++; setStats(null); setJwt(result.jwt); setSession(info); setDemo(false); setPassword(''); setSentNow(false); navigate('home');
+      requestVersion.current++; setStats(null); setJwt(result.jwt); setSession(info); setDemo(false); setPassword(''); setSentNow(false); setSupportPrompt(false); navigate('home');
     } catch (err) { setError(err instanceof ApiError && [400, 401].includes(err.status) ? 'Adresse ou mot de passe incorrect.' : err instanceof Error ? err.message : 'Connexion impossible.'); }
     finally { setBusy(false); }
   }
   async function logout() {
-    requestVersion.current++; await tokenStore.clear(); setSession(null); setJwt(null); setDemo(false); setPage('home'); setError(''); setStats(null); setScore(null); setTags([]); setSentNow(false); setShowTags(false);
+    requestVersion.current++; await tokenStore.clear(); setSession(null); setJwt(null); setDemo(false); setPage('home'); setError(''); setStats(null); setScore(null); setTags([]); setSentNow(false); setSupportPrompt(false); clearSupportMemory();
   }
   async function submit() {
     if (score === null || !session) return;
     setBusy(true); setError('');
     try {
-      if (demo) await AsyncStorage.setItem('eclaircie.demo.day', localDay());
-      else await strapiApi.submitMood(jwt!, score, tags);
-      setSession({ ...session, submitted: true, day: localDay() }); setSentNow(true);
+      let submittedDay = localDay();
+      if (demo) await AsyncStorage.setItem('eclaircie.demo.day', submittedDay);
+      else { const result = await strapiApi.submitMood(jwt!, score, tags); submittedDay = result.data.day; }
+      setSession({ ...session, submitted: true, day: submittedDay }); setSentNow(true);
+      if (demo || session.privateSupportKey) {
+        const prompt = await recordPrivateMood(demo ? 'demo' : session.privateSupportKey!, submittedDay, score, demo);
+        setSupportPrompt(prompt);
+      }
     } catch (err) {
       if (err instanceof ApiError && err.status === 409) { setSession({ ...session, submitted: true, day: localDay() }); setSentNow(false); }
       else if (err instanceof ApiError && err.status === 401) setError('Ta session a expiré. Reconnecte-toi pour envoyer ta météo.');
@@ -140,8 +138,8 @@ function Eclaircie() {
 
   if (!session) return <SafeAreaView style={s.safe}><StatusBar style="light" /><KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}><ScrollView contentContainerStyle={s.loginOuter} keyboardShouldPersistTaps="handled">
     <View style={[s.loginTop, wide && { paddingHorizontal: 48 }]}><Brand /><Kicker>LA MÉTÉO DU COLLECTIF</Kicker></View>
-    <View style={[s.loginLayout, wide && { flexDirection: 'row' }]}>
-      <View style={[s.loginIntro, wide && { flex: 1.2 }]}><View style={s.sectionLine}><Kicker>01 / UN MOMENT POUR TOI</Kicker><View style={s.liveDot} /></View>
+    <View style={[s.loginLayout, wide && { flexDirection: 'row' }, !tablet && { paddingVertical: 22, gap: 16 }]}>
+      <View style={[s.loginIntro, wide && { flex: 1.2 }, !tablet && { display: 'none' }]}><View style={s.sectionLine}><Kicker>01 / UN MOMENT POUR TOI</Kicker><View style={s.liveDot} /></View>
         <Text accessibilityRole="header" style={[s.loginTitle, !tablet && { fontSize: 48, lineHeight: 52 }]}>Tous les jours{ '\n' }ne sont pas{ '\n' }<Text style={{ color: c.accent }}>plein soleil.</Text></Text>
         <Text style={[s.body, { maxWidth: 370, fontSize: 17, lineHeight: 27 }]}>Et c’est OK. Partage ta météo intérieure en quelques secondes. Ensemble, faisons place aux éclaircies.</Text>
         <View style={s.loginWeather}>{weathers.map(w => <View key={w.score} style={[s.miniWeather, { backgroundColor: w.color }]}><w.icon size={tablet ? 40 : 30} color={c.ink} weight="duotone" /></View>)}</View>
@@ -156,8 +154,18 @@ function Eclaircie() {
         <Action label="Explorer la démo" secondary onPress={() => void openDemo('collaborateur')} />
         <Pressable accessibilityRole="button" style={s.textLink} onPress={() => void openDemo('manager')}><Text style={s.linkText}>Découvrir la vue manager</Text><ArrowRightIcon color={c.muted} size={16} /></Pressable>
       </View>
-    </View><View style={s.loginFooter}><Kicker>LE RESSENTI DE CHACUN. LA MÉTÉO DU COLLECTIF.</Kicker><Text style={s.caption}>Éclaircie / Projet Moodly</Text></View>
+    </View><View style={[s.loginFooter, !tablet && { display: 'none' }]}><Kicker>LE RESSENTI DE CHACUN. LA MÉTÉO DU COLLECTIF.</Kicker><Text style={s.caption}>Éclaircie / Projet Moodly</Text></View>
   </ScrollView></KeyboardAvoidingView></SafeAreaView>;
+
+  if (session.role === 'collaborateur' && page === 'home') return <MoodFlow
+    key={demo ? 'demo-collaborateur' : session.privateSupportKey ?? session.name}
+    score={score} onScore={setScore} tags={tags} onTags={setTags}
+    submitted={session.submitted} sentNow={sentNow} demo={demo} busy={busy} error={error}
+    supportPrompt={supportPrompt} onDismissSupport={() => setSupportPrompt(false)}
+    onSubmit={() => void submit()} onPrivacy={() => navigate('privacy')} onLogout={() => void logout()}
+    onDemoManager={() => void openDemo('manager')}
+    onReplay={() => { void AsyncStorage.removeItem('eclaircie.demo.day').then(() => { setSession({ ...session, submitted: false }); setScore(3); setTags([]); setSentNow(false); setSupportPrompt(false); }); }}
+  />;
 
   const visible = stats?.data.filter(d => d.average !== null) ?? [];
   const mean = visible.length ? visible.reduce((sum, d) => sum + d.average!, 0) / visible.length : null;
@@ -175,18 +183,7 @@ function Eclaircie() {
         {page === 'home' ? <>
           <View style={s.sectionLine}><Kicker>01 / {session.role === 'manager' ? 'LE COLLECTIF' : 'TA MÉTÉO DU JOUR'}</Kicker><Text style={s.date}>{date}</Text></View>
           <View style={s.headingRow}><View style={{ flex: 1 }}><Text style={s.hello}>Bonjour {session.name.split(' ')[0]}.</Text><Text accessibilityRole="header" style={[s.heroTitle, !tablet && { fontSize: 38, lineHeight: 43 }]}>{session.role === 'manager' ? <>Prendre le pouls.{ '\n' }<Text style={{ color: c.accent }}>Faire la différence.</Text></> : <>Un jour.{ '\n' }<Text style={{ color: c.accent }}>Une météo.</Text></>}</Text></View>{tablet && <View style={s.heroCorner}><CloudSunIcon color={c.accent} size={58} weight="thin" /><Kicker>{session.role === 'manager' ? '30 DERNIERS JOURS' : 'MOINS DE 10 SECONDES'}</Kicker></View>}</View>
-          {session.role === 'collaborateur' ? <>
-            {session.submitted ? <View style={[s.confirmPanel, !tablet && { padding: 24 }]}><CheckCircleIcon color={c.ink} size={48} weight="duotone" /><Kicker light>{sentNow ? 'C’EST ENVOYÉ' : 'DÉJÀ PARTAGÉE AUJOURD’HUI'}</Kicker><Text accessibilityRole="header" style={s.confirmTitle}>Ta météo compte.{ '\n' }Merci de l’avoir partagée.</Text><Text accessibilityLiveRegion="polite" style={s.confirmBody}>{demo ? 'Ta saisie de démo reste uniquement sur cet appareil.' : 'Ton retour contribue à la météo collective. Ton manager reçoit uniquement des moyennes lorsque le seuil de participation est atteint.'}</Text><Text style={s.confirmBody}>On se retrouve demain, quel que soit le temps.</Text>{demo && <Action label="Rejouer la démo" onPress={() => { void AsyncStorage.removeItem('eclaircie.demo.day').then(() => { setSession({ ...session, submitted: false }); setScore(null); setTags([]); setSentNow(false); }); }} />}</View> : <>
-              <View style={[s.questionPanel, tablet && { flexDirection: 'row' }, !tablet && { display: 'none' }]}><View style={s.questionCopy}><Kicker light>COMMENT TE SENS-TU AUJOURD’HUI ?</Kicker><Text style={[s.questionTitle, !tablet && { fontSize: 27, lineHeight: 33 }]}>{selected ? selected.message : 'À l’intérieur,\nquel temps fait-il ?'}</Text><Text style={s.questionBody}>Pas de bonne ou de mauvaise réponse.{ '\n' }Juste la tienne, ici et maintenant.</Text></View><View style={s.questionArt}><WeatherArt small={!tablet} /></View></View>
-              <View style={s.weatherGrid}>{weathers.map(weather => { const active = score === weather.score; return <Pressable key={weather.score} accessibilityRole="radio" accessibilityState={{ checked: active }} accessibilityLabel={`${weather.score} sur 5, ${weather.title}, ${weather.label}`} onPress={() => setScore(weather.score)} style={({ pressed }) => [s.weatherCard, { backgroundColor: weather.color }, active && s.weatherSelected, pressed && { opacity: 0.85 }, !tablet && { minHeight: 116, padding: 8 }]}>
-                <View style={s.weatherNumber}><Text style={s.weatherIndex}>0{weather.score}</Text>{active && <CheckIcon color={c.ink} size={15} weight="bold" />}</View><weather.icon color={c.ink} size={tablet ? 48 : 32} weight={active ? 'fill' : 'regular'} /><View style={{ gap: 3 }}><Text style={[s.weatherTitle, !tablet && { fontSize: 10 }]}>{weather.title}</Text><Text style={[s.weatherLabel, !tablet && { fontSize: 9 }]}>{weather.label}</Text></View>
-              </Pressable>; })}</View>
-              <View style={s.tagHeader}><Kicker>02 / CE QUI JOUE AUJOURD’HUI</Kicker>{tablet ? <Text style={s.caption}>Facultatif</Text> : <Pressable accessibilityRole="button" accessibilityLabel="Afficher ou masquer les tags facultatifs" accessibilityState={{ expanded: showTags }} onPress={() => setShowTags(!showTags)} style={{ minHeight: 44, justifyContent: 'center' }}><Text style={s.linkText}>{showTags ? 'Réduire' : 'Ajouter · facultatif'}</Text></Pressable>}</View><View style={[s.tags, !tablet && !showTags && { display: 'none' }]}>{moodTags.map(tag => { const active = tags.includes(tag.label); return <Pressable key={tag.label} accessibilityRole="checkbox" accessibilityState={{ checked: active }} accessibilityLabel={tag.label} onPress={() => setTags(current => active ? current.filter(t => t !== tag.label) : [...current, tag.label])} style={[s.tag, active && s.tagSelected]}><tag.icon size={17} color={active ? c.accent : c.muted} /><Text style={[s.tagText, active && { color: c.accent }]}>{tag.label}</Text>{active && <CheckIcon size={13} color={c.accent} />}</Pressable>; })}</View>
-              {error ? <Text accessibilityRole="alert" style={s.error}>{error}</Text> : null}
-              <View style={[s.sendRow, !tablet && { flexDirection: 'column-reverse', alignItems: 'stretch' }]}><View style={s.trustLine}><LockSimpleIcon color={c.muted} size={17} /><Text style={s.caption}>Sans nom sur la réponse · 1 fois par jour</Text></View><View style={!tablet ? undefined : { minWidth: 236 }}><Action label="Partager ma météo" onPress={() => void submit()} disabled={score === null} busy={busy} /></View></View>
-            </>}
-            <View style={[s.bottomInfo, !tablet && { flexDirection: 'column' }]}><View style={s.trustLine}><ShieldCheckIcon color={c.accent} size={25} /><View style={{ flex: 1, gap: 5 }}><Text style={s.infoTitle}>Ton ressenti. En confiance.</Text><Text style={s.caption}>Le manager voit une tendance collective, jamais ta note.</Text></View></View><Pressable accessibilityRole="button" style={s.textLink} onPress={() => navigate('privacy')}><Text style={s.linkText}>Comprendre mes données</Text><ArrowUpRightIcon color={c.muted} size={17} /></Pressable></View>
-          </> : <>
+          <>
             <View style={s.chartPanel}><View style={[s.chartHeader, !tablet && { flexDirection: 'column', alignItems: 'flex-start' }]}><View style={{ gap: 10 }}><Kicker>{session.team.name.toUpperCase()}</Kicker><Text style={s.panelTitle}>La météo de l’équipe</Text></View><View style={s.period}><Text style={s.periodText}>30 JOURS</Text></View></View>
               {statsLoading ? <View style={s.chartLoading}><ActivityIndicator color={c.accent} /><Text style={s.body}>Chargement de la météo collective…</Text></View> : statsError ? <View style={{ gap: 20 }}><Text accessibilityRole="alert" style={s.error}>{statsError}</Text><Action secondary label="Réessayer" onPress={() => void refreshStats()} /></View> : stats ? <>
                 <View style={s.metrics}><View style={{ flex: 1 }}><Text style={s.bigMetric}>{mean === null ? '—' : friendlyNumber(mean)}<Text style={s.metricUnit}> / 5</Text></Text><Text style={s.caption}>Moyenne des jours visibles</Text></View><View style={s.metricSecondary}><Text style={s.mediumMetric}>{stats.meta.participation === null ? '—' : `${stats.meta.participation}%`}</Text><Text style={s.caption}>Participation sur 7 jours</Text></View></View>
@@ -194,12 +191,13 @@ function Eclaircie() {
               </> : null}
             </View><View style={s.managerNote}><InfoIcon color={c.accent} size={24} /><View style={{ flex: 1, gap: 8 }}><Text style={s.infoTitle}>Un signal pour ouvrir la discussion.</Text><Text style={s.body}>Cette météo invite à échanger avec l’équipe et à adapter les conditions de travail. Elle ne permet pas d’évaluer une personne ou de poser un diagnostic.</Text></View></View>
             <Pressable accessibilityRole="button" style={[s.textLink, { alignSelf: 'flex-start' }]} onPress={() => navigate('guide')}><Text style={s.linkText}>Et maintenant, comment agir ?</Text><ArrowUpRightIcon color={c.muted} size={17} /></Pressable>
-          </>}
+          </>
         </> : page === 'privacy' ? <>
           <Kicker>01 / EN CONFIANCE</Kicker><Text accessibilityRole="header" style={s.heroTitle}>Tes données.{ '\n' }<Text style={{ color: c.accent }}>En toute clarté.</Text></Text><Text style={s.intro}>Tu dois pouvoir comprendre ce que tu partages, qui le voit et pourquoi.</Text>
           <InfoRow icon={ShieldCheckIcon} title="Ta note n’a pas ton nom">Les réponses contiennent une équipe, une date, une note et des tags. Elles n’ont pas de lien vers ton compte. Un journal séparé retient seulement si tu as répondu aujourd’hui.</InfoRow>
           <InfoRow icon={UsersThreeIcon} title="Une météo collective uniquement">Le manager accède aux moyennes de son équipe. Un jour avec moins de 5 réponses est masqué. Il n’a accès ni aux réponses individuelles ni à la liste des participants.</InfoRow>
-          <InfoRow icon={LockSimpleIcon} title="Tu gardes le choix">Répondre est facultatif. Aucun commentaire libre ni relance nominative. Tu peux choisir de ne pas partager ta météo.</InfoRow>
+          <InfoRow icon={LockSimpleIcon} title="Tu gardes le choix">Répondre est facultatif. Les tags collectifs restent prédéfinis. Ta raison personnelle est un brouillon privé, jamais transmis, puis effacé après l’envoi. Aucune relance nominative.</InfoRow>
+          <InfoRow icon={ChatsCircleIcon} title="Une invitation privée, si tu en as besoin">Après trois météos « Très mal » sur des jours distincts dans les 30 derniers jours, l’app peut t’inviter à préparer un échange. Le compteur reste dans le stockage sécurisé du téléphone. Sur le web, il reste seulement en mémoire pendant la session. Ton manager ne reçoit aucune alerte.</InfoRow>
           <InfoRow icon={EyeSlashIcon} title="Une conservation limitée">Les réponses et journaux sont supprimés après 45 jours par défaut. Les moyennes collectives restent disponibles. Les administrateurs techniques ont des accès distincts de ceux du manager.</InfoRow>
           <View style={s.managerNote}><InfoIcon color={c.yellow} size={22} /><Text style={[s.body, { flex: 1 }]}>{demo ? 'Tu explores une démonstration. Les graphiques sont fictifs ; seule la date de ta saisie de démo est mémorisée localement.' : 'Ce prototype protège l’accès manager. Avant un usage avec de vrais salariés, l’organisation doit valider la confidentialité, les accès administrateur, les journaux techniques et les informations à fournir.'}</Text></View>
         </> : <>

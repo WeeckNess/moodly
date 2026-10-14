@@ -56,13 +56,17 @@ Téléphone et PC doivent être sur le même réseau. Redémarrer Expo après mo
 - Interface adaptée au mobile et au web : barre de navigation mobile, navigation latérale sur grand écran.
 - Connexion réelle Strapi, rôle et équipe résolus côté serveur.
 - JWT conservé dans le stockage sécurisé système sur mobile ; en mémoire uniquement sur le web. Expiration après 8 heures et suppression à la déconnexion.
-- Saisie 1 à 5, tags prédéfinis facultatifs, confirmation et contrôle serveur d’une réponse par jour, selon le fuseau Europe/Paris.
+- Sélecteur gestuel en arc de 240° : un cercle ouvert en bas, parcouru de Très mal à Très bien, également utilisable au clavier et avec les actions d’accessibilité natives.
+- Transitions de météo par fondu, rotation et variation d’échelle ; fond et disque central changent de couleur. Réduction des animations lorsque le réglage système le demande.
+- Parcours collaborateur épuré en deux écrans fixes : météo, puis raisons facultatives. Contrôle serveur d’une réponse par jour, selon le fuseau Europe/Paris.
+- Bouton « + Ma propre raison » : brouillon privé de 80 caractères maximum, non envoyé et effacé après la saisie. Seuls les tags prédéfinis sont transmis.
+- Invitation privée après trois « Très mal » sur trois jours distincts dans les 30 derniers jours, comptés sur cet appareil uniquement. Aucune alerte individuelle au manager. Le message proposé doit être copié et envoyé volontairement par l’utilisateur.
 - Journal et réponse créés dans une transaction ; contrainte unique pour bloquer les requêtes concurrentes.
 - Vue manager : un graphique sur 30 jours, moyennes masquées sous 5 réponses et résumé texte.
 - Participation collective sur 7 jours, masquée sous 5 participants distincts.
 - Routes manager limitées à l’équipe gérée par le compte ; aucune route de lecture des réponses ou journaux.
 - Écrans « Mes données » et « Comment ça marche ».
-- Mode démo explicitement fictif ; seule sa date de saisie est conservée localement, indépendamment du serveur.
+- Mode démo explicitement fictif avec possibilité de rejouer ; sa date de saisie et ses dates de météo très basse sont conservées localement, indépendamment du serveur.
 - Purge des réponses et journaux après 45 jours par défaut, au démarrage et quotidiennement à 3 h, avec conservation séparée des agrégats.
 
 ## Structure
@@ -72,6 +76,9 @@ mobile/App.tsx                       Parcours et écrans
 mobile/src/weather.ts                Météos et tags Phosphor
 mobile/src/theme.ts                  Palette et typographie
 mobile/src/components/MoodChart.tsx   Graphique accessible
+mobile/src/components/MoodDial.tsx    Arc et transitions météo
+mobile/src/components/MoodFlow.tsx    Parcours en deux étapes et fenêtres privées
+mobile/src/support.ts                Compteur privé sur l’appareil
 mobile/src/strapi.ts                  Client API et stockage du jeton
 backend/src/api/                     Modèles, routes et contrôleurs
 backend/src/lib/                     Validation, seed et conservation
@@ -83,6 +90,7 @@ docs/                               Conception, API et état du serveur
 
 ```sh
 npm run typecheck
+npm test
 npm run backend:test
 npm run build --prefix backend
 ```
@@ -109,6 +117,8 @@ Le script compile le serveur, démarre l’instance isolée, exécute les tests 
 ## Limites avant utilisation réelle
 
 Le MVP limite ce que voit le manager ; ce n’est pas une preuve d’anonymat absolu. Les accès administrateur, horodatages, identifiants internes et journaux techniques peuvent permettre des recoupements. Une validation de confidentialité et de conformité reste nécessaire avant une utilisation avec de vrais salariés. Voir `docs/conception.md`.
+
+Le compteur d’accompagnement est isolé par compte à l’aide d’une clé opaque délivrée dans `/api/session`. Sur mobile, il utilise le stockage sécurisé système. Sur le web réel, il reste en mémoire pendant la session et se réinitialise à la déconnexion ou au rechargement. Il ne synchronise pas les appareils et ne reconstitue pas les anciennes réponses. Les dates hors fenêtre sont écartées lors de la prochaine saisie. Ce dispositif d’accompagnement ne constitue pas une validation RGPD.
 
 Les dépendances du starter présentent des alertes npm audit : leur revue reste à mener avant un déploiement. Notifications locales, historique personnel et export CSV ne font pas partie de cette version.
 

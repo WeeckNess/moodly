@@ -14,7 +14,8 @@
     "backend:dev": "npm --prefix backend run develop",
     "backend:demo": "npm --prefix backend run demo",
     "backend:test": "npm --prefix backend test",
-    "backend:test:api": "npm --prefix backend run test:api"
+    "backend:test:api": "npm --prefix backend run test:api",
+    "test": "npm --prefix mobile test"
   },
   "engines": {
     "node": ">=24 <25"

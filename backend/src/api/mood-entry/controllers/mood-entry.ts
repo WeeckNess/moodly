@@ -17,7 +17,7 @@ export default {
     const user = await getMember(ctx); if (!user) return;
     const day = today();
     const log = await query('api::submission-log.submission-log').findOne({ where: { user: user.id, day } });
-    ctx.body = { data: { name: user.username, role: user.role.type, team: { name: user.team.name }, submitted: Boolean(log), day } };
+    ctx.body = { data: { name: user.username, role: user.role.type, team: { name: user.team.name }, submitted: Boolean(log), day, privateSupportKey: createHmac('sha256', process.env.JWT_SECRET!).update(`private-support:${user.id}`).digest('hex') } };
   },
   async create(ctx: any) {
     const user = await getMember(ctx); if (!user) return;

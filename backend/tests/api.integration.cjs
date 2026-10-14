@@ -28,7 +28,7 @@ test('Parcours API et isolation des rôles sur des comptes fictifs', async t => 
   await t.test('Deux saisies concurrentes produisent une réponse unique', async () => {
     const responses = await Promise.all([call('/api/mood-entries', tokens[0], { data: { score: 4, tags: ['Charge'] } }), call('/api/mood-entries', tokens[0], { data: { score: 4, tags: ['Charge'] } })]);
     assert.deepEqual(responses.map(r => r.status).sort(), [201, 409]);
-    const info = await call('/api/session', tokens[0]); assert.equal(info.body.data.submitted, true);
+    const info = await call('/api/session', tokens[0]); assert.equal(info.body.data.submitted, true); assert.match(info.body.data.privateSupportKey, /^[a-f0-9]{64}$/);
     assert.equal((await call('/api/mood-entries', tokens[0], { data: { score: 5 } })).status, 409);
   });
   await t.test('Le seuil est appliqué côté serveur, les agrégats ne contiennent aucun auteur', async () => {
@@ -39,6 +39,6 @@ test('Parcours API et isolation des rôles sur des comptes fictifs', async t => 
     assert.equal(result.body.data.at(-1).average, 3); // (4 + 3 + 3 + 3 + 2) / 5
     assert.equal(Object.keys(result.body.data.at(-1)).join(','), 'day,average');
     assert.equal(result.body.meta.team, 'Studio · Démonstration');
-    assert.ok(!JSON.stringify(result.body).includes('createdAt')); assert.ok(!JSON.stringify(result.body).includes('@eclaircie.test'));
+    assert.ok(!JSON.stringify(result.body).includes('privateSupportKey')); assert.ok(!JSON.stringify(result.body).includes('createdAt')); assert.ok(!JSON.stringify(result.body).includes('@eclaircie.test'));
   });
 });
