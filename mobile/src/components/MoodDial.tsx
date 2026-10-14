@@ -5,7 +5,6 @@ import Svg, { Circle, Defs, LinearGradient, Path, Stop } from 'react-native-svg'
 import { weathers } from '../weather';
 import Animated, { Easing, ReduceMotion, runOnJS, useAnimatedReaction, useAnimatedProps, useAnimatedStyle, useSharedValue, withSpring, withTiming, interpolateColor, type SharedValue } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import { WeatherHalo } from './WeatherHalo';
 import { WeatherMorph } from './WeatherMorph';
 import { mono, moodPalette } from '../theme';
 import { continuousValueFromPoint, crossedStops, pointForValue, sweepDuration, valueFromPoint } from '../dialMath';
@@ -105,7 +104,6 @@ export function MoodDial({ score, onChange, motion, compact = false }: { score: 
         <ACircle animatedProps={thumbProps} r={3} fill="#354134" />
       </Svg>
       <View pointerEvents="none" style={[styles.center, { top: cy - orbSize / 2, left: cx - orbSize / 2, width: orbSize }]}>
-        <WeatherHalo value={motion} size={orbSize} />
         <Animated.View style={[styles.orb, { width: orbSize, height: orbSize, borderRadius: orbSize / 2 }, orbStyle]}><WeatherMorph value={motion} size={(compact ? 65 : 78) * 1.25} /></Animated.View>
       </View>
       <View pointerEvents="none" style={[styles.value, { top: cy + orbSize / 2 + 6, width }]}><Text style={styles.valueTitle}>{weather.label}</Text><Text style={styles.weatherName}>{weather.title.toUpperCase()} · {score}/5</Text></View>
