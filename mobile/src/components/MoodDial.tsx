@@ -114,7 +114,7 @@ export function MoodDial({ score, onChange, motion, compact = false }: { score: 
   </View>;
 }
 const styles = StyleSheet.create({
-  wrapper: { width: '100%', maxWidth: 360, alignSelf: 'center' }, touchArea: { width: '100%', overflow: 'hidden' },
+  wrapper: { width: '100%', maxWidth: 360, alignSelf: 'center' }, touchArea: { width: '100%' },
   center: { position: 'absolute', width: 130, alignItems: 'center' }, orb: { alignItems: 'center', justifyContent: 'center' },
   value: { position: 'absolute', left: 0, alignItems: 'center', gap: 7 }, valueTitle: { color: '#f8f5e9', fontSize: 28, lineHeight: 34, fontWeight: '500', letterSpacing: -0.8 }, weatherName: { fontFamily: mono, color: '#d1d5c8', fontSize: 10, letterSpacing: 1.5 },
   ends: { flexDirection: 'row', justifyContent: 'space-between', marginTop: -4, paddingHorizontal: 8 }, endButton: { minHeight: 44, minWidth: 72, justifyContent: 'center' }, endLabel: { color: '#deded0', fontSize: 12 },
