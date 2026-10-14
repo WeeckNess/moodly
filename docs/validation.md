@@ -43,3 +43,7 @@ Le dernier script crée sa propre base temporaire sous `backend/.tmp/`, utilise 
 ## Limites
 
 La validation navigateur ne remplace pas un test Android/iOS sur téléphone réel. Le retour haptique est intégré avec expo-haptics ; sa sensation et sa disponibilité restent à vérifier sur un téléphone compatible. Un export Expo n’est ni un APK signé ni une publication sur les stores. Ces contrôles ne constituent pas un audit de conformité ou une preuve d’anonymat absolu.
+
+## Revue de la DA et du portail manager
+
+Voir [revue-da.md](revue-da.md) pour les corrections, les parcours vérifiés, les formats d’écran et les limites de la validation du 14 octobre 2026.

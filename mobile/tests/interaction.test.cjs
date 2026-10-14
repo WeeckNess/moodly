@@ -69,3 +69,17 @@ test('Les vrais contours Phosphor se déforment continûment avec une topologie 
     assert.equal(weatherMorphPath(6, weatherContours, layer), weatherMorphPath(5, weatherContours, layer));
   }
 });
+
+const { chartSegments, visibleMean } = load('chartGeometry');
+test('Le graphe manager ne relie jamais les jours masqués et ne les assimile pas à zéro', () => {
+  const data = [{ day: '2026-10-10', average: 4 }, { day: '2026-10-11', average: null }, { day: '2026-10-12', average: 2 }, { day: '2026-10-13', average: 3 }];
+  const segments = chartSegments(data, 300, 216);
+  assert.equal(segments.length, 1);
+  assert.equal(segments[0].from, 2);
+  assert.equal(segments[0].to, 3);
+  assert.ok(segments[0].y1 > segments[0].y2);
+  assert.equal(visibleMean(data), 3);
+  assert.equal(visibleMean([{ day: '2026-10-10', average: null }]), null);
+  assert.deepEqual(chartSegments([{ day: '2026-10-10', average: null }], 240, 216), []);
+  assert.equal(visibleMean([]), null);
+});

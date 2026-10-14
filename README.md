@@ -128,3 +128,7 @@ Les dépendances du starter présentent des alertes npm audit : leur revue reste
 - [Phosphor React Native](https://github.com/duongdev/phosphor-react-native)
 - [Expo](https://docs.expo.dev/)
 - [Strapi v5](https://docs.strapi.io/cms/quick-start)
+
+## Revue de la nouvelle DA
+
+La revue du portail manager, de la connexion et des parcours est détaillée dans [docs/revue-da.md](docs/revue-da.md). Le graphe reste unique sur trente jours, les journées masquées interrompent la courbe et la navigation par date expose uniquement les moyennes collectives autorisées.

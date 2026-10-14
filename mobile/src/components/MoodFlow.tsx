@@ -2,9 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Animated as NativeAnimated, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { ArrowLeftIcon, ArrowRightIcon, ArrowUpRightIcon, CheckIcon, CheckCircleIcon, CloudSunIcon, PlusCircleIcon, ShieldCheckIcon, SignOutIcon, XIcon, ChatsCircleIcon } from '../icons';
+import { ArrowLeftIcon, ArrowRightIcon, ArrowUpRightIcon, CheckIcon, CheckCircleIcon, PlusCircleIcon, ShieldCheckIcon, SignOutIcon, XIcon, ChatsCircleIcon } from '../icons';
 import { moodTags, weathers } from '../weather';
 import Animated, { interpolateColor, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
+import { BrandMark } from './BrandMark';
 import { mono } from '../theme';
 import { MoodDial, moodAccents, moodBackgrounds, useReducedMotion, WeatherMorph } from './MoodDial';
 
@@ -40,7 +41,7 @@ export function MoodFlow(props: Props) {
   }, [done]);
   useEffect(() => { setPrepareMessage(false); }, [supportVisible]);
   function go(next: 'mood' | 'reasons') {
-    if (props.score === null) props.onScore(3);
+    if (next === 'reasons') props.onScore(Math.round(motion.value));
     setStep(next);
     entrance.setValue(reduced ? 1 : 0);
     NativeAnimated.timing(entrance, { toValue: 1, duration: reduced ? 0 : 280, useNativeDriver: true }).start();
@@ -53,7 +54,7 @@ export function MoodFlow(props: Props) {
   return <Animated.View style={[styles.background, backgroundStyle]}>
     <StatusBar style="light" /><SafeAreaView style={styles.safe}>
       <View style={[styles.header, compact && { height: 54 }]}>
-        <View style={styles.brand}><CloudSunIcon color="#f6f2e7" size={25} /><Text style={styles.brandText}>éclaircie.</Text></View>
+        <BrandMark />
         <View style={styles.headerActions}>{props.demo && <Pressable accessibilityRole="button" accessibilityLabel="Démo manager" onPress={props.onDemoManager} style={styles.demoBadge}><Text style={styles.demoText}>DÉMO</Text><ArrowUpRightIcon color="#e7e4d9" size={13} /></Pressable>}
           <Pressable accessibilityRole="button" accessibilityLabel="Mes données et confidentialité" onPress={props.onPrivacy} style={styles.iconButton}><ShieldCheckIcon size={20} color="#e7e4d9" /></Pressable>
           <Pressable accessibilityRole="button" accessibilityLabel="Se déconnecter" onPress={props.onLogout} style={styles.iconButton}><SignOutIcon size={19} color="#e7e4d9" /></Pressable>

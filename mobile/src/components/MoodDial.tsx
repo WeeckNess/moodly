@@ -6,11 +6,11 @@ import { weathers } from '../weather';
 import Animated, { Easing, ReduceMotion, runOnJS, useAnimatedReaction, useAnimatedProps, useAnimatedStyle, useSharedValue, withSpring, withTiming, interpolateColor, type SharedValue } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { WeatherMorph } from './WeatherMorph';
-import { mono } from '../theme';
+import { mono, moodPalette } from '../theme';
 import { continuousValueFromPoint, crossedStops, pointForValue, sweepDuration, valueFromPoint } from '../dialMath';
 
-export const moodBackgrounds = ['#251e32', '#1c2b3b', '#202e29', '#363022', '#3c2b23'];
-export const moodAccents = ['#d4c5f0', '#b7d4ed', '#c9dfbd', '#f4da8c', '#f5be8e'];
+export const moodBackgrounds = moodPalette.backgrounds;
+export const moodAccents = moodPalette.accents;
 const INPUT = [1, 2, 3, 4, 5];
 const ACircle = Animated.createAnimatedComponent(Circle);
 const FOLLOW = { damping: 40, stiffness: 600, mass: 0.65, overshootClamping: true };
