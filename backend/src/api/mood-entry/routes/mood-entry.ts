@@ -4,5 +4,9 @@ export default {
     { method: 'GET', path: '/session', handler: 'mood-entry.session', config: { auth: { scope: ['api::mood-entry.mood-entry.session'] } } },
     { method: 'POST', path: '/mood-entries', handler: 'mood-entry.create', config: { auth: { scope: ['api::mood-entry.mood-entry.create'] } } },
     { method: 'GET', path: '/team-stats', handler: 'mood-entry.stats', config: { auth: { scope: ['api::mood-entry.mood-entry.stats'] } } },
+    { method: 'GET', path: '/team-actions', handler: 'mood-entry.actions', config: { auth: { scope: ['api::mood-entry.mood-entry.actions'] } } },
+    { method: 'POST', path: '/team-actions', handler: 'mood-entry.createAction', config: { auth: { scope: ['api::mood-entry.mood-entry.createAction'] } } },
+    { method: 'PATCH', path: '/team-actions/:documentId', handler: 'mood-entry.updateAction', config: { auth: { scope: ['api::mood-entry.mood-entry.updateAction'] } } },
+    { method: 'POST', path: '/team-actions/:documentId/feedback', handler: 'mood-entry.actionFeedback', config: { auth: { scope: ['api::mood-entry.mood-entry.actionFeedback'] } } },
   ],
 };

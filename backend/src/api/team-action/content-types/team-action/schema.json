@@ -1,0 +1,57 @@
+{
+  "kind": "collectionType",
+  "collectionName": "team_actions",
+  "info": {
+    "singularName": "team-action",
+    "pluralName": "team-actions",
+    "displayName": "team-action"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true,
+      "maxLength": 100
+    },
+    "description": {
+      "type": "text",
+      "maxLength": 500
+    },
+    "team": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::team.team"
+    },
+    "dueDay": {
+      "type": "date",
+      "required": true
+    },
+    "createdDay": {
+      "type": "date",
+      "required": true
+    },
+    "status": {
+      "type": "enumeration",
+      "enum": [
+        "planned",
+        "active",
+        "completed"
+      ],
+      "default": "planned",
+      "required": true
+    },
+    "reviewUntil": {
+      "type": "date"
+    },
+    "feedbackCount": {
+      "type": "integer",
+      "default": 0
+    },
+    "feedbackSum": {
+      "type": "integer",
+      "default": 0
+    }
+  }
+}

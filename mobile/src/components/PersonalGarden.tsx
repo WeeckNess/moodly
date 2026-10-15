@@ -44,7 +44,7 @@ export function PersonalGarden({ profile, history, today }: { profile?: string; 
       <View style={s.testSteps}>{treeSpecies.map(tree => <Pressable key={tree.id} accessibilityRole="button" accessibilityLabel={`Choisir le ${tree.name.toLowerCase()}`} accessibilityState={{ selected: species === tree.id, disabled: savingSpecies }} disabled={savingSpecies} onPress={() => void chooseSpecies(tree.id)} style={({ pressed }) => [s.speciesButton, species === tree.id && s.active, pressed && { transform: [{ scale: .96 }], opacity: .85 }]}><Text style={[s.tabText, species === tree.id && { color: c.ink }]}>{tree.name}</Text></Pressable>)}</View>
       <Text style={s.caption}>{treeSpecies.find(tree => tree.id === species)!.description} Tu peux changer d’essence sans perdre ta progression.</Text>
       {speciesError ? <Text accessibilityRole="alert" style={s.error}>{speciesError}</Text> : null}
-      <GrowingTree days={shownCount ?? 0} species={species} label={`${treeSpecies.find(tree => tree.id === species)!.name} : ${['graine', 'pousse', 'jeune arbre', 'arbre en croissance', 'arbre épanoui'][stage]}. ${shownCount ?? 0} journées ${previewCount === null ? 'partagées' : 'simulées'}.`} />
+      <GrowingTree days={shownCount ?? 0} species={species} label={`${treeSpecies.find(tree => tree.id === species)!.name} : ${['graine', 'pousse', 'jeune arbre', 'arbre en croissance', 'arbre épanoui'][stage]}. ${shownCount ?? 0} journées ${previewCount === null ? 'enregistrées' : 'simulées'}.`} />
       <View style={s.testPanel}>
         <Pressable accessibilityRole="button" accessibilityLabel="Tester l’évolution du jardin" accessibilityState={{ expanded: testOpen }} onPress={() => setTestOpen(value => !value)} style={s.testToggle}><Text style={s.testLabel}>{testOpen ? 'Masquer les tests −' : 'Tester l’évolution +'}{previewCount !== null ? ` · ${previewCount} j simulés` : ''}</Text></Pressable>
         {testOpen && <>
@@ -58,7 +58,7 @@ export function PersonalGarden({ profile, history, today }: { profile?: string; 
         </>}
       </View>
       <Text accessibilityRole="header" style={s.title}>{gardenTitle(shownCount ?? 0)}</Text>
-      <Text style={s.body}>{previewCount !== null ? `Aperçu à ${previewCount} journée${previewCount > 1 ? 's' : ''}. Ta progression réelle reste inchangée.` : error ? 'Ton arbre n’a pas pu être chargé. Réouvre ton profil pour réessayer.' : count === null ? 'Ton jardin arrive…' : `${count} journée${count > 1 ? 's' : ''} partagée${count > 1 ? 's' : ''}. Chaque météo compte, de l’orage au soleil.`}</Text>
+      <Text style={s.body}>{previewCount !== null ? `Aperçu à ${previewCount} journée${previewCount > 1 ? 's' : ''}. Ta progression réelle reste inchangée.` : error ? 'Ton arbre n’a pas pu être chargé. Réouvre ton profil pour réessayer.' : count === null ? 'Ton jardin arrive…' : `${count} météo${count > 1 ? 's' : ''} enregistrée${count > 1 ? 's' : ''}. Chaque météo compte, de l’orage au soleil.`}</Text>
       <Text style={s.caption}>Aucun objectif, aucune série à maintenir. Ton arbre ne régresse pas lors d’une pause. {Platform.OS === 'web' ? 'Sur le web, il reste dans cette session.' : 'Il grandit sur cet appareil, sans partager sa progression.'}</Text>
 
     </View>

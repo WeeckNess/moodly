@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { useEffect } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -12,8 +13,8 @@ import { MoodChart } from './MoodChart';
 import { HeaderActions } from './HeaderActions';
 import { WeatherMorph } from './WeatherMorph';
 
-type Props = { session: Session; stats: TeamStats | null; loading: boolean; error: string; onRefresh: () => void; onProfile: () => void; onHelp: () => void };
-export function ManagerPortal({ session, stats, loading, error, onRefresh, onProfile, onHelp }: Props) {
+type Props = { navigation?: ReactNode; session: Session; stats: TeamStats | null; loading: boolean; error: string; onRefresh: () => void; onProfile: () => void; onHelp: () => void };
+export function ManagerPortal({ session, stats, loading, error, onRefresh, onProfile, onHelp, navigation }: Props) {
   const { width } = useWindowDimensions();
   const wide = width >= 960, small = width < 400;
   const mean = stats ? visibleMean(stats.data) : null;
@@ -28,6 +29,7 @@ export function ManagerPortal({ session, stats, loading, error, onRefresh, onPro
       {wide && <View style={s.sidebar}><BrandMark size={24} /><Text style={s.eyebrow}>ESPACE MANAGER</Text><Text style={s.team}>{session.team.name}</Text><Pressable accessibilityRole="button" onPress={onProfile} style={{ minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: 12 }}><UserCircleIcon size={24} color={c.text} /><Text style={s.body}>Mon profil</Text></Pressable><View style={{ flex: 1 }} /><View style={s.sidebarTrust}><ShieldCheckIcon size={23} color={c.text} /><Text style={s.body}>L’équipe se dessine.{ '\n' }Chacun reste anonyme dans cette vue.</Text></View></View>}
       <View style={s.main}>
         <View style={s.header}>{wide ? <Text style={s.eyebrow}>LA MÉTÉO DU COLLECTIF</Text> : <BrandMark />}<HeaderActions onProfile={onProfile} /></View>
+        {navigation}
         <ScrollView contentContainerStyle={[s.content, small && { paddingHorizontal: 20, gap: 20 }]}>
           <View style={s.hero}><View style={{ flex: 1, gap: 12 }}><Text style={s.eyebrow}>01 / LE COLLECTIF</Text><Text accessibilityRole="header" style={[s.title, small && { fontSize: 30, lineHeight: 35 }]}>La météo{ '\n' }de l’équipe.</Text><Text style={s.body}>{session.team.name}</Text></View><Animated.View style={[s.orb, accent]}>{mean === null || loading || error ? <ShieldCheckIcon size={44} color={c.ink} /> : <WeatherMorph value={value} size={73} />}</Animated.View></View>
           <View style={s.chartCard}>

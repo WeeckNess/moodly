@@ -76,6 +76,10 @@ Téléphone et PC doivent être sur le même réseau. Redémarrer Expo après mo
 
 Le profil contient un arbre personnel qui grandit au fil des journées partagées, des rapports journaliers et des bilans glissants sur 7 et 30 jours. Les professionnels et services d’accompagnement se configurent dans Strapi, par équipe, sans transmettre automatiquement les moods. Voir [la configuration et les règles de confidentialité](docs/rapports-jardin-accompagnement.md).
 
+## Espaces manager
+
+**Mon équipe** conserve le graphe collectif. **Pour moi** propose une météo de manager strictement privée, son jardin, ses rapports, ses raisons adaptées et son accompagnement. **Agir ensemble** permet de préparer une discussion, publier et suivre une action collective, puis recueillir un bilan anonyme après sa réalisation. Voir [les parcours, règles de confidentialité et nouvelles routes](docs/espaces-manager.md).
+
 ## Structure
 
 ```text

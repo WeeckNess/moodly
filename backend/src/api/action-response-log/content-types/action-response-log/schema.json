@@ -1,0 +1,24 @@
+{
+  "kind": "collectionType",
+  "collectionName": "action_response_logs",
+  "info": {
+    "singularName": "action-response-log",
+    "pluralName": "action-response-logs",
+    "displayName": "action-response-log"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "deduplicationKey": {
+      "type": "string",
+      "required": true,
+      "unique": true,
+      "private": true
+    },
+    "expiresOn": {
+      "type": "date",
+      "required": true
+    }
+  }
+}

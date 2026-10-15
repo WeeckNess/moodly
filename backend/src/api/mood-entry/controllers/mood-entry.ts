@@ -1,3 +1,4 @@
+import { listActions, createAction, updateAction, actionFeedback } from '../../../lib/teamActions';
 import { randomUUID, createHmac } from 'node:crypto';
 import { dateRange, safePoints, shiftDay, today, validateMood, THRESHOLD } from '../../../lib/mood';
 
@@ -13,6 +14,10 @@ async function getMember(ctx: any) {
   return user;
 }
 export default {
+  async actions(ctx: any) { const user = await getMember(ctx); if (user) await listActions(ctx, user); },
+  async createAction(ctx: any) { const user = await getMember(ctx); if (user) await createAction(ctx, user); },
+  async updateAction(ctx: any) { const user = await getMember(ctx); if (user) await updateAction(ctx, user); },
+  async actionFeedback(ctx: any) { const user = await getMember(ctx); if (user) await actionFeedback(ctx, user); },
   async session(ctx: any) {
     const user = await getMember(ctx); if (!user) return;
     const day = today();

@@ -1,5 +1,6 @@
 import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
+export type TeamAction = { id: string; title: string; description: string; dueDay: string; status: 'planned' | 'active' | 'completed'; reviewUntil: string | null; reviewClosed: boolean; hasResponded: boolean; feedback: { count: number; average: number } | null; threshold: number };
 export type Role = 'collaborateur' | 'manager';
 export type SupportContact = { name: string; kind: 'psychologue' | 'prevention' | 'manager' | 'autre'; qualification?: string; details?: string; email?: string; phone?: string; bookingUrl?: string };
 export type Session = { name: string; role: Role; team: { name: string; supportContacts?: SupportContact[] }; submitted: boolean; day: string; privateSupportKey?: string };
@@ -30,6 +31,10 @@ export const tokenStore = {
   clear: () => Platform.OS === 'web' ? Promise.resolve() : SecureStore.deleteItemAsync('eclaircie.jwt'),
 };
 export const strapiApi = {
+  actions: async (jwt: string): Promise<TeamAction[]> => (await request('/api/team-actions', { headers: auth(jwt) })).data,
+  createAction: (jwt: string, data: { title: string; description: string; dueDay: string }) => request('/api/team-actions', { method: 'POST', headers: auth(jwt), body: JSON.stringify({ data }) }),
+  updateAction: (jwt: string, id: string, status: 'active' | 'completed') => request(`/api/team-actions/${id}`, { method: 'PATCH', headers: auth(jwt), body: JSON.stringify({ data: { status } }) }),
+  actionFeedback: (jwt: string, id: string, score: number) => request(`/api/team-actions/${id}/feedback`, { method: 'POST', headers: auth(jwt), body: JSON.stringify({ data: { score } }) }),
   login: (identifier: string, password: string): Promise<{ jwt: string }> => request('/api/auth/local', { method: 'POST', body: JSON.stringify({ identifier, password }) }),
   session: async (jwt: string): Promise<Session> => (await request('/api/session', { headers: auth(jwt) })).data,
   submitMood: (jwt: string, score: number, tags: string[]) => request('/api/mood-entries', { method: 'POST', headers: auth(jwt), body: JSON.stringify({ data: { score, tags } }) }),

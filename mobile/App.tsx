@@ -9,14 +9,15 @@ import { clearPersonalHistory, clearPersonalMemory, readPersonalHistory, savePer
 import type { PersonalMood } from './src/personalHistoryLogic';
 import { colors as c } from './src/theme';
 import { LoginScreen } from './src/components/LoginScreen';
-import { ManagerPortal } from './src/components/ManagerPortal';
+import { ManagerWorkspace, type ManagerSection } from './src/components/ManagerWorkspace';
 import { MoodFlow } from './src/components/MoodFlow';
 import { ProfilePortal, type ProfileSection } from './src/components/ProfilePortal';
 
 function Eclaircie() {
   const [session, setSession] = useState<Session | null>(null);
   const [jwt, setJwt] = useState<string | null>(null);
-  const [page, setPage] = useState<'home' | 'profile'>('home');
+  const [page, setPage] = useState<'home' | 'profile' | 'manager-mood'>('home');
+  const [managerSection, setManagerSection] = useState<ManagerSection>('team');
   const [profileSection, setProfileSection] = useState<ProfileSection>(null);
   const [score, setScore] = useState<number | null>(null);
   const [tags, setTags] = useState<string[]>([]);
@@ -49,7 +50,7 @@ function Eclaircie() {
   useEffect(() => {
     let active = true;
     setHistory([]); setHistoryError('');
-    if (!historyKey || session?.role !== 'collaborateur') { setHistoryLoading(false); return; }
+    if (!historyKey || !session) { setHistoryLoading(false); return; }
     setHistoryLoading(true);
     void readPersonalHistory(historyKey, localDay()).then(entries => { if (active) setHistory(entries); }).catch(() => { if (active) setHistoryError('Ton récap local n’a pas pu être chargé. Ta météo collective reste indépendante.'); }).finally(() => { if (active) setHistoryLoading(false); });
     return () => { active = false; };
@@ -102,7 +103,7 @@ function Eclaircie() {
     try { await tokenStore.clear(); }
     catch { setHistoryError('La déconnexion n’a pas pu aboutir. Réessaie.'); return; }
     accountEpoch.current++; requestVersion.current++;
-    setSession(null); setJwt(null); setPage('home'); setError(''); setStats(null); setScore(null); setTags([]); setSentNow(false); setSupportPrompt(false); setHistory([]); setHistoryError(''); setBusy(false); setIdentifier(''); setPassword('');
+    setManagerSection('team'); setSession(null); setJwt(null); setPage('home'); setError(''); setStats(null); setScore(null); setTags([]); setSentNow(false); setSupportPrompt(false); setHistory([]); setHistoryError(''); setBusy(false); setIdentifier(''); setPassword('');
     clearSupportMemory(); clearPersonalMemory();
   }
   async function submit() {
@@ -111,6 +112,16 @@ function Eclaircie() {
     const profile = historyKey;
     setBusy(true); setError('');
     try {
+      if (session.role === 'manager') {
+        if (!profile) throw new Error('Ton espace privé est indisponible. Reconnecte-toi.');
+        const day = localDay();
+        const entries = await savePersonalMood(profile, { day, score, tags }, day);
+        if (epoch !== accountEpoch.current) return;
+        setHistory(entries); setHistoryError(''); setSentNow(true);
+        const prompt = await recordPrivateMood(profile, day, score);
+        if (epoch === accountEpoch.current) setSupportPrompt(prompt);
+        return;
+      }
       const result = await strapiApi.submitMood(jwt!, score, tags);
       const submittedDay = result.data.day;
       if (epoch !== accountEpoch.current) return;
@@ -136,9 +147,9 @@ function Eclaircie() {
   }
   if (restoring) return <View style={s.loading}><ActivityIndicator color={c.accent} /><Text style={s.body}>Un instant…</Text></View>;
   if (!session) return <LoginScreen identifier={identifier} password={password} onIdentifier={setIdentifier} onPassword={setPassword} onLogin={() => void login()} onTestLogin={__DEV__ ? role => void login({ identifier: role === 'manager' ? 'manager@eclaircie.test' : 'collaborateur2@eclaircie.test', password: 'EclaircieDemo2026!' }) : undefined} busy={busy} error={error} />;
-  if (page === 'profile') return <ProfilePortal session={session} today={localDay()} history={history} loading={historyLoading} error={historyError} section={profileSection} onBack={() => setPage('home')} onLogout={() => void logout()} onClear={clearHistory} />;
-  if (session.role === 'manager') return <ManagerPortal session={session} stats={stats} loading={statsLoading} error={statsError} onRefresh={() => void refreshStats()} onProfile={() => openProfile()} onHelp={() => openProfile('guide')} />;
-  return <MoodFlow key={session.privateSupportKey ?? session.name} score={score} onScore={setScore} tags={tags} onTags={setTags} submitted={session.submitted} sentNow={sentNow} busy={busy} error={error} supportPrompt={supportPrompt} onDismissSupport={() => setSupportPrompt(false)} onSubmit={() => void submit()} onProfile={() => openProfile()} onSupport={() => openProfile('support')} />;
+  if (page === 'profile') return <ProfilePortal personalOnly={session.role === 'manager'} jwt={jwt!} session={session} today={localDay()} history={history} loading={historyLoading} error={historyError} section={profileSection} onBack={() => setPage('home')} onLogout={() => void logout()} onClear={clearHistory} />;
+  if (session.role === 'manager' && page !== 'manager-mood') return <ManagerWorkspace section={managerSection} onSection={setManagerSection} jwt={jwt!} history={history} onMood={() => { const own = history.find(entry => entry.day === localDay()); setScore(own?.score ?? null); setTags(own?.tags ?? []); setPage('manager-mood'); }} session={session} stats={stats} loading={statsLoading} error={statsError} onRefresh={() => void refreshStats()} onProfile={() => openProfile()} onHelp={() => openProfile('guide')} />;
+  return <MoodFlow privateMood={session.role === 'manager'} onBack={session.role === 'manager' ? () => { setManagerSection('self'); setPage('home'); } : undefined} key={session.privateSupportKey ?? session.name} score={score} onScore={setScore} tags={tags} onTags={setTags} submitted={session.role === 'manager' ? history.some(entry => entry.day === localDay()) : session.submitted} sentNow={sentNow} busy={busy} error={error} supportPrompt={supportPrompt} onDismissSupport={() => setSupportPrompt(false)} onSubmit={() => void submit()} onProfile={() => openProfile()} onSupport={() => openProfile('support')} />;
 }
 export default function App() { return <GestureHandlerRootView style={{ flex: 1 }}><SafeAreaProvider><Eclaircie /></SafeAreaProvider></GestureHandlerRootView>; }
 const s = StyleSheet.create({ loading: { flex: 1, backgroundColor: c.background, alignItems: 'center', justifyContent: 'center', gap: 20 }, body: { fontSize: 14, lineHeight: 22, color: c.muted } });

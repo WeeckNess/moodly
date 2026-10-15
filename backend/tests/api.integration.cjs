@@ -41,4 +41,29 @@ test('Parcours API et isolation des rôles sur des comptes fictifs', async t => 
     assert.equal(result.body.meta.team, 'Studio · Démonstration');
     assert.ok(!JSON.stringify(result.body).includes('privateSupportKey')); assert.ok(!JSON.stringify(result.body).includes('createdAt')); assert.ok(!JSON.stringify(result.body).includes('@eclaircie.test'));
   });
+  await t.test('Actions collectives : rôles, transitions, retours anonymes et dédoublonnage', async () => {
+    const data = { title: 'Clarifier les priorités', description: 'Un point collectif court.', dueDay: new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Paris' }) };
+    assert.ok([401, 403].includes((await call('/api/team-actions')).status));
+    assert.equal((await call('/api/team-actions', tokens[0], { data })).status, 403);
+    assert.equal((await call('/api/team-actions', manager, { data: { ...data, team: 999 } })).status, 400);
+    const created = await call('/api/team-actions', manager, { data }); assert.equal(created.status, 201);
+    const id = created.body.data.id;
+    assert.equal((await call(`/api/team-actions/${id}`, tokens[0], { data: { status: 'active' } }, 'PATCH')).status, 403);
+    assert.equal((await call(`/api/team-actions/${id}`, manager, { data: { status: 'completed' } }, 'PATCH')).status, 400);
+    assert.equal((await call(`/api/team-actions/${id}`, manager, { data: { status: 'active' } }, 'PATCH')).status, 200);
+    assert.equal((await call(`/api/team-actions/${id}/feedback`, tokens[0], { data: { score: 3 } })).status, 400);
+    assert.equal((await call(`/api/team-actions/${id}`, manager, { data: { status: 'completed' } }, 'PATCH')).status, 200);
+    assert.equal((await call(`/api/team-actions/${id}/feedback`, manager, { data: { score: 3 } })).status, 403);
+    assert.equal((await call(`/api/team-actions/${id}/feedback`, tokens[0], { data: { score: 3, user: 999 } })).status, 400);
+    const pair = await Promise.all([call(`/api/team-actions/${id}/feedback`, tokens[0], { data: { score: 3 } }), call(`/api/team-actions/${id}/feedback`, tokens[0], { data: { score: 1 } })]);
+    assert.deepEqual(pair.map(r => r.status).sort(), [201, 409]);
+    for (let i = 1; i < 5; i++) assert.equal((await call(`/api/team-actions/${id}/feedback`, tokens[i], { data: { score: 2 } })).status, 201);
+    const own = (await call('/api/team-actions', tokens[0])).body.data.find(a => a.id === id);
+    assert.equal(own.hasResponded, true); assert.equal(own.feedback, null);
+    const result = (await call('/api/team-actions?team=999', manager)).body.data.find(a => a.id === id);
+    assert.equal(result.feedback, null); assert.equal(result.reviewClosed, false);
+    assert.ok(!JSON.stringify(result).includes('feedbackSum'));
+    for (const path of ['/api/action-response-logs', '/api/team-action']) assert.ok([403, 404, 405].includes((await call(path, manager)).status));
+  });
+
 });

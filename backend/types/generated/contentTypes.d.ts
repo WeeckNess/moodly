@@ -443,6 +443,39 @@ export interface AdminUser extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiActionResponseLogActionResponseLog
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'action_response_logs';
+  info: {
+    displayName: 'action-response-log';
+    pluralName: 'action-response-logs';
+    singularName: 'action-response-log';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    deduplicationKey: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private &
+      Schema.Attribute.Unique;
+    expiresOn: Schema.Attribute.Date & Schema.Attribute.Required;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::action-response-log.action-response-log'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiDailyAggregateDailyAggregate
   extends Struct.CollectionTypeSchema {
   collectionName: 'daily_aggregates';
@@ -577,6 +610,51 @@ export interface ApiTagTag extends Struct.CollectionTypeSchema {
     localizations: Schema.Attribute.Relation<'oneToMany', 'api::tag.tag'> &
       Schema.Attribute.Private;
     publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiTeamActionTeamAction extends Struct.CollectionTypeSchema {
+  collectionName: 'team_actions';
+  info: {
+    displayName: 'team-action';
+    pluralName: 'team-actions';
+    singularName: 'team-action';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    createdDay: Schema.Attribute.Date & Schema.Attribute.Required;
+    description: Schema.Attribute.Text &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 500;
+      }>;
+    dueDay: Schema.Attribute.Date & Schema.Attribute.Required;
+    feedbackCount: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    feedbackSum: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::team-action.team-action'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    reviewUntil: Schema.Attribute.Date;
+    status: Schema.Attribute.Enumeration<['planned', 'active', 'completed']> &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'planned'>;
+    team: Schema.Attribute.Relation<'manyToOne', 'api::team.team'>;
+    title: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 100;
+      }>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -1125,10 +1203,12 @@ declare module '@strapi/strapi' {
       'admin::transfer-token': AdminTransferToken;
       'admin::transfer-token-permission': AdminTransferTokenPermission;
       'admin::user': AdminUser;
+      'api::action-response-log.action-response-log': ApiActionResponseLogActionResponseLog;
       'api::daily-aggregate.daily-aggregate': ApiDailyAggregateDailyAggregate;
       'api::mood-entry.mood-entry': ApiMoodEntryMoodEntry;
       'api::submission-log.submission-log': ApiSubmissionLogSubmissionLog;
       'api::tag.tag': ApiTagTag;
+      'api::team-action.team-action': ApiTeamActionTeamAction;
       'api::team.team': ApiTeamTeam;
       'plugin::content-releases.release': PluginContentReleasesRelease;
       'plugin::content-releases.release-action': PluginContentReleasesReleaseAction;

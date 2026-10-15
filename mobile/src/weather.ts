@@ -11,3 +11,8 @@ export const moodTags = [
   { label: 'Charge', icon: BriefcaseIcon }, { label: 'Ambiance', icon: ChatsCircleIcon }, { label: 'Sens', icon: CompassIcon },
   { label: 'Équilibre', icon: ScalesIcon }, { label: 'Reconnaissance', icon: HeartIcon }, { label: 'Outils', icon: WrenchIcon },
 ];
+
+export const managerMoodTags = [
+  { label: 'Arbitrages', icon: ScalesIcon }, { label: 'Moyens', icon: WrenchIcon }, { label: 'Conflits', icon: ChatsCircleIcon },
+  { label: 'Objectifs', icon: CompassIcon }, { label: 'Soutien hiérarchique', icon: HeartIcon }, { label: 'Reconnaissance', icon: BriefcaseIcon },
+];
