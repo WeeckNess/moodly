@@ -12,8 +12,8 @@ import { MoodChart } from './MoodChart';
 import { HeaderActions } from './HeaderActions';
 import { WeatherMorph } from './WeatherMorph';
 
-type Props = { session: Session; stats: TeamStats | null; loading: boolean; error: string; demo: boolean; onRefresh: () => void; onProfile: () => void; onHelp: () => void; onDemo: () => void };
-export function ManagerPortal({ session, stats, loading, error, demo, onRefresh, onProfile, onHelp, onDemo }: Props) {
+type Props = { session: Session; stats: TeamStats | null; loading: boolean; error: string; onRefresh: () => void; onProfile: () => void; onHelp: () => void };
+export function ManagerPortal({ session, stats, loading, error, onRefresh, onProfile, onHelp }: Props) {
   const { width } = useWindowDimensions();
   const wide = width >= 960, small = width < 400;
   const mean = stats ? visibleMean(stats.data) : null;
@@ -27,10 +27,9 @@ export function ManagerPortal({ session, stats, loading, error, demo, onRefresh,
     <View style={s.layout}>
       {wide && <View style={s.sidebar}><BrandMark size={24} /><Text style={s.eyebrow}>ESPACE MANAGER</Text><Text style={s.team}>{session.team.name}</Text><Pressable accessibilityRole="button" onPress={onProfile} style={{ minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: 12 }}><UserCircleIcon size={24} color={c.text} /><Text style={s.body}>Mon profil</Text></Pressable><View style={{ flex: 1 }} /><View style={s.sidebarTrust}><ShieldCheckIcon size={23} color={c.text} /><Text style={s.body}>L’équipe se dessine.{ '\n' }Chacun reste anonyme dans cette vue.</Text></View></View>}
       <View style={s.main}>
-        <View style={s.header}>{wide ? <Text style={s.eyebrow}>LA MÉTÉO DU COLLECTIF</Text> : <BrandMark />}<HeaderActions demo={demo} manager onSwitch={onDemo} onProfile={onProfile} /></View>
+        <View style={s.header}>{wide ? <Text style={s.eyebrow}>LA MÉTÉO DU COLLECTIF</Text> : <BrandMark />}<HeaderActions onProfile={onProfile} /></View>
         <ScrollView contentContainerStyle={[s.content, small && { paddingHorizontal: 20, gap: 20 }]}>
           <View style={s.hero}><View style={{ flex: 1, gap: 12 }}><Text style={s.eyebrow}>01 / LE COLLECTIF</Text><Text accessibilityRole="header" style={[s.title, small && { fontSize: 30, lineHeight: 35 }]}>La météo{ '\n' }de l’équipe.</Text><Text style={s.body}>{session.team.name}</Text></View><Animated.View style={[s.orb, accent]}>{mean === null || loading || error ? <ShieldCheckIcon size={44} color={c.ink} /> : <WeatherMorph value={value} size={73} />}</Animated.View></View>
-          {demo && <Text style={s.demoNotice}>Démonstration · Toutes les données sont fictives.</Text>}
           <View style={s.chartCard}>
             <View style={s.cardHeader}><Text style={s.eyebrow}>LES 30 DERNIERS JOURS</Text><Pressable accessibilityRole="button" accessibilityLabel="Actualiser la météo collective" disabled={loading} onPress={onRefresh} style={s.refresh}><Text style={s.refreshText}>{loading ? 'Chargement…' : 'Actualiser'}</Text></Pressable></View>
             {loading ? <View style={s.state}><ActivityIndicator color={c.text} /><Text style={s.body}>La météo collective arrive…</Text></View> : error ? <View style={s.state}><Text accessibilityRole="alert" style={s.error}>{error}</Text><Pressable accessibilityRole="button" onPress={onRefresh} style={s.retry}><Text style={s.retryText}>Réessayer</Text><ArrowRightIcon size={18} color={c.ink} /></Pressable></View> : stats ? <>
@@ -64,7 +63,6 @@ const s = StyleSheet.create({
   body: { color: c.muted, fontSize: 13, lineHeight: 21 },
   caption: { color: c.muted, fontSize: 11, lineHeight: 17 },
   orb: { width: 110, height: 110, borderRadius: 55, alignItems: 'center', justifyContent: 'center' },
-  demoNotice: { color: c.muted, fontSize: 10, lineHeight: 16, marginTop: -10 },
   chartCard: { padding: 20, borderRadius: 24, backgroundColor: '#ffffff06', borderWidth: 1, borderColor: c.line, gap: 16 },
   cardHeader: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 6 },
   refresh: { minHeight: 44, justifyContent: 'center' },

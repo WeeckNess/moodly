@@ -2,7 +2,7 @@
   "name": "moodly-starter",
   "version": "0.1.0",
   "private": true,
-  "description": "Moodly mobile demo and Strapi starter",
+  "description": "Éclaircie mobile app and Strapi API",
   "scripts": {
     "postinstall": "npm ci --prefix mobile",
     "start": "npm --prefix mobile start",

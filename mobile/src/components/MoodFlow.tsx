@@ -12,9 +12,9 @@ import { MoodDial, moodAccents, moodBackgrounds, useReducedMotion, WeatherMorph 
 
 type Props = {
   score: number | null; onScore: (score: number) => void; tags: string[]; onTags: (tags: string[]) => void;
-  submitted: boolean; sentNow: boolean; demo: boolean; busy: boolean; error: string;
+  submitted: boolean; sentNow: boolean; busy: boolean; error: string;
   supportPrompt: boolean; onDismissSupport: () => void;
-  onSubmit: () => void; onProfile: () => void; onDemoManager: () => void; onReplay: () => void;
+  onSubmit: () => void; onProfile: () => void;
 };
 const INPUT = [1, 2, 3, 4, 5];
 export function MoodFlow(props: Props) {
@@ -53,24 +53,19 @@ export function MoodFlow(props: Props) {
     NativeAnimated.timing(entrance, { toValue: 1, duration: reduced ? 0 : 280, useNativeDriver: true }).start();
   }
   function dismissSupport() { props.onDismissSupport(); setManualSupport(false); setPrepareMessage(false); }
-  function replay() {
-    setStep('mood'); setPrivateReason(''); setReasonDraft(''); props.onReplay();
-    motion.value = 3; props.onScore(3);
-  }
   return <Animated.View style={[styles.background, backgroundStyle]}>
     <StatusBar style="light" /><SafeAreaView style={styles.safe}>
       <View style={[styles.header, compact && { height: 54 }]}>
         <BrandMark />
-        <HeaderActions disabled={props.busy} demo={props.demo} onSwitch={props.onDemoManager} onProfile={props.onProfile} />
+        <HeaderActions disabled={props.busy} onProfile={props.onProfile} />
       </View>
       <NativeAnimated.View style={[styles.body, { maxWidth: width >= 660 ? 520 : 430, opacity: entrance, transform: [{ translateY: entrance.interpolate({ inputRange: [0, 1], outputRange: [12, 0] }) }] }]}>
         {done ? <View style={styles.done}>
           <Animated.View style={[styles.doneOrb, accentStyle]}><CheckCircleIcon color="#26372a" size={66} weight="duotone" /></Animated.View>
-          <Text style={styles.eyebrow}>{props.sentNow ? 'C’EST PARTAGÉ' : 'DÉJÀ PARTAGÉE AUJOURD’HUI'}</Text><Text accessibilityRole="header" style={styles.doneTitle}>Ta météo compte.</Text><Text style={styles.doneBody}>{props.demo ? 'Ta réponse de démo reste sur cet appareil.' : 'Merci pour ton retour. Il contribue à la météo collective.'}{'\n'}On se retrouve demain.</Text>
+          <Text style={styles.eyebrow}>{props.sentNow ? 'C’EST PARTAGÉ' : 'DÉJÀ PARTAGÉE AUJOURD’HUI'}</Text><Text accessibilityRole="header" style={styles.doneTitle}>Ta météo compte.</Text><Text style={styles.doneBody}>Merci pour ton retour. Il contribue à la météo collective.{'\n'}On se retrouve demain.</Text>
           <Pressable accessibilityRole="button" style={styles.supportLink} onPress={() => setManualSupport(true)}><ChatsCircleIcon size={19} color="#e9e6d9" /><Text style={styles.supportLinkText}>Besoin d’en parler ?</Text></Pressable>
-          {props.demo && <Pressable accessibilityRole="button" onPress={replay} style={styles.replay}><Text style={styles.secondaryText}>Rejouer la démo</Text></Pressable>}
         </View> : step === 'mood' ? <>
-          <View style={[styles.intro, compact && { paddingTop: 5, gap: 8 }]}><Text style={styles.eyebrow}>{props.demo ? 'DÉMO / TA MÉTÉO' : '01 / TA MÉTÉO'}</Text><Text accessibilityRole="header" style={[styles.title, compact && { fontSize: tiny ? 26 : 29, lineHeight: tiny ? 31 : 34 }]}>À l’intérieur,{ '\n' }quel temps fait-il ?</Text></View>
+          <View style={[styles.intro, compact && { paddingTop: 5, gap: 8 }]}><Text style={styles.eyebrow}>01 / TA MÉTÉO</Text><Text accessibilityRole="header" style={[styles.title, compact && { fontSize: tiny ? 26 : 29, lineHeight: tiny ? 31 : 34 }]}>À l’intérieur,{ '\n' }quel temps fait-il ?</Text></View>
           <View style={[styles.dialSpace, tiny && { minHeight: 230 }]}><Text style={styles.gestureHint}>{weathers[(props.score ?? 3) - 1].message}</Text><View style={{ width: '100%', maxWidth: tiny ? 230 : compact ? 280 : 350 }}><MoodDial compact={compact} score={props.score ?? 3} onChange={props.onScore} motion={motion} /></View></View>
           <View style={styles.bottom}><Pressable accessibilityRole="button" accessibilityLabel="Continuer vers les raisons" onPress={() => go('reasons')} style={styles.primary}><Text style={styles.primaryText}>Continuer</Text><ArrowRightIcon size={21} color="#27352c" /></Pressable><Text style={styles.footnote}>Volontaire · Sans nom sur ta réponse</Text></View>
         </> : <>

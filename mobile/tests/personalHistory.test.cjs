@@ -34,29 +34,30 @@ test('Le calendrier commence le lundi et couvre correctement le mois', () => {
 });
 test('L’adaptateur mobile utilise le stockage sécurisé et isole les comptes', async () => {
   const { api, secure, plain } = harness('ios');
-  await api.savePersonalMood('account-a', { day: '2026-10-14', score: 4, tags: ['Charge'], comment: 'Brouillon à exclure' }, '2026-10-15', false);
-  assert.equal((await api.readPersonalHistory('account-a', '2026-10-15', false)).length, 1);
-  assert.deepEqual(await api.readPersonalHistory('account-b', '2026-10-15', false), []);
+  await api.savePersonalMood('account-a', { day: '2026-10-14', score: 4, tags: ['Charge'], comment: 'Brouillon à exclure' }, '2026-10-15');
+  assert.equal((await api.readPersonalHistory('account-a', '2026-10-15')).length, 1);
+  assert.deepEqual(await api.readPersonalHistory('account-b', '2026-10-15'), []);
   assert.equal(plain.size, 0);
   assert.deepEqual(Object.keys(JSON.parse(secure.get('eclaircie.history.account-a.2026-10-14'))), ['day', 'score', 'tags']);
   assert.ok([...secure.values()].every(value => Buffer.byteLength(value) < 2048));
   api.clearPersonalMemory();
-  assert.equal((await api.readPersonalHistory('account-a', '2026-10-15', false))[0].score, 4);
-  await api.readPersonalHistory('account-a', '2026-12-01', false);
+  assert.equal((await api.readPersonalHistory('account-a', '2026-10-15'))[0].score, 4);
+  await api.readPersonalHistory('account-a', '2026-12-01');
   assert.ok(!secure.has('eclaircie.history.account-a.2026-10-14'));
 });
 test('Sur le web réel aucun souvenir de santé n’est persisté', async () => {
   const { api, secure, plain } = harness('web');
-  await api.savePersonalMood('account-a', { day: '2026-10-15', score: 2, tags: [] }, '2026-10-15', false);
-  assert.equal((await api.readPersonalHistory('account-a', '2026-10-15', false)).length, 1);
+  await api.savePersonalMood('account-a', { day: '2026-10-15', score: 2, tags: [] }, '2026-10-15');
+  assert.equal((await api.readPersonalHistory('account-a', '2026-10-15')).length, 1);
   assert.equal(plain.size, 0); assert.equal(secure.size, 0);
   api.clearPersonalMemory();
-  assert.deepEqual(await api.readPersonalHistory('account-a', '2026-10-15', false), []);
+  assert.deepEqual(await api.readPersonalHistory('account-a', '2026-10-15'), []);
 });
-test('Effacer la démo ne fait pas réapparaître automatiquement les exemples', async () => {
-  const { api } = harness('web');
-  assert.ok((await api.readPersonalHistory('demo', '2026-10-15', true)).length > 0);
-  await api.clearPersonalHistory('demo', '2026-10-15', true);
+test('Un nouveau profil reste vide et l’effacement ne recrée aucune donnée', async () => {
+  const { api } = harness('ios');
+  assert.deepEqual(await api.readPersonalHistory('account-a', '2026-10-15'), []);
+  await api.savePersonalMood('account-a', { day: '2026-10-15', score: 4, tags: [] }, '2026-10-15');
+  await api.clearPersonalHistory('account-a', '2026-10-15');
   api.clearPersonalMemory();
-  assert.deepEqual(await api.readPersonalHistory('demo', '2026-10-15', true), []);
+  assert.deepEqual(await api.readPersonalHistory('account-a', '2026-10-15'), []);
 });

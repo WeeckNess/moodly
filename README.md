@@ -15,18 +15,18 @@ npm ci
 npm start
 ```
 
-Scanner le QR code sur téléphone, ou utiliser `npm run web`. La démo fonctionne sans serveur via « Explorer la démo » ou « Découvrir la vue manager ».
+Scanner le QR code sur téléphone, ou utiliser `npm run web`. La connexion à Strapi est obligatoire. Le rôle et l’équipe du compte déterminent la vue affichée ; aucun mode fictif n’est proposé dans l’interface.
 
-## Lancer le serveur et les comptes fictifs
+## Lancer le serveur
 
 Dans un second terminal, depuis la racine :
 
 ```sh
 npm run backend:install
-npm run backend:demo
+npm run backend:dev
 ```
 
-Le premier démarrage crée automatiquement `backend/.env` avec des secrets aléatoires, sans écraser un fichier existant. Le seed est explicite, idempotent et interdit en production. Il crée les rôles, une équipe, un manager, huit collaborateurs et 29 jours de données fictives. Aujourd’hui reste disponible pour tester la saisie.
+Pour des tests locaux uniquement, `npm run backend:demo` permet de créer des comptes et données fictifs. Ne pas utiliser ces données pour un lancement réel. Le premier démarrage de cette commande crée automatiquement `backend/.env` avec des secrets aléatoires, sans écraser un fichier existant. Le seed est explicite, idempotent et interdit en production. Il crée les rôles, une équipe, un manager, huit collaborateurs et 29 jours de données fictives. Aujourd’hui reste disponible pour tester la saisie.
 
 | Compte fictif | Identifiant | Mot de passe local par défaut |
 | --- | --- | --- |
@@ -53,8 +53,8 @@ Téléphone et PC doivent être sur le même réseau. Redémarrer Expo après mo
 ## Fonctionnalités livrées
 
 - Identité Éclaircie : fond sombre, grands titres, filets fins, accents sauge et jaune, cinq météos Phosphor.
-- Interface mobile et web simplifiée : météo et profil. La bascule salarié/manager de la démo utilise une icône à deux flèches ; le profil remplace les boutons de confidentialité et de déconnexion du bandeau. Les rôles réels restent définis par Strapi.
-- Connexion Strapi refaite : formulaire unique, affichage/masquage du mot de passe et un seul accès à la démo ; rôle et équipe résolus côté serveur.
+- Interface mobile et web simplifiée : météo et profil. Le profil regroupe la confidentialité et la déconnexion. La vue salarié ou manager est définie par Strapi, sans bascule de rôle côté client.
+- Connexion Strapi refaite : formulaire unique, affichage/masquage du mot de passe sans accès anonyme ; rôle et équipe résolus côté serveur.
 - JWT conservé dans le stockage sécurisé système sur mobile ; en mémoire uniquement sur le web. Expiration après 8 heures et suppression à la déconnexion.
 - Sélecteur gestuel en arc de 240° : un cercle ouvert en bas, parcouru de Très mal à Très bien, également utilisable au clavier et avec les actions d’accessibilité natives.
 - Les cinq icônes météo Phosphor en duotone se transforment réellement par interpolation de leurs contours SVG, autour d’un centre fixe. Les points et les ouvertures se déforment sur le thread UI : aucun fondu entre icônes superposées. Le disque et l’icône centrale sont agrandis de 25 %, et la phrase positive apparaît au-dessus de l’arc, agrandie de 25 % (15 px). Fond et disque central changent de couleur. Le curseur et la scène sont animés par Reanimated, avec Gesture Handler sur le thread UI natif : aucune mise à jour React à chaque image, uniquement lors du changement de note. Clic éloigné : trajet continu sur tout l’arc, avec libellé et phrase positive au passage des paliers. Retour haptique léger au franchissement exact de chaque point entier, indépendamment du changement de libellé à mi-palier, sur téléphone compatible (aucune vibration sur le navigateur). Logo toujours droit et fixe. Trajet raccourci lorsque le réglage système demande moins de mouvement.
@@ -67,7 +67,6 @@ Téléphone et PC doivent être sur le même réseau. Redémarrer Expo après mo
 - Routes manager limitées à l’équipe gérée par le compte ; aucune route de lecture des réponses ou journaux.
 - Profil personnel : carte météo quotidienne inspirée des souvenirs BeReal, calendrier des 30 derniers jours et tendance personnelle sur 7 jours. Stockage sécurisé par compte sur mobile ; mémoire de session uniquement sur le web réel. Aucun nouvel historique individuel côté serveur ou manager.
 - Confidentialité, aide et déconnexion regroupées dans le profil, sans les anciennes pages ni barre d’onglets. Effacement local du récap et du compteur privé après confirmation.
-- Mode démo explicitement fictif avec possibilité de rejouer ; souvenirs d’exemple, saisies de démo et compteur privé conservés localement, indépendamment du serveur. Les exemples ne se recréent pas après effacement volontaire.
 - Purge des réponses et journaux après 45 jours par défaut, au démarrage et quotidiennement à 3 h, avec conservation séparée des agrégats.
 
 ## Structure
