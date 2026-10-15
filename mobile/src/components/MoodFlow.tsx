@@ -97,16 +97,43 @@ export function MoodFlow(saved: Props) {
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={[styles.overlay, { padding: 0 }]}><ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.modalScroll}><View style={styles.sheet} accessibilityViewIsModal role="dialog" aria-modal={true}><View style={styles.sheetHeader}><Text style={styles.sheetKicker}>JUSTE POUR TOI</Text><Pressable accessibilityRole="button" accessibilityLabel="Fermer la raison personnelle" onPress={() => setReasonModal(false)} style={styles.iconButton}><XIcon size={21} color={c.text} /></Pressable></View><Text accessibilityRole="header" style={styles.sheetTitle}>Ta propre raison.</Text><Text style={styles.sheetBody}>Ce brouillon reste sur cet écran. Il n’est envoyé ni au serveur ni à ton manager, puis il est effacé après l’envoi.</Text><TextInput accessibilityLabel="Ma raison personnelle" placeholder="Ce qui joue pour moi…" placeholderTextColor={c.dim} value={reasonDraft} onChangeText={setReasonDraft} maxLength={80} multiline style={styles.noteInput} /><Text style={styles.counter}>{reasonDraft.length}/80</Text><Pressable accessibilityRole="button" style={styles.primary} onPress={() => { setPrivateReason(reasonDraft.trim()); setReasonModal(false); }}><Text style={styles.primaryText}>{reasonDraft.trim() ? 'Ajouter à mon écran' : 'Retirer ma note'}</Text><CheckIcon size={19} color={c.ink} /></Pressable></View></ScrollView></KeyboardAvoidingView>
     </Modal>
     <Modal visible={supportVisible} transparent animationType={reduced ? 'none' : 'fade'} onRequestClose={dismissSupport}>
-      <View style={[styles.overlay, { padding: 0 }]}><ScrollView contentContainerStyle={styles.modalScroll}><View style={styles.sheet} accessibilityViewIsModal role="dialog" aria-modal={true}><View style={styles.sheetHeader}><ChatsCircleIcon size={30} color={c.link} weight="duotone" /><Pressable accessibilityRole="button" accessibilityLabel="Fermer l’invitation à échanger" onPress={dismissSupport} style={styles.iconButton}><XIcon color={c.text} size={21} /></Pressable></View><Text accessibilityRole="header" style={styles.sheetTitle}>{prepareMessage ? 'Un premier pas.' : 'Tu peux en parler.'}</Text>
-        <Text style={styles.sheetBody}>{prepareMessage ? 'Voici un message que tu peux copier et adapter. Tu choisis à qui le transmettre.' : props.supportPrompt ? 'Tu as partagé trois météos « Très mal » sur des jours distincts au cours des 30 derniers jours. Si tu le souhaites, tu peux demander un temps d’échange avec ton manager ou une personne de confiance.' : 'Si tu en ressens le besoin, tu peux demander un temps d’échange avec ton manager ou une personne de confiance.'}</Text>
-        {prepareMessage ? <Text selectable style={styles.message}>Bonjour, j’aimerais prendre un moment pour échanger sur mon ressenti au travail et sur ce qui pourrait m’aider. Serais-tu disponible pour en parler ?</Text> : <View style={styles.privacyNote}><ShieldCheckIcon size={18} color={c.link} /><Text style={styles.privacyNoteText}>Invitation privée. Aucune alerte ni réponse individuelle n’est envoyée à ton manager.</Text></View>}
-        <Pressable accessibilityRole="button" style={styles.primary} onPress={() => { dismissSupport(); props.onSupport(); }}><Text style={styles.primaryText}>Trouver un accompagnement</Text><ArrowUpRightIcon color={c.ink} size={19} /></Pressable>
-        <Pressable accessibilityRole="button" style={styles.replay} onPress={() => prepareMessage ? dismissSupport() : setPrepareMessage(true)}><Text style={styles.secondaryText}>{prepareMessage ? 'Fermer' : 'Préparer un échange'}</Text><ArrowUpRightIcon color={c.ink} size={19} /></Pressable>{!prepareMessage && <Pressable accessibilityRole="button" onPress={dismissSupport} style={styles.replay}><Text style={styles.secondaryText}>Pas maintenant</Text></Pressable>}
-      </View></ScrollView></View>
+      <View style={[styles.overlay, { padding: 0 }]}>
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={[styles.modalScroll, { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 16 }]}>
+          <View style={[styles.sheet, styles.supportSheet]} accessibilityViewIsModal role="dialog" aria-modal={true}>
+            <View style={styles.sheetHeader}>
+              <View style={styles.supportBadge}><ChatsCircleIcon size={27} color={c.link} weight="duotone" /></View>
+              <Pressable accessibilityRole="button" accessibilityLabel="Fermer l’invitation à échanger" onPress={dismissSupport} style={styles.supportClose}><XIcon color={c.text} size={21} /></Pressable>
+            </View>
+            <View style={styles.supportIntro}>
+              <Text style={styles.sheetKicker}>UN MOMENT POUR TOI</Text>
+              <Text accessibilityRole="header" style={styles.sheetTitle}>{prepareMessage ? 'Un premier pas.' : 'Tu peux en parler.'}</Text>
+              <Text style={styles.sheetBody}>{prepareMessage ? 'Voici un message à copier et adapter. Tu choisis à qui le transmettre.' : props.supportPrompt ? 'Tu as partagé trois météos « Très mal » sur des jours distincts au cours des 30 derniers jours. Si tu le souhaites, tu peux échanger avec un professionnel, ton manager ou une personne de confiance.' : 'Un professionnel, ton manager ou une personne de confiance : choisis la personne avec qui tu te sens à l’aise.'}</Text>
+            </View>
+            {prepareMessage && <View style={styles.supportMessage}><Text style={styles.sheetKicker}>TON BROUILLON</Text><Text selectable style={styles.sheetBody}>Bonjour, j’aimerais prendre un moment pour échanger sur mon ressenti au travail et sur ce qui pourrait m’aider. Serais-tu disponible pour en parler ?</Text><Text style={styles.privacyNoteText}>Tu peux sélectionner ce texte pour le copier. Rien n’est envoyé depuis cet écran.</Text></View>}
+            <View style={styles.supportPrivacy}><ShieldCheckIcon size={18} color={c.link} /><Text style={styles.privacyNoteText}>Ton choix reste privé. Aucune alerte ni météo individuelle n’est transmise à ton manager.</Text></View>
+            <View style={styles.supportActions}>
+              <Pressable accessibilityRole="button" accessibilityLabel="Trouver un accompagnement" style={({ pressed }) => [styles.primary, pressed && { opacity: .8 }]} onPress={() => { dismissSupport(); props.onSupport(); }}><Text style={styles.primaryText}>Trouver du soutien</Text><CaretRightIcon color={c.ink} weight="bold" size={20} /></Pressable>
+              <Pressable accessibilityRole="button" accessibilityLabel={prepareMessage ? 'Retour aux options d’échange' : 'Préparer un échange'} style={({ pressed }) => [styles.supportSecondary, pressed && { opacity: .7 }]} onPress={() => setPrepareMessage(value => !value)}>{prepareMessage ? <ArrowLeftIcon color={c.link} size={19} /> : <ChatsCircleIcon color={c.link} size={19} />}<Text style={styles.supportSecondaryText}>{prepareMessage ? 'Retour aux options' : 'Préparer un échange'}</Text>{!prepareMessage && <CaretRightIcon color={c.link} size={18} />}</Pressable>
+              <Pressable accessibilityRole="button" onPress={dismissSupport} style={styles.supportDismiss}><Text style={styles.supportDismissText}>{prepareMessage ? 'Fermer' : 'Pas maintenant'}</Text></Pressable>
+            </View>
+          </View>
+        </ScrollView>
+      </View>
     </Modal>
   </Animated.View>;
 }
 const styles = StyleSheet.create({
+  supportSheet: { padding: 20, gap: 18, maxWidth: 420 },
+  supportBadge: { width: 48, height: 48, borderRadius: 16, backgroundColor: c.selected, alignItems: 'center', justifyContent: 'center' },
+  supportClose: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: c.surface },
+  supportIntro: { gap: 12 },
+  supportPrivacy: { flexDirection: 'row', alignItems: 'flex-start', gap: 9, backgroundColor: c.elevated, padding: 12, borderRadius: 14 },
+  supportMessage: { gap: 10, borderWidth: 1, borderColor: c.line, borderRadius: 16, padding: 14 },
+  supportActions: { gap: 10 },
+  supportSecondary: { minHeight: 52, paddingHorizontal: 16, paddingVertical: 14, borderRadius: 18, borderWidth: 1, borderColor: c.line, flexDirection: 'row', alignItems: 'center', gap: 10 },
+  supportSecondaryText: { flex: 1, fontSize: 13, fontWeight: '500', lineHeight: 19, color: c.link },
+  supportDismiss: { minHeight: 44, alignItems: 'center', justifyContent: 'center' },
+  supportDismissText: { fontSize: 12, color: c.muted },
   background: { flex: 1 },
   safe: { flex: 1 },
   header: { height: 68, paddingHorizontal: 22, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
