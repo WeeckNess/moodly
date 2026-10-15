@@ -15,7 +15,9 @@ npm ci
 npm start
 ```
 
-Scanner le QR code sur téléphone, ou utiliser `npm run web`. La connexion à Strapi est obligatoire. Le rôle et l’équipe du compte déterminent la vue affichée ; aucun mode fictif n’est proposé dans l’interface.
+Scanner le QR code sur téléphone, ou utiliser `npm run web`. Dans Expo en développement, les boutons « Test salarié » et « Test manager » connectent directement aux comptes fictifs locaux ci-dessous, via l’authentification Strapi normale. Le serveur et les comptes de test doivent être disponibles. Ces raccourcis ne sont pas affichés dans la version de production.
+
+La connexion à Strapi est obligatoire. Le rôle et l’équipe du compte déterminent la vue affichée ; aucun mode fictif n’est proposé dans l’interface.
 
 ## Lancer le serveur
 

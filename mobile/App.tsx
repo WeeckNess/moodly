@@ -83,13 +83,13 @@ function Eclaircie() {
     return () => { subscription.remove(); clearInterval(interval); };
   }, [session, jwt, refreshStats]);
   function openProfile(section: ProfileSection = null) { setProfileSection(section); setPage('profile'); }
-  async function login() {
+  async function login(credentials = { identifier, password }) {
     if (busy) return;
-    if (!identifier.trim() || !password) { setError('Renseigne ton adresse et ton mot de passe.'); return; }
+    if (!credentials.identifier.trim() || !credentials.password) { setError('Renseigne ton adresse et ton mot de passe.'); return; }
     setBusy(true); setError('');
     const epoch = ++accountEpoch.current;
     try {
-      const result = await strapiApi.login(identifier.trim(), password);
+      const result = await strapiApi.login(credentials.identifier.trim(), credentials.password);
       const info = await strapiApi.session(result.jwt);
       if (epoch !== accountEpoch.current) return;
       await tokenStore.write(result.jwt);
@@ -135,7 +135,7 @@ function Eclaircie() {
     setHistory([]); setHistoryError(''); setSupportPrompt(false);
   }
   if (restoring) return <View style={s.loading}><ActivityIndicator color={c.accent} /><Text style={s.body}>Un instant…</Text></View>;
-  if (!session) return <LoginScreen identifier={identifier} password={password} onIdentifier={setIdentifier} onPassword={setPassword} onLogin={() => void login()} busy={busy} error={error} />;
+  if (!session) return <LoginScreen identifier={identifier} password={password} onIdentifier={setIdentifier} onPassword={setPassword} onLogin={() => void login()} onTestLogin={__DEV__ ? role => void login({ identifier: role === 'manager' ? 'manager@eclaircie.test' : 'collaborateur2@eclaircie.test', password: 'EclaircieDemo2026!' }) : undefined} busy={busy} error={error} />;
   if (page === 'profile') return <ProfilePortal session={session} today={localDay()} history={history} loading={historyLoading} error={historyError} section={profileSection} onBack={() => setPage('home')} onLogout={() => void logout()} onClear={clearHistory} />;
   if (session.role === 'manager') return <ManagerPortal session={session} stats={stats} loading={statsLoading} error={statsError} onRefresh={() => void refreshStats()} onProfile={() => openProfile()} onHelp={() => openProfile('guide')} />;
   return <MoodFlow key={session.privateSupportKey ?? session.name} score={score} onScore={setScore} tags={tags} onTags={setTags} submitted={session.submitted} sentNow={sentNow} busy={busy} error={error} supportPrompt={supportPrompt} onDismissSupport={() => setSupportPrompt(false)} onSubmit={() => void submit()} onProfile={() => openProfile()} onSupport={() => openProfile('support')} />;
