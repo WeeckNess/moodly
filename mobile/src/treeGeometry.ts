@@ -9,7 +9,7 @@ export function clamp(value: number, low = 0, high = 1) { 'worklet'; return Math
 export function mix(a: number, b: number, amount: number) { 'worklet'; return a + (b - a) * amount; }
 export function ramp(day: number, start: number, end: number) { 'worklet'; const t = clamp((day - start) / (end - start)); return t * t * (3 - 2 * t); }
 export function trunkHeight(day: number, pine: number) { 'worklet'; return 35 * ramp(day, 0, 1) + (88 + pine * 12) * ramp(day, 1, 24); }
-export function treeProgress(day: number) { 'worklet'; return clamp(day, 0, 60); }
+export function treeProgress(day: number) { 'worklet'; return clamp(day, 0, 120); }
 // All essences share 48 vertices per leaf mass and identical path commands.
 // This makes species changes an actual contour morph, including midway through growth.
 const pinePolygon = [[0, -1], [.27, -.52], [.12, -.52], [.55, -.05], [.3, -.05], [.92, .65], [.4, .65], [.4, .88], [-.4, .88], [-.4, .65], [-.92, .65], [-.3, -.05], [-.55, -.05], [-.12, -.52], [-.27, -.52]];
@@ -65,4 +65,39 @@ export function branchPath(day: number, species: number, index: number) {
   const endX = 160 + a[0] * (1 - w[2] * .4) * extent;
   const endY = mix(startY, 220 + a[1] + w[1] * (index % 2 ? 10 : 20) - w[2] * index * 2, extent * mature);
   return `M160,${startY} Q${mix(160, endX, .8)},${startY - 8 * extent} ${endX},${endY}`;
+}
+
+export const gardenMilestones = [
+  { day: 0, label: 'Graine' }, { day: 1, label: 'Pousse' }, { day: 5, label: 'Jeune arbre' },
+  { day: 12, label: 'Croissance' }, { day: 24, label: 'Épanoui' }, { day: 35, label: 'Floraison' },
+  { day: 50, label: 'Premiers fruits' }, { day: 75, label: 'Jardin vivant' }, { day: 100, label: 'Abondance' },
+];
+export function nextGardenMilestone(day: number) { return gardenMilestones.find(step => step.day > day)?.day ?? null; }
+export function gardenTitle(day: number) {
+  if (day >= 100) return 'Un jardin plein de vie.';
+  if (day >= 75) return 'Ton jardin s’enrichit.';
+  if (day >= 50) return 'Les premiers fruits de ton chemin.';
+  if (day >= 35) return 'Ton arbre se met à fleurir.';
+  return ['Tout commence ici.', 'Une pousse, à ton rythme.', 'Tes repères prennent racine.', 'Un peu plus de place pour toi.', 'Ton arbre continue son chemin.'][day < 1 ? 0 : day < 5 ? 1 : day < 12 ? 2 : day < 24 ? 3 : 4];
+}
+export function gardenLife(day: number) {
+  'worklet'; return { grass: ramp(day, 5, 24), flowers: ramp(day, 18, 40), blossom: ramp(day, 26, 38) * (1 - ramp(day, 42, 57)), fruit: ramp(day, 38, 60), abundance: ramp(day, 60, 100) };
+}
+export function fruitPosition(species: number, index: number) {
+  'worklet'; const w = speciesWeights(species);
+  const points = [[132, 133], [188, 124], [156, 91], [112, 113], [207, 137], [139, 79], [184, 85]];
+  return { x: mix(points[index][0], [142, 177, 156, 132, 187, 148, 171][index], w[2]), y: points[index][1] + w[1] * 13 };
+}
+export function fruitPath(species: number, size: number) {
+  'worklet'; const w = speciesWeights(species);
+  // A gland, an elongated willow catkin and a pine cone share one rounded contour.
+  const rx = mix(5.5, 3, w[1]) + w[2] * .5, ry = mix(6.5, 10, w[1]) + w[2] * 2;
+  let path = '';
+  for (let i = 0; i <= 24; i++) {
+    const a = -Math.PI / 2 + i / 24 * Math.PI * 2;
+    const taper = 1 - w[2] * .22 * Math.cos(a) - w[0] * .12 * Math.sin(a);
+    const x = Math.cos(a) * rx * size * taper, y = Math.sin(a) * ry * size;
+    path += `${i === 0 ? 'M' : 'L'}${x},${y}`;
+  }
+  return path + 'Z';
 }

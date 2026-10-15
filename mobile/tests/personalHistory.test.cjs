@@ -107,3 +107,20 @@ test('Le choix d’essence est privé, conservé sur mobile et supprimé avec le
   await api.clearPersonalHistory('a', '2026-10-15');
   assert.equal(await api.readTreeSpecies('a'), 'oak');
 });
+test('Le jardin enrichit progressivement le sol, la floraison puis les fruits', () => {
+  assert.deepEqual(trees.gardenLife(0), { grass: 0, flowers: 0, blossom: 0, fruit: 0, abundance: 0 });
+  assert.ok(trees.gardenLife(12).grass > 0);
+  assert.equal(trees.gardenLife(24).fruit, 0);
+  assert.ok(trees.gardenLife(35).blossom > .5);
+  assert.equal(trees.gardenLife(60).blossom, 0);
+  assert.equal(trees.gardenLife(60).fruit, 1);
+  assert.equal(trees.gardenLife(100).abundance, 1);
+  assert.equal(trees.nextGardenMilestone(24), 35);
+  assert.equal(trees.nextGardenMilestone(35), 50);
+  assert.equal(trees.nextGardenMilestone(100), null);
+  for (let species = 0; species <= 2; species += .2) {
+    const path = trees.fruitPath(species, .5);
+    assert.equal((path.match(/L/g) ?? []).length, 24);
+    assert.ok(!path.includes('NaN'));
+  }
+});
