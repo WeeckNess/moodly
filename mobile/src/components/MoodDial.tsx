@@ -7,7 +7,7 @@ import Animated, { Easing, ReduceMotion, runOnJS, useAnimatedReaction, useAnimat
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { WeatherMorph } from './WeatherMorph';
 import { mono, moodPalette } from '../theme';
-import { continuousValueFromPoint, crossedStops, pointForValue, sweepDuration, valueFromPoint } from '../dialMath';
+import { continuousValueFromPoint, crossedStops, dialGeometry, pointForValue, sweepDuration, valueFromPoint } from '../dialMath';
 
 export const moodBackgrounds = moodPalette.backgrounds;
 export const moodAccents = moodPalette.accents;
@@ -30,9 +30,7 @@ export function MoodDial({ score, onChange, motion, compact = false }: { score: 
   const [width, setWidth] = useState(320);
   const raw = useSharedValue(score);
   const reduced = useReducedMotion();
-  const radius = width * 0.405, cx = width / 2, cy = width * 0.455;
-  const orbSize = (compact ? 106 : 126) * 1.25;
-  const height = Math.max(width * 0.84, cy + orbSize / 2 + 62);
+  const { radius, cx, cy, orbSize, height } = dialGeometry(width, compact);
   const lastTick = useSharedValue(0);
   const reportStep = useCallback((value: number) => {
     onChange(value);

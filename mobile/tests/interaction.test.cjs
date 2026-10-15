@@ -83,3 +83,17 @@ test('Le graphe manager ne relie jamais les jours masqués et ne les assimile pa
   assert.deepEqual(chartSegments([{ day: '2026-10-10', average: null }], 240, 216), []);
   assert.equal(visibleMean([]), null);
 });
+
+const { dialGeometry } = load('dialMath');
+test('La boule entière reste dans le SVG, notamment au sommet sur petit écran', () => {
+  for (const width of [180, 230, 280, 320, 342, 360]) {
+    for (const compact of [true, false]) {
+      const { radius, cx, cy, height } = dialGeometry(width, compact);
+      for (let step = 0; step <= 80; step++) {
+        const point = pointForValue(1 + step / 20, radius, cx, cy);
+        assert.ok(point.x - 17 >= 1.99 && point.x + 17 <= width - 1.99);
+        assert.ok(point.y - 17 >= 1.99 && point.y + 17 <= height - 1.99);
+      }
+    }
+  }
+});

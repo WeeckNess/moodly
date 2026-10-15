@@ -39,3 +39,13 @@ export function crossedStops(from: number, to: number): number[] {
   }
   return stops;
 }
+
+export function dialGeometry(width: number, compact: boolean) {
+  const cursorPadding = 19; // 17 px outer cursor radius, plus 2 px breathing room.
+  const radius = Math.min(width * 0.405, width / 2 - cursorPadding);
+  const cx = width / 2;
+  const cy = Math.max(width * 0.455, radius + cursorPadding);
+  const orbSize = (compact ? 106 : 126) * 1.25;
+  const height = Math.max(width * 0.84, cy + orbSize / 2 + 62);
+  return { radius, cx, cy, orbSize, height };
+}
