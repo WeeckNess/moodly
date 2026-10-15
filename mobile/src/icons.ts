@@ -29,3 +29,4 @@ export { ArrowsLeftRightIcon } from 'phosphor-react-native/src/icons/ArrowsLeftR
 export { EyeIcon } from 'phosphor-react-native/src/icons/Eye';
 export { TrashIcon } from 'phosphor-react-native/src/icons/Trash';
 export { CaretDownIcon } from 'phosphor-react-native/src/icons/CaretDown';
+export { CaretRightIcon } from 'phosphor-react-native/src/icons/CaretRight';
