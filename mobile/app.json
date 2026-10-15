@@ -5,14 +5,14 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "dark",
+    "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.moodly.eclaircie"
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#121615",
+        "backgroundColor": "#f2f4e9",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
@@ -24,6 +24,7 @@
     },
     "plugins": [
       "expo-secure-store"
-    ]
+    ],
+    "backgroundColor": "#f2f4e9"
   }
 }

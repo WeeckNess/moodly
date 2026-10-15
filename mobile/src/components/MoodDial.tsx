@@ -6,7 +6,7 @@ import { weathers } from '../weather';
 import Animated, { Easing, ReduceMotion, runOnJS, useAnimatedReaction, useAnimatedProps, useAnimatedStyle, useSharedValue, withSpring, withTiming, interpolateColor, type SharedValue } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { WeatherMorph } from './WeatherMorph';
-import { mono, moodPalette } from '../theme';
+import { colors as c, mono, moodPalette } from '../theme';
 import { continuousValueFromPoint, crossedStops, dialGeometry, pointForValue, sweepDuration, valueFromPoint } from '../dialMath';
 
 export const moodBackgrounds = moodPalette.backgrounds;
@@ -93,13 +93,13 @@ export function MoodDial({ score, onChange, motion, compact = false }: { score: 
       accessibilityActions={[{ name: 'increment', label: 'Aller vers très bien' }, { name: 'decrement', label: 'Aller vers très mal' }]}
       onAccessibilityAction={event => change(Math.max(1, Math.min(5, score + (event.nativeEvent.actionName === 'increment' ? 1 : -1))))}>
       <Svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`} pointerEvents="none">
-        <Defs><LinearGradient id="moodTrack" x1="0%" x2="100%" y1="0%" y2="0%"><Stop offset="0%" stopColor="#c5b2e5" /><Stop offset="45%" stopColor="#c0d5bc" /><Stop offset="100%" stopColor="#f2bd83" /></LinearGradient></Defs>
-        <Path d={path} fill="none" stroke="#ffffff" strokeOpacity={0.08} strokeWidth={26} strokeLinecap="round" />
+        <Defs><LinearGradient id="moodTrack" x1="0%" x2="100%" y1="0%" y2="0%"><Stop offset="0%" stopColor="#a78acd" /><Stop offset="45%" stopColor="#92b37e" /><Stop offset="100%" stopColor="#e8a16c" /></LinearGradient></Defs>
+        <Path d={path} fill="none" stroke={c.ink} strokeOpacity={0.08} strokeWidth={26} strokeLinecap="round" />
         <Path d={path} fill="none" stroke="url(#moodTrack)" strokeOpacity={0.75} strokeWidth={10} strokeLinecap="round" />
-        {weathers.map(w => { const p = pointForValue(w.score, radius, cx, cy); return <Circle key={w.score} cx={p.x} cy={p.y} r={3} fill="#26322d" opacity={0.55} />; })}
-        <ACircle animatedProps={thumbProps} r={17} fill="#f8f5e9" fillOpacity={0.17} />
-        <ACircle animatedProps={thumbProps} r={11} fill="#f8f5e9" />
-        <ACircle animatedProps={thumbProps} r={3} fill="#354134" />
+        {weathers.map(w => { const p = pointForValue(w.score, radius, cx, cy); return <Circle key={w.score} cx={p.x} cy={p.y} r={3} fill={c.ink} opacity={0.55} />; })}
+        <ACircle animatedProps={thumbProps} r={17} fill={c.text} fillOpacity={0.12} />
+        <ACircle animatedProps={thumbProps} r={11} fill={c.text} />
+        <ACircle animatedProps={thumbProps} r={3} fill={c.cream} />
       </Svg>
       <View pointerEvents="none" style={[styles.center, { top: cy - orbSize / 2, left: cx - orbSize / 2, width: orbSize }]}>
         <Animated.View style={[styles.orb, { width: orbSize, height: orbSize, borderRadius: orbSize / 2 }, orbStyle]}><WeatherMorph value={motion} size={(compact ? 65 : 78) * 1.25} /></Animated.View>
@@ -112,6 +112,6 @@ export function MoodDial({ score, onChange, motion, compact = false }: { score: 
 const styles = StyleSheet.create({
   wrapper: { width: '100%', maxWidth: 360, alignSelf: 'center' }, touchArea: { width: '100%' },
   center: { position: 'absolute', width: 130, alignItems: 'center' }, orb: { alignItems: 'center', justifyContent: 'center' },
-  value: { position: 'absolute', left: 0, alignItems: 'center', gap: 7 }, valueTitle: { color: '#f8f5e9', fontSize: 28, lineHeight: 34, fontWeight: '500', letterSpacing: -0.8 }, weatherName: { fontFamily: mono, color: '#d1d5c8', fontSize: 10, letterSpacing: 1.5 },
-  ends: { flexDirection: 'row', justifyContent: 'space-between', marginTop: -4, paddingHorizontal: 8 }, endButton: { minHeight: 44, minWidth: 72, justifyContent: 'center' }, endLabel: { color: '#deded0', fontSize: 12 },
+  value: { position: 'absolute', left: 0, alignItems: 'center', gap: 7 }, valueTitle: { color: c.text, fontSize: 28, lineHeight: 34, fontWeight: '500', letterSpacing: -0.8 }, weatherName: { fontFamily: mono, color: c.muted, fontSize: 10, letterSpacing: 1.5 },
+  ends: { flexDirection: 'row', justifyContent: 'space-between', marginTop: -4, paddingHorizontal: 8 }, endButton: { minHeight: 44, minWidth: 72, justifyContent: 'center' }, endLabel: { color: c.text, fontSize: 12 },
 });

@@ -8,7 +8,7 @@ const APath = Animated.createAnimatedComponent(Path);
 const AG = Animated.createAnimatedComponent(G);
 const ACircle = Animated.createAnimatedComponent(Circle);
 const AEllipse = Animated.createAnimatedComponent(Ellipse);
-const leafColors = ['#a8c28b', '#c5d89f', '#bed39a', '#92b47e', '#aac68a', '#cbdca6', '#d5e2b1'];
+const leafColors = ['#8aaa70', '#adc783', '#a2bd79', '#779d65', '#91b16f', '#b0c98d', '#bdcf98'];
 function Branch({ day, species, index }: { day: SharedValue<number>; species: SharedValue<number>; index: number }) {
   const props = useAnimatedProps(() => ({ d: branchPath(day.value, species.value, index), strokeWidth: mix(1, 3, ramp(day.value, 1, 24)), opacity: ramp(day.value, 0, 3) * (index >= 3 ? 1 - clamp(species.value - 1) : 1) }));
   return <APath animatedProps={props} stroke="#baa67c" fill="none" strokeLinecap="round" />;
@@ -29,7 +29,7 @@ function Grass({ day, breeze, index }: { day: SharedValue<number>; breeze: Share
 function GroundFlower({ day, breeze, index }: { day: SharedValue<number>; breeze: SharedValue<number>; index: number }) {
   const x = [64, 251, 95, 222, 43, 277][index], y = [214, 217, 210, 211, 220, 221][index];
   const props = useAnimatedProps(() => { const size = ramp(day.value, 18 + index * 9, 36 + index * 9); return { transform: `translate(${x} ${y}) rotate(${Math.sin(breeze.value + index) * 4}) scale(${size})`, opacity: size }; });
-  return <AG animatedProps={props}><Path d="M0 3 Q-2 -4 0 -13" fill="none" stroke="#a3bb81" strokeWidth={1.4} />{[0, 1, 2, 3, 4].map(petal => <Ellipse key={petal} cx={0} cy={-16} rx={2.5} ry={4} fill={index % 2 ? '#d7c5e9' : '#efe1ae'} transform={`rotate(${petal * 72} 0 -12)`} />)}<Circle cx={0} cy={-12} r={2} fill="#e2bc68" /></AG>;
+  return <AG animatedProps={props}><Path d="M0 3 Q-2 -4 0 -13" fill="none" stroke="#759b61" strokeWidth={1.4} />{[0, 1, 2, 3, 4].map(petal => <Ellipse key={petal} cx={0} cy={-16} rx={2.5} ry={4} fill={index % 2 ? '#b48bc8' : '#ecc85c'} transform={`rotate(${petal * 72} 0 -12)`} />)}<Circle cx={0} cy={-12} r={2} fill="#d6a341" /></AG>;
 }
 function OrchardFruit({ day, species, breeze, index }: { day: SharedValue<number>; species: SharedValue<number>; breeze: SharedValue<number>; index: number }) {
   const delay = index * 4;
@@ -41,7 +41,7 @@ function OrchardFruit({ day, species, breeze, index }: { day: SharedValue<number
   const texture = useAnimatedProps(() => { const size = gardenLife(day.value - delay).fruit; return { d: `M${-2 * size},${-3 * size} L${2 * size},0 L${-2 * size},${3 * size} M${2 * size},${-3 * size} L${-2 * size},0 L${2 * size},${3 * size}`, opacity: size * clamp(species.value - 1) * .6 }; });
   return <AG animatedProps={group}>
     <APath animatedProps={stem} stroke="#9f8f69" strokeWidth={1} fill="none" />
-    <AG animatedProps={blossom}>{[0, 1, 2, 3, 4].map(petal => <Ellipse key={petal} cx={0} cy={-3} rx={2.4} ry={4} fill="#eee0b9" transform={`rotate(${petal * 72})`} />)}<Circle r={2} fill="#dfbf75" /></AG>
+    <AG animatedProps={blossom}>{[0, 1, 2, 3, 4].map(petal => <Ellipse key={petal} cx={0} cy={-3} rx={2.4} ry={4} fill="#ffe8b1" transform={`rotate(${petal * 72})`} />)}<Circle r={2} fill="#dfbf75" /></AG>
     <APath animatedProps={fruit} /><APath animatedProps={cap} fill="#927851" /><APath animatedProps={texture} stroke="#715b43" strokeWidth={.8} fill="none" />
   </AG>;
 }
@@ -66,8 +66,8 @@ export function GrowingTree({ days, species, label }: { days: number; species: T
   const sun = useAnimatedProps(() => ({ opacity: .65 + .08 * Math.sin(breeze.value) }));
   return <View accessible accessibilityRole="image" accessibilityLabel={label}>
     <Svg width="100%" height={255} viewBox="0 0 320 255" pointerEvents="none" {...(Platform.OS === 'web' ? { 'aria-hidden': true } : { accessibilityElementsHidden: true })}>
-      <ACircle animatedProps={sun} cx={251} cy={49} r={20} fill="#edda8c" />
-      <Path d="M25 224 Q95 207 160 219 Q236 204 295 224" stroke="#a8b991" strokeWidth={1} fill="none" opacity={.5} />
+      <ACircle animatedProps={sun} cx={251} cy={49} r={20} fill="#f3c95f" />
+      <Path d="M25 224 Q95 207 160 219 Q236 204 295 224" stroke="#6c8662" strokeWidth={1} fill="none" opacity={.5} />
       {Array.from({ length: 19 }, (_, index) => <Grass key={index} day={progress} breeze={breeze} index={index} />)}
       <AEllipse animatedProps={seed} cx={160} cy={220} fill="#eedfa7" />
       <AG animatedProps={sway}>

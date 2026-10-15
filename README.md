@@ -52,7 +52,7 @@ Téléphone et PC doivent être sur le même réseau. Redémarrer Expo après mo
 
 ## Fonctionnalités livrées
 
-- Identité Éclaircie : fond sombre, grands titres, filets fins, accents sauge et jaune, cinq météos Phosphor.
+- Identité Éclaircie : fonds pastel lumineux, textes vert profond, grands titres, filets fins, accents sauge, jaune, lavande et pêche, cinq météos Phosphor.
 - Interface mobile et web simplifiée : météo et profil. Le profil regroupe la confidentialité et la déconnexion. La vue salarié ou manager est définie par Strapi, sans bascule de rôle côté client.
 - Connexion Strapi refaite : formulaire unique, affichage/masquage du mot de passe sans accès anonyme ; rôle et équipe résolus côté serveur.
 - JWT conservé dans le stockage sécurisé système sur mobile ; en mémoire uniquement sur le web. Expiration après 8 heures et suppression à la déconnexion.

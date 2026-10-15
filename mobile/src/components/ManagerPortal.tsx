@@ -23,7 +23,7 @@ export function ManagerPortal({ session, stats, loading, error, onRefresh, onPro
   const accent = useAnimatedStyle(() => ({ backgroundColor: interpolateColor(value.value, [1, 2, 3, 4, 5], moodPalette.accents) }));
   const formatted = mean === null ? '—' : mean.toFixed(1).replace('.', ',');
   const dates = stats?.data.length ? `${new Date(stats.data[0].day + 'T12:00:00Z').toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} — ${new Date(stats.data[stats.data.length - 1].day + 'T12:00:00Z').toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}` : '30 derniers jours';
-  return <Animated.View style={[s.root, background]}><StatusBar style="light" /><SafeAreaView style={s.safe}>
+  return <Animated.View style={[s.root, background]}><StatusBar style="dark" /><SafeAreaView style={s.safe}>
     <View style={s.layout}>
       {wide && <View style={s.sidebar}><BrandMark size={24} /><Text style={s.eyebrow}>ESPACE MANAGER</Text><Text style={s.team}>{session.team.name}</Text><Pressable accessibilityRole="button" onPress={onProfile} style={{ minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: 12 }}><UserCircleIcon size={24} color={c.text} /><Text style={s.body}>Mon profil</Text></Pressable><View style={{ flex: 1 }} /><View style={s.sidebarTrust}><ShieldCheckIcon size={23} color={c.text} /><Text style={s.body}>L’équipe se dessine.{ '\n' }Chacun reste anonyme dans cette vue.</Text></View></View>}
       <View style={s.main}>
@@ -63,7 +63,7 @@ const s = StyleSheet.create({
   body: { color: c.muted, fontSize: 13, lineHeight: 21 },
   caption: { color: c.muted, fontSize: 11, lineHeight: 17 },
   orb: { width: 110, height: 110, borderRadius: 55, alignItems: 'center', justifyContent: 'center' },
-  chartCard: { padding: 20, borderRadius: 24, backgroundColor: '#ffffff06', borderWidth: 1, borderColor: c.line, gap: 16 },
+  chartCard: { padding: 20, borderRadius: 24, backgroundColor: c.surface, borderWidth: 1, borderColor: c.line, gap: 16 },
   cardHeader: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 6 },
   refresh: { minHeight: 44, justifyContent: 'center' },
   refreshText: { fontSize: 11, color: c.text, textDecorationLine: 'underline' },
@@ -75,11 +75,11 @@ const s = StyleSheet.create({
   period: { color: c.muted, fontSize: 11 },
   trust: { paddingTop: 16, borderTopWidth: 1, borderColor: c.line, flexDirection: 'row', alignItems: 'flex-start', gap: 9 },
   state: { minHeight: 260, alignItems: 'center', justifyContent: 'center', gap: 22 },
-  error: { color: '#ffc1b6', fontSize: 13, lineHeight: 21, textAlign: 'center' },
+  error: { color: c.error, fontSize: 13, lineHeight: 21, textAlign: 'center' },
   retry: { minHeight: 48, paddingHorizontal: 22, borderRadius: 16, backgroundColor: c.accent, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 16 },
   retryText: { color: c.ink, fontSize: 13, fontWeight: '600' },
   empty: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  actionCard: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 20, borderRadius: 22, backgroundColor: '#ffffff06', borderWidth: 1, borderColor: c.line },
+  actionCard: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 20, borderRadius: 22, backgroundColor: c.surface, borderWidth: 1, borderColor: c.line },
   actionIcon: { width: 44, height: 44, borderRadius: 22, backgroundColor: c.sage, alignItems: 'center', justifyContent: 'center' },
   actionTitle: { color: c.text, fontSize: 17, lineHeight: 23, letterSpacing: -0.3 },
   disclaimer: { color: c.muted, fontSize: 11, lineHeight: 18, maxWidth: 560 }
