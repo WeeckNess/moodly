@@ -9,9 +9,12 @@ import { useReducedMotion } from './MoodDial';
 
 export function PersonalGarden({ profile, history, today }: { profile?: string; history: PersonalMood[]; today: string }) {
   const [count, setCount] = useState<number | null>(null);
+  const [previewCount, setPreviewCount] = useState<number | null>(null);
+  const [testing, setTesting] = useState(false);
+  const shownCount = previewCount ?? count;
   const [period, setPeriod] = useState<7 | 30>(7);
   const [error, setError] = useState(false);
-  const stage = growthStage(count ?? 0);
+  const stage = growthStage(shownCount ?? 0);
   const reduced = useReducedMotion();
   const growth = useRef(new Animated.Value(0.92)).current;
   useEffect(() => {
@@ -20,12 +23,20 @@ export function PersonalGarden({ profile, history, today }: { profile?: string; 
     if (profile) void readGrowth(profile).then(value => { if (active) setCount(value.count); }).catch(() => { if (active) setError(true); });
     return () => { active = false; };
   }, [profile, history]);
-  useEffect(() => { Animated.timing(growth, { toValue: 1, duration: reduced ? 0 : 800, useNativeDriver: true }).start(); }, [stage, reduced, growth]);
+  useEffect(() => { growth.stopAnimation(); growth.setValue(reduced ? 1 : 0.92); Animated.timing(growth, { toValue: 1, duration: reduced ? 0 : 800, useNativeDriver: true }).start(); }, [stage, reduced, growth]);
   const report = personalReport(history, today, period);
   return <>
     <View style={s.garden}>
       <View style={s.top}><Text style={s.kicker}>TON JARDIN INTÉRIEUR</Text><Text style={s.pill}>Personnel</Text></View>
-      <Animated.View accessible accessibilityRole="image" accessibilityLabel={`Ton arbre : ${['graine', 'pousse', 'jeune arbre', 'arbre en croissance', 'arbre épanoui'][stage]}. ${count ?? 0} journées partagées.`} style={{ alignItems: 'center', transform: [{ scale: growth }] }}>
+      {__DEV__ && <View style={s.testPanel}>
+        <Pressable accessibilityRole="button" accessibilityState={{ expanded: testing }} onPress={() => { setTesting(value => !value); setPreviewCount(null); }} style={s.testToggle}><Text style={s.tabText}>{testing ? 'Fermer les tests' : 'Tester l’évolution de l’arbre'}</Text></Pressable>
+        {testing && <>
+          <Text style={s.caption}>Prévisualisation temporaire · aucune journée ajoutée.</Text>
+          <View style={s.testSteps}>{[{ count: 0, label: 'Graine' }, { count: 1, label: 'Pousse' }, { count: 5, label: 'Jeune arbre' }, { count: 12, label: 'Croissance' }, { count: 24, label: 'Épanoui' }].map(step => <Pressable key={step.count} accessibilityRole="button" accessibilityLabel={`Tester l’arbre : ${step.label}`} accessibilityState={{ selected: previewCount === step.count }} onPress={() => setPreviewCount(step.count)} style={[s.testStep, previewCount === step.count && s.active]}><Text style={[s.tabText, previewCount === step.count && { color: c.ink }]}>{step.label}</Text><Text style={[s.caption, previewCount === step.count && { color: c.ink }]}>{step.count} j</Text></Pressable>)}</View>
+          <Pressable accessibilityRole="button" onPress={() => setPreviewCount(null)} style={s.testToggle}><Text style={s.linkText}>Revenir à mon arbre réel</Text></Pressable>
+        </>}
+      </View>}
+      <Animated.View accessible accessibilityRole="image" accessibilityLabel={`Ton arbre : ${['graine', 'pousse', 'jeune arbre', 'arbre en croissance', 'arbre épanoui'][stage]}. ${shownCount ?? 0} journées ${previewCount === null ? 'partagées' : 'simulées'}.`} style={{ alignItems: 'center', transform: [{ scale: growth }] }}>
         <Svg width="100%" height={205} viewBox="0 0 320 205">
           <Circle cx={243} cy={43} r={22} fill="#edda8c" opacity={0.7} />
           <Path d="M25 183 Q95 164 160 179 Q236 160 295 183" stroke="#a8b991" strokeWidth={1} fill="none" opacity={0.6} />
@@ -41,8 +52,9 @@ export function PersonalGarden({ profile, history, today }: { profile?: string; 
         </Svg>
       </Animated.View>
       <Text accessibilityRole="header" style={s.title}>{['Tout commence ici.', 'Une pousse, à ton rythme.', 'Tes repères prennent racine.', 'Un peu plus de place pour toi.', 'Ton arbre continue son chemin.'][stage]}</Text>
-      <Text style={s.body}>{error ? 'Ton arbre n’a pas pu être chargé. Réouvre ton profil pour réessayer.' : count === null ? 'Ton jardin arrive…' : `${count} journée${count > 1 ? 's' : ''} partagée${count > 1 ? 's' : ''}. Chaque météo compte, de l’orage au soleil.`}</Text>
+      <Text style={s.body}>{previewCount !== null ? `Aperçu à ${previewCount} journée${previewCount > 1 ? 's' : ''}. Ta progression réelle reste inchangée.` : error ? 'Ton arbre n’a pas pu être chargé. Réouvre ton profil pour réessayer.' : count === null ? 'Ton jardin arrive…' : `${count} journée${count > 1 ? 's' : ''} partagée${count > 1 ? 's' : ''}. Chaque météo compte, de l’orage au soleil.`}</Text>
       <Text style={s.caption}>Aucun objectif, aucune série à maintenir. Ton arbre ne régresse pas lors d’une pause. {Platform.OS === 'web' ? 'Sur le web, il reste dans cette session.' : 'Il grandit sur cet appareil, sans partager sa progression.'}</Text>
+
     </View>
     <View style={s.report}>
       <Text style={s.kicker}>PRENDRE DU RECUL</Text>
@@ -57,4 +69,4 @@ export function PersonalGarden({ profile, history, today }: { profile?: string; 
     </View>
   </>;
 }
-const s = StyleSheet.create({ garden: { borderRadius: 26, backgroundColor: '#ffffff06', borderWidth: 1, borderColor: c.line, padding: 22, gap: 12 }, top: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }, kicker: { fontFamily: mono, fontSize: 9, letterSpacing: 1.2, color: c.muted }, pill: { fontSize: 9, color: c.muted, borderWidth: 1, borderColor: c.line, borderRadius: 20, padding: 7 }, title: { color: c.text, fontSize: 24, lineHeight: 29, letterSpacing: -0.6 }, subtitle: { fontSize: 14, color: c.text }, body: { color: c.muted, fontSize: 13, lineHeight: 21 }, caption: { color: c.dim, fontSize: 11, lineHeight: 17 }, report: { gap: 16, padding: 22, borderRadius: 26, borderWidth: 1, borderColor: c.line }, tabs: { flexDirection: 'row', gap: 8 }, tab: { minHeight: 44, paddingHorizontal: 20, borderRadius: 22, justifyContent: 'center', backgroundColor: '#ffffff08' }, active: { backgroundColor: c.sage }, tabText: { fontSize: 12, color: c.text }, average: { fontSize: 40, color: c.text, letterSpacing: -1 }, tagRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 12, borderTopWidth: 1, borderColor: c.line, paddingTop: 10 } });
+const s = StyleSheet.create({ testPanel: { gap: 12, borderTopWidth: 1, borderColor: c.line, paddingTop: 12 }, testToggle: { minHeight: 44, justifyContent: 'center' }, testSteps: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 }, testStep: { minHeight: 58, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 16, gap: 4, justifyContent: 'center', backgroundColor: '#ffffff08' }, linkText: { color: c.sage, fontSize: 12 }, garden: { borderRadius: 26, backgroundColor: '#ffffff06', borderWidth: 1, borderColor: c.line, padding: 22, gap: 12 }, top: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }, kicker: { fontFamily: mono, fontSize: 9, letterSpacing: 1.2, color: c.muted }, pill: { fontSize: 9, color: c.muted, borderWidth: 1, borderColor: c.line, borderRadius: 20, padding: 7 }, title: { color: c.text, fontSize: 24, lineHeight: 29, letterSpacing: -0.6 }, subtitle: { fontSize: 14, color: c.text }, body: { color: c.muted, fontSize: 13, lineHeight: 21 }, caption: { color: c.dim, fontSize: 11, lineHeight: 17 }, report: { gap: 16, padding: 22, borderRadius: 26, borderWidth: 1, borderColor: c.line }, tabs: { flexDirection: 'row', gap: 8 }, tab: { minHeight: 44, paddingHorizontal: 20, borderRadius: 22, justifyContent: 'center', backgroundColor: '#ffffff08' }, active: { backgroundColor: c.sage }, tabText: { fontSize: 12, color: c.text }, average: { fontSize: 40, color: c.text, letterSpacing: -1 }, tagRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 12, borderTopWidth: 1, borderColor: c.line, paddingTop: 10 } });
