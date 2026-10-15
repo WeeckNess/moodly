@@ -3,17 +3,17 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View, useWi
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import Animated, { interpolateColor, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
-import { ArrowRightIcon, ArrowUpRightIcon, ChatsCircleIcon, EyeSlashIcon, ShieldCheckIcon, SignOutIcon } from '../icons';
+import { ArrowRightIcon, ChatsCircleIcon, EyeSlashIcon, ShieldCheckIcon, UserCircleIcon } from '../icons';
 import { colors as c, mono, moodPalette } from '../theme';
 import type { Session, TeamStats } from '../strapi';
 import { visibleMean } from '../chartGeometry';
 import { BrandMark } from './BrandMark';
 import { MoodChart } from './MoodChart';
-import { PortalNavigation, type PortalPage } from './PortalNavigation';
+import { HeaderActions } from './HeaderActions';
 import { WeatherMorph } from './WeatherMorph';
 
-type Props = { session: Session; stats: TeamStats | null; loading: boolean; error: string; demo: boolean; onRefresh: () => void; onNavigate: (page: PortalPage) => void; onLogout: () => void; onDemo: () => void };
-export function ManagerPortal({ session, stats, loading, error, demo, onRefresh, onNavigate, onLogout, onDemo }: Props) {
+type Props = { session: Session; stats: TeamStats | null; loading: boolean; error: string; demo: boolean; onRefresh: () => void; onProfile: () => void; onHelp: () => void; onDemo: () => void };
+export function ManagerPortal({ session, stats, loading, error, demo, onRefresh, onProfile, onHelp, onDemo }: Props) {
   const { width } = useWindowDimensions();
   const wide = width >= 960, small = width < 400;
   const mean = stats ? visibleMean(stats.data) : null;
@@ -25,9 +25,9 @@ export function ManagerPortal({ session, stats, loading, error, demo, onRefresh,
   const dates = stats?.data.length ? `${new Date(stats.data[0].day + 'T12:00:00Z').toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} — ${new Date(stats.data[stats.data.length - 1].day + 'T12:00:00Z').toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}` : '30 derniers jours';
   return <Animated.View style={[s.root, background]}><StatusBar style="light" /><SafeAreaView style={s.safe}>
     <View style={s.layout}>
-      {wide && <View style={s.sidebar}><BrandMark size={24} /><Text style={s.eyebrow}>ESPACE MANAGER</Text><Text style={s.team}>{session.team.name}</Text><PortalNavigation manager page="home" vertical onNavigate={onNavigate} /><View style={{ flex: 1 }} /><View style={s.sidebarTrust}><ShieldCheckIcon size={23} color={c.text} /><Text style={s.body}>L’équipe se dessine.{ '\n' }Chacun reste anonyme dans cette vue.</Text></View></View>}
+      {wide && <View style={s.sidebar}><BrandMark size={24} /><Text style={s.eyebrow}>ESPACE MANAGER</Text><Text style={s.team}>{session.team.name}</Text><Pressable accessibilityRole="button" onPress={onProfile} style={{ minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: 12 }}><UserCircleIcon size={24} color={c.text} /><Text style={s.body}>Mon profil</Text></Pressable><View style={{ flex: 1 }} /><View style={s.sidebarTrust}><ShieldCheckIcon size={23} color={c.text} /><Text style={s.body}>L’équipe se dessine.{ '\n' }Chacun reste anonyme dans cette vue.</Text></View></View>}
       <View style={s.main}>
-        <View style={s.header}>{wide ? <Text style={s.eyebrow}>LA MÉTÉO DU COLLECTIF</Text> : <BrandMark />}<View style={s.headerActions}>{demo && <Pressable accessibilityRole="button" accessibilityLabel="Démo collaborateur" onPress={onDemo} style={s.demo}><Text style={s.demoText}>DÉMO</Text><ArrowUpRightIcon size={13} color={c.text} /></Pressable>}<Pressable accessibilityRole="button" accessibilityLabel="Mes données et confidentialité" onPress={() => onNavigate('privacy')} style={s.icon}><ShieldCheckIcon size={20} color={c.text} /></Pressable><Pressable accessibilityRole="button" accessibilityLabel="Se déconnecter" onPress={onLogout} style={s.icon}><SignOutIcon size={20} color={c.text} /></Pressable></View></View>
+        <View style={s.header}>{wide ? <Text style={s.eyebrow}>LA MÉTÉO DU COLLECTIF</Text> : <BrandMark />}<HeaderActions demo={demo} manager onSwitch={onDemo} onProfile={onProfile} /></View>
         <ScrollView contentContainerStyle={[s.content, small && { paddingHorizontal: 20, gap: 20 }]}>
           <View style={s.hero}><View style={{ flex: 1, gap: 12 }}><Text style={s.eyebrow}>01 / LE COLLECTIF</Text><Text accessibilityRole="header" style={[s.title, small && { fontSize: 30, lineHeight: 35 }]}>La météo{ '\n' }de l’équipe.</Text><Text style={s.body}>{session.team.name}</Text></View><Animated.View style={[s.orb, accent]}>{mean === null || loading || error ? <ShieldCheckIcon size={44} color={c.ink} /> : <WeatherMorph value={value} size={73} />}</Animated.View></View>
           {demo && <Text style={s.demoNotice}>Démonstration · Toutes les données sont fictives.</Text>}
@@ -41,12 +41,48 @@ export function ManagerPortal({ session, stats, loading, error, demo, onRefresh,
               <View style={s.trust}><ShieldCheckIcon size={16} color={c.muted} /><Text style={[s.caption, { flex: 1 }]}>{stats.meta.maskedDays} jour{stats.meta.maskedDays > 1 ? 's' : ''} masqué{stats.meta.maskedDays > 1 ? 's' : ''} ou sans données. Une moyenne apparaît à partir de {stats.meta.threshold} réponses.</Text></View>
             </> : <View style={s.state}><Text style={s.body}>La météo collective est indisponible.</Text><Pressable accessibilityRole="button" onPress={onRefresh} style={s.retry}><Text style={s.retryText}>Charger la météo</Text></Pressable></View>}
           </View>
-          <Pressable accessibilityRole="button" accessibilityLabel="Ouvrir le guide pour agir ensemble" onPress={() => onNavigate('guide')} style={({ pressed }) => [s.actionCard, pressed && { opacity: 0.8 }]}><View style={s.actionIcon}><ChatsCircleIcon size={24} color={c.ink} /></View><View style={{ flex: 1, gap: 7 }}><Text style={s.actionTitle}>Une éclaircie se construit ensemble.</Text><Text style={s.body}>Ouvre la discussion, puis choisissez une petite action concrète.</Text></View><ArrowRightIcon size={20} color={c.text} /></Pressable>
+          <Pressable accessibilityRole="button" accessibilityLabel="Ouvrir le guide pour agir ensemble" onPress={onHelp} style={({ pressed }) => [s.actionCard, pressed && { opacity: 0.8 }]}><View style={s.actionIcon}><ChatsCircleIcon size={24} color={c.ink} /></View><View style={{ flex: 1, gap: 7 }}><Text style={s.actionTitle}>Une éclaircie se construit ensemble.</Text><Text style={s.body}>Ouvre la discussion, puis choisissez une petite action concrète.</Text></View><ArrowRightIcon size={20} color={c.text} /></Pressable>
           <Text style={s.disclaimer}>Un ressenti collectif, à écouter avec l’équipe. Aucune réponse individuelle ni liste de participants dans ce portail.</Text>
         </ScrollView>
-        {!wide && <View style={s.nav}><PortalNavigation page="home" manager onNavigate={onNavigate} /></View>}
       </View>
     </View>
   </SafeAreaView></Animated.View>;
 }
-const s = StyleSheet.create({ root: { flex: 1 }, safe: { flex: 1 }, layout: { flex: 1, flexDirection: 'row' }, main: { flex: 1, minWidth: 0 }, sidebar: { width: 250, padding: 24, gap: 26, borderRightWidth: 1, borderColor: c.line }, sidebarTrust: { gap: 12 }, team: { color: c.text, fontSize: 14, lineHeight: 22, marginTop: -12 }, header: { height: 68, paddingHorizontal: 22, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }, headerActions: { flexDirection: 'row', alignItems: 'center', gap: 2 }, icon: { width: 40, minHeight: 44, alignItems: 'center', justifyContent: 'center' }, demo: { flexDirection: 'row', alignItems: 'center', gap: 3, minHeight: 44, paddingHorizontal: 5 }, demoText: { fontFamily: mono, fontSize: 9, color: c.text, letterSpacing: 0.8 }, content: { width: '100%', maxWidth: 980, alignSelf: 'center', padding: 28, paddingTop: 20, paddingBottom: 32, gap: 24 }, hero: { flexDirection: 'row', alignItems: 'center', gap: 16 }, eyebrow: { fontFamily: mono, color: c.muted, fontSize: 10, lineHeight: 17, letterSpacing: 1.3 }, title: { fontSize: 39, lineHeight: 44, letterSpacing: -1.2, fontWeight: '500', color: c.text }, body: { color: c.muted, fontSize: 13, lineHeight: 21 }, caption: { color: c.muted, fontSize: 11, lineHeight: 17 }, orb: { width: 110, height: 110, borderRadius: 55, alignItems: 'center', justifyContent: 'center' }, demoNotice: { color: c.muted, fontSize: 10, lineHeight: 16, marginTop: -10 }, chartCard: { padding: 20, borderRadius: 24, backgroundColor: '#ffffff06', borderWidth: 1, borderColor: c.line, gap: 16 }, cardHeader: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 6 }, refresh: { minHeight: 44, justifyContent: 'center' }, refreshText: { fontSize: 11, color: c.text, textDecorationLine: 'underline' }, metrics: { flexDirection: 'row', alignItems: 'center', gap: 12 }, mean: { fontSize: 46, fontWeight: '500', letterSpacing: -1.7, color: c.text }, unit: { fontSize: 17, color: c.muted, letterSpacing: 0 }, participation: { paddingLeft: 16, borderLeftWidth: 1, borderColor: c.line, gap: 8 }, percentage: { fontSize: 25, letterSpacing: -0.7, color: c.text }, period: { color: c.muted, fontSize: 11 }, trust: { paddingTop: 16, borderTopWidth: 1, borderColor: c.line, flexDirection: 'row', alignItems: 'flex-start', gap: 9 }, state: { minHeight: 260, alignItems: 'center', justifyContent: 'center', gap: 22 }, error: { color: '#ffc1b6', fontSize: 13, lineHeight: 21, textAlign: 'center' }, retry: { minHeight: 48, paddingHorizontal: 22, borderRadius: 16, backgroundColor: c.accent, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 16 }, retryText: { color: c.ink, fontSize: 13, fontWeight: '600' }, empty: { flexDirection: 'row', alignItems: 'center', gap: 12 }, actionCard: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 20, borderRadius: 22, backgroundColor: '#ffffff06', borderWidth: 1, borderColor: c.line }, actionIcon: { width: 44, height: 44, borderRadius: 22, backgroundColor: c.sage, alignItems: 'center', justifyContent: 'center' }, actionTitle: { color: c.text, fontSize: 17, lineHeight: 23, letterSpacing: -0.3 }, disclaimer: { color: c.muted, fontSize: 11, lineHeight: 18, maxWidth: 560 }, nav: { borderTopWidth: 1, borderColor: c.line, paddingHorizontal: 16, paddingVertical: 8 } });
+const s = StyleSheet.create({
+  root: { flex: 1 },
+  safe: { flex: 1 },
+  layout: { flex: 1, flexDirection: 'row' },
+  main: { flex: 1, minWidth: 0 },
+  sidebar: { width: 250, padding: 24, gap: 26, borderRightWidth: 1, borderColor: c.line },
+  sidebarTrust: { gap: 12 },
+  team: { color: c.text, fontSize: 14, lineHeight: 22, marginTop: -12 },
+  header: { height: 68, paddingHorizontal: 22, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  content: { width: '100%', maxWidth: 980, alignSelf: 'center', padding: 28, paddingTop: 20, paddingBottom: 32, gap: 24 },
+  hero: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+  eyebrow: { fontFamily: mono, color: c.muted, fontSize: 10, lineHeight: 17, letterSpacing: 1.3 },
+  title: { fontSize: 39, lineHeight: 44, letterSpacing: -1.2, fontWeight: '500', color: c.text },
+  body: { color: c.muted, fontSize: 13, lineHeight: 21 },
+  caption: { color: c.muted, fontSize: 11, lineHeight: 17 },
+  orb: { width: 110, height: 110, borderRadius: 55, alignItems: 'center', justifyContent: 'center' },
+  demoNotice: { color: c.muted, fontSize: 10, lineHeight: 16, marginTop: -10 },
+  chartCard: { padding: 20, borderRadius: 24, backgroundColor: '#ffffff06', borderWidth: 1, borderColor: c.line, gap: 16 },
+  cardHeader: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 6 },
+  refresh: { minHeight: 44, justifyContent: 'center' },
+  refreshText: { fontSize: 11, color: c.text, textDecorationLine: 'underline' },
+  metrics: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  mean: { fontSize: 46, fontWeight: '500', letterSpacing: -1.7, color: c.text },
+  unit: { fontSize: 17, color: c.muted, letterSpacing: 0 },
+  participation: { paddingLeft: 16, borderLeftWidth: 1, borderColor: c.line, gap: 8 },
+  percentage: { fontSize: 25, letterSpacing: -0.7, color: c.text },
+  period: { color: c.muted, fontSize: 11 },
+  trust: { paddingTop: 16, borderTopWidth: 1, borderColor: c.line, flexDirection: 'row', alignItems: 'flex-start', gap: 9 },
+  state: { minHeight: 260, alignItems: 'center', justifyContent: 'center', gap: 22 },
+  error: { color: '#ffc1b6', fontSize: 13, lineHeight: 21, textAlign: 'center' },
+  retry: { minHeight: 48, paddingHorizontal: 22, borderRadius: 16, backgroundColor: c.accent, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 16 },
+  retryText: { color: c.ink, fontSize: 13, fontWeight: '600' },
+  empty: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  actionCard: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 20, borderRadius: 22, backgroundColor: '#ffffff06', borderWidth: 1, borderColor: c.line },
+  actionIcon: { width: 44, height: 44, borderRadius: 22, backgroundColor: c.sage, alignItems: 'center', justifyContent: 'center' },
+  actionTitle: { color: c.text, fontSize: 17, lineHeight: 23, letterSpacing: -0.3 },
+  disclaimer: { color: c.muted, fontSize: 11, lineHeight: 18, maxWidth: 560 }
+});

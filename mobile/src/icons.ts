@@ -24,3 +24,8 @@ export { WrenchIcon } from 'phosphor-react-native/src/icons/Wrench';
 export { BookOpenIcon } from 'phosphor-react-native/src/icons/BookOpen';
 export { PlusCircleIcon } from 'phosphor-react-native/src/icons/PlusCircle';
 export { XIcon } from 'phosphor-react-native/src/icons/X';
+export { UserCircleIcon } from 'phosphor-react-native/src/icons/UserCircle';
+export { ArrowsLeftRightIcon } from 'phosphor-react-native/src/icons/ArrowsLeftRight';
+export { EyeIcon } from 'phosphor-react-native/src/icons/Eye';
+export { TrashIcon } from 'phosphor-react-native/src/icons/Trash';
+export { CaretDownIcon } from 'phosphor-react-native/src/icons/CaretDown';

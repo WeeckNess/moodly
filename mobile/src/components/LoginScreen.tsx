@@ -1,0 +1,28 @@
+import { useState } from 'react';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
+import { ArrowRightIcon, EyeIcon, EyeSlashIcon, SunIcon } from '../icons';
+import { BrandMark } from './BrandMark';
+import { colors as c } from '../theme';
+type Props = { identifier: string; password: string; onIdentifier: (value: string) => void; onPassword: (value: string) => void; onLogin: () => void; onDemo: () => void; busy: boolean; error: string };
+export function LoginScreen(props: Props) {
+  const { height } = useWindowDimensions();
+  const compact = height < 700;
+  const [showPassword, setShowPassword] = useState(false);
+  return <SafeAreaView style={s.safe}><StatusBar style="light" /><KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}><ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={[s.scroll, compact && { paddingVertical: 16, gap: 24 }]}>
+    <View style={s.brand}><BrandMark size={24} /></View>
+    <View style={[s.content, compact && { gap: 22 }]}>
+      <View style={[s.intro, compact && { gap: 12 }]}>{!compact && <View style={s.sun}><SunIcon size={62} color={c.ink} weight="duotone" /></View>}<Text accessibilityRole="header" style={[s.title, compact && { fontSize: 34, lineHeight: 38 }]}>Un moment{ '\n' }pour toi.</Text><Text style={s.description}>Connecte-toi à ton espace Éclaircie.</Text></View>
+      <View style={s.form}>
+        <View style={s.field}><Text style={s.label}>Ton adresse professionnelle</Text><TextInput accessibilityLabel="Adresse e-mail" value={props.identifier} onChangeText={props.onIdentifier} placeholder="toi@entreprise.fr" placeholderTextColor={c.dim} autoCapitalize="none" autoCorrect={false} autoComplete="email" keyboardType="email-address" textContentType="username" style={s.input} /></View>
+        <View style={s.field}><Text style={s.label}>Ton mot de passe</Text><View style={s.passwordRow}><TextInput accessibilityLabel="Mot de passe" value={props.password} onChangeText={props.onPassword} placeholder="Mot de passe" placeholderTextColor={c.dim} autoCapitalize="none" autoCorrect={false} autoComplete="current-password" textContentType="password" secureTextEntry={!showPassword} returnKeyType="go" onSubmitEditing={props.onLogin} style={[s.input, { flex: 1, borderWidth: 0 }]} /><Pressable accessibilityRole="button" accessibilityLabel={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'} onPress={() => setShowPassword(value => !value)} style={s.eye}>{showPassword ? <EyeSlashIcon size={21} color={c.muted} /> : <EyeIcon size={21} color={c.muted} />}</Pressable></View></View>
+        {props.error ? <Text accessibilityRole="alert" style={s.error}>{props.error}</Text> : null}
+        <Pressable accessibilityRole="button" accessibilityLabel="Me connecter" disabled={props.busy} onPress={props.onLogin} style={({ pressed }) => [s.primary, (props.busy || pressed) && { opacity: 0.7 }]}><Text style={s.primaryText}>Me connecter</Text>{props.busy ? <ActivityIndicator size="small" color={c.ink} /> : <ArrowRightIcon size={20} color={c.ink} />}</Pressable>
+        <Pressable accessibilityRole="button" accessibilityLabel="Découvrir l’app en démo" disabled={props.busy} onPress={props.onDemo} style={s.demo}><Text style={s.demoText}>Découvrir l’app</Text><Text style={s.demoHint}>Démo · aucun compte nécessaire</Text></Pressable>
+      </View>
+    </View>
+    <Text style={s.footer}>Ton ressenti a sa place, chaque jour.</Text>
+  </ScrollView></KeyboardAvoidingView></SafeAreaView>;
+}
+const s = StyleSheet.create({ safe: { flex: 1, backgroundColor: c.background }, scroll: { flexGrow: 1, paddingHorizontal: 24, paddingVertical: 28, gap: 36, alignItems: 'center', justifyContent: 'space-between' }, brand: { alignSelf: 'center' }, content: { width: '100%', maxWidth: 360, gap: 30 }, intro: { alignItems: 'center', gap: 18 }, sun: { width: 108, height: 108, borderRadius: 54, backgroundColor: c.yellow, justifyContent: 'center', alignItems: 'center' }, title: { fontSize: 42, lineHeight: 46, letterSpacing: -1.5, color: c.text, fontWeight: '500', textAlign: 'center' }, description: { fontSize: 14, lineHeight: 21, color: c.muted, textAlign: 'center' }, form: { gap: 18 }, field: { gap: 9 }, label: { fontSize: 12, color: c.muted }, input: { minHeight: 54, paddingHorizontal: 16, paddingVertical: 14, backgroundColor: '#ffffff05', borderWidth: 1, borderColor: c.line, borderRadius: 16, fontSize: 15, color: c.text }, passwordRow: { flexDirection: 'row', alignItems: 'center', borderRadius: 16, borderWidth: 1, borderColor: c.line, overflow: 'hidden', backgroundColor: '#ffffff05' }, eye: { minHeight: 52, minWidth: 48, alignItems: 'center', justifyContent: 'center' }, primary: { minHeight: 54, borderRadius: 18, paddingHorizontal: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: c.accent, marginTop: 4 }, primaryText: { fontSize: 14, fontWeight: '600', color: c.ink }, demo: { minHeight: 52, alignItems: 'center', justifyContent: 'center', gap: 5 }, demoText: { color: c.text, fontSize: 13 }, demoHint: { color: c.dim, fontSize: 10 }, error: { color: '#ffc1b6', fontSize: 12, lineHeight: 18 }, footer: { color: c.dim, fontSize: 11, lineHeight: 18, textAlign: 'center' } });

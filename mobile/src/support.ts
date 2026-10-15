@@ -17,3 +17,10 @@ export async function recordPrivateMood(profileKey: string, day: string, score: 
   return result.shouldPrompt;
 }
 export function clearSupportMemory() { memory.clear(); }
+
+export async function clearPrivateSupport(profileKey: string, demo: boolean) {
+  const key = `eclaircie.support.${profileKey}`;
+  if (demo) await AsyncStorage.removeItem(key);
+  else if (Platform.OS !== 'web') await SecureStore.deleteItemAsync(key);
+  memory.delete(key);
+}

@@ -47,3 +47,7 @@ La validation navigateur ne remplace pas un test Android/iOS sur téléphone ré
 ## Revue de la DA et du portail manager
 
 Voir [revue-da.md](revue-da.md) pour les corrections, les parcours vérifiés, les formats d’écran et les limites de la validation du 14 octobre 2026.
+
+## Profil personnel — 15 octobre 2026
+
+Douze tests mobiles couvrent désormais également le calendrier, la rétention à trente jours, la tendance sur sept jours, l’isolation des comptes, les adaptateurs de stockage simulés et l’effacement des exemples de démo. La validation navigateur couvre la connexion des deux rôles, la carte du jour après une saisie de démo, l’absence du brouillon libre dans le récap et l’absence d’exemples dans un compte réel. Voir [profil-personnel.md](profil-personnel.md). Les adaptateurs simulés ne constituent pas un test sur téléphone réel.

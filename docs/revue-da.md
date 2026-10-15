@@ -1,5 +1,7 @@
 # Revue Éclaircie — 14 octobre 2026
 
+Cette revue décrit la version du 14 octobre. La connexion et la navigation ont ensuite été simplifiées le 15 octobre : voir [profil-personnel.md](profil-personnel.md).
+
 ## Résultat
 
 La connexion, la saisie collaborateur, le portail manager, le guide et la confidentialité partagent maintenant la DA Éclaircie : marque identique, tons météo, texte crème, surfaces arrondies, icônes Phosphor et navigation cohérente. La saisie reste en deux écrans et son curseur conserve son mouvement continu, son morphing et ses vibrations.

@@ -2,9 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Animated as NativeAnimated, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { ArrowLeftIcon, ArrowRightIcon, ArrowUpRightIcon, CheckIcon, CheckCircleIcon, PlusCircleIcon, ShieldCheckIcon, SignOutIcon, XIcon, ChatsCircleIcon } from '../icons';
+import { ArrowLeftIcon, ArrowRightIcon, ArrowUpRightIcon, CheckIcon, CheckCircleIcon, PlusCircleIcon, ShieldCheckIcon, XIcon, ChatsCircleIcon } from '../icons';
 import { moodTags, weathers } from '../weather';
-import Animated, { interpolateColor, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
+import Animated, { cancelAnimation, interpolateColor, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import { HeaderActions } from './HeaderActions';
 import { BrandMark } from './BrandMark';
 import { mono } from '../theme';
 import { MoodDial, moodAccents, moodBackgrounds, useReducedMotion, WeatherMorph } from './MoodDial';
@@ -13,7 +14,7 @@ type Props = {
   score: number | null; onScore: (score: number) => void; tags: string[]; onTags: (tags: string[]) => void;
   submitted: boolean; sentNow: boolean; demo: boolean; busy: boolean; error: string;
   supportPrompt: boolean; onDismissSupport: () => void;
-  onSubmit: () => void; onPrivacy: () => void; onLogout: () => void; onDemoManager: () => void; onReplay: () => void;
+  onSubmit: () => void; onProfile: () => void; onDemoManager: () => void; onReplay: () => void;
 };
 const INPUT = [1, 2, 3, 4, 5];
 export function MoodFlow(props: Props) {
@@ -41,7 +42,12 @@ export function MoodFlow(props: Props) {
   }, [done]);
   useEffect(() => { setPrepareMessage(false); }, [supportVisible]);
   function go(next: 'mood' | 'reasons') {
-    if (next === 'reasons') props.onScore(Math.round(motion.value));
+    if (next === 'reasons') {
+      const chosen = Math.round(motion.value);
+      cancelAnimation(motion);
+      motion.value = withTiming(chosen, { duration: reduced ? 0 : 160 });
+      props.onScore(chosen);
+    }
     setStep(next);
     entrance.setValue(reduced ? 1 : 0);
     NativeAnimated.timing(entrance, { toValue: 1, duration: reduced ? 0 : 280, useNativeDriver: true }).start();
@@ -55,10 +61,7 @@ export function MoodFlow(props: Props) {
     <StatusBar style="light" /><SafeAreaView style={styles.safe}>
       <View style={[styles.header, compact && { height: 54 }]}>
         <BrandMark />
-        <View style={styles.headerActions}>{props.demo && <Pressable accessibilityRole="button" accessibilityLabel="Démo manager" onPress={props.onDemoManager} style={styles.demoBadge}><Text style={styles.demoText}>DÉMO</Text><ArrowUpRightIcon color="#e7e4d9" size={13} /></Pressable>}
-          <Pressable accessibilityRole="button" accessibilityLabel="Mes données et confidentialité" onPress={props.onPrivacy} style={styles.iconButton}><ShieldCheckIcon size={20} color="#e7e4d9" /></Pressable>
-          <Pressable accessibilityRole="button" accessibilityLabel="Se déconnecter" onPress={props.onLogout} style={styles.iconButton}><SignOutIcon size={19} color="#e7e4d9" /></Pressable>
-        </View>
+        <HeaderActions disabled={props.busy} demo={props.demo} onSwitch={props.onDemoManager} onProfile={props.onProfile} />
       </View>
       <NativeAnimated.View style={[styles.body, { maxWidth: width >= 660 ? 520 : 430, opacity: entrance, transform: [{ translateY: entrance.interpolate({ inputRange: [0, 1], outputRange: [12, 0] }) }] }]}>
         {done ? <View style={styles.done}>
@@ -67,7 +70,7 @@ export function MoodFlow(props: Props) {
           <Pressable accessibilityRole="button" style={styles.supportLink} onPress={() => setManualSupport(true)}><ChatsCircleIcon size={19} color="#e9e6d9" /><Text style={styles.supportLinkText}>Besoin d’en parler ?</Text></Pressable>
           {props.demo && <Pressable accessibilityRole="button" onPress={replay} style={styles.replay}><Text style={styles.secondaryText}>Rejouer la démo</Text></Pressable>}
         </View> : step === 'mood' ? <>
-          <View style={[styles.intro, compact && { paddingTop: 5, gap: 8 }]}><Text style={styles.eyebrow}>01 / TA MÉTÉO</Text><Text accessibilityRole="header" style={[styles.title, compact && { fontSize: tiny ? 26 : 29, lineHeight: tiny ? 31 : 34 }]}>À l’intérieur,{ '\n' }quel temps fait-il ?</Text></View>
+          <View style={[styles.intro, compact && { paddingTop: 5, gap: 8 }]}><Text style={styles.eyebrow}>{props.demo ? 'DÉMO / TA MÉTÉO' : '01 / TA MÉTÉO'}</Text><Text accessibilityRole="header" style={[styles.title, compact && { fontSize: tiny ? 26 : 29, lineHeight: tiny ? 31 : 34 }]}>À l’intérieur,{ '\n' }quel temps fait-il ?</Text></View>
           <View style={[styles.dialSpace, tiny && { minHeight: 230 }]}><Text style={styles.gestureHint}>{weathers[(props.score ?? 3) - 1].message}</Text><View style={{ width: '100%', maxWidth: tiny ? 230 : compact ? 280 : 350 }}><MoodDial compact={compact} score={props.score ?? 3} onChange={props.onScore} motion={motion} /></View></View>
           <View style={styles.bottom}><Pressable accessibilityRole="button" accessibilityLabel="Continuer vers les raisons" onPress={() => go('reasons')} style={styles.primary}><Text style={styles.primaryText}>Continuer</Text><ArrowRightIcon size={21} color="#27352c" /></Pressable><Text style={styles.footnote}>Volontaire · Sans nom sur ta réponse</Text></View>
         </> : <>
@@ -92,11 +95,50 @@ export function MoodFlow(props: Props) {
   </Animated.View>;
 }
 const styles = StyleSheet.create({
-  background: { flex: 1 }, safe: { flex: 1 }, header: { height: 68, paddingHorizontal: 22, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }, brand: { flexDirection: 'row', gap: 7, alignItems: 'center' }, brandText: { fontSize: 22, letterSpacing: -1, fontWeight: '600', color: '#f6f2e7' }, headerActions: { flexDirection: 'row', gap: 2, alignItems: 'center' }, iconButton: { width: 40, height: 44, alignItems: 'center', justifyContent: 'center' }, demoBadge: { flexDirection: 'row', gap: 3, alignItems: 'center', minHeight: 44, paddingHorizontal: 5 }, demoText: { fontFamily: mono, fontSize: 9, letterSpacing: 0.8, color: '#e7e4d9' },
-  body: { flex: 1, width: '100%', alignSelf: 'center', paddingHorizontal: 24 }, intro: { paddingTop: 22, gap: 16 }, eyebrow: { fontFamily: mono, fontSize: 10, letterSpacing: 1.7, color: '#c5cec1', textAlign: 'center' }, title: { color: '#f8f5e9', fontSize: 35, lineHeight: 41, fontWeight: '500', letterSpacing: -1.1, textAlign: 'center' }, dialSpace: { flex: 1, justifyContent: 'center', alignItems: 'center', minHeight: 280, gap: 6 }, gestureHint: { minHeight: 44, maxWidth: 340, lineHeight: 21.25, paddingHorizontal: 8, fontSize: 15, color: '#c5cec1', textAlign: 'center' },
-  bottom: { paddingBottom: 18, gap: 12, paddingTop: 12 }, primary: { backgroundColor: '#f0f0dd', minHeight: 54, borderRadius: 18, paddingHorizontal: 22, paddingVertical: 15, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 14 }, primaryText: { color: '#27352c', fontSize: 14, fontWeight: '600', flexShrink: 1 }, footnote: { fontSize: 10, lineHeight: 15, color: '#c5cec1', textAlign: 'center' }, stepHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }, back: { width: 40, height: 40, justifyContent: 'center' }, smallOrb: { width: 36, height: 36, borderRadius: 20, alignItems: 'center', justifyContent: 'center' }, optional: { fontSize: 12, color: '#c5cec1', textAlign: 'center' },
-  reasonSpace: { flex: 1, justifyContent: 'center', gap: 14, paddingVertical: 14 }, reasonGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 }, reason: { width: '48%', flexGrow: 1, minHeight: 76, borderRadius: 16, padding: 14, flexDirection: 'row', alignItems: 'center', gap: 10, borderWidth: 1, borderColor: '#ffffff29', backgroundColor: '#ffffff05' }, reasonSelected: { backgroundColor: '#ffffff15', borderColor: '#e4e9d3' }, reasonText: { fontSize: 12, color: '#eeeadd', flexShrink: 1 }, addReason: { minHeight: 78, borderWidth: 1, borderStyle: 'dashed', borderColor: '#ffffff50', borderRadius: 16, flexDirection: 'row', alignItems: 'center', gap: 13, padding: 15 }, privateLabel: { color: '#c5cec1', fontSize: 10, lineHeight: 16 },
-  done: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 23, paddingBottom: 40 }, doneOrb: { width: 132, height: 132, borderRadius: 70, alignItems: 'center', justifyContent: 'center', marginBottom: 8 }, doneTitle: { fontSize: 34, letterSpacing: -1.2, color: '#f8f5e9', textAlign: 'center' }, doneBody: { fontSize: 14, lineHeight: 24, textAlign: 'center', color: '#d1d8ca' }, supportLink: { minHeight: 46, flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 18, borderWidth: 1, borderColor: '#ffffff35', borderRadius: 25 }, supportLinkText: { color: '#e9e6d9', fontSize: 13 }, replay: { minHeight: 44, alignItems: 'center', justifyContent: 'center' }, secondaryText: { fontSize: 12, color: '#c5cec1', textDecorationLine: 'underline' },
+  background: { flex: 1 },
+  safe: { flex: 1 },
+  header: { height: 68, paddingHorizontal: 22, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  iconButton: { width: 40, height: 44, alignItems: 'center', justifyContent: 'center' },
+  body: { flex: 1, width: '100%', alignSelf: 'center', paddingHorizontal: 24 },
+  intro: { paddingTop: 22, gap: 16 },
+  eyebrow: { fontFamily: mono, fontSize: 10, letterSpacing: 1.7, color: '#c5cec1', textAlign: 'center' },
+  title: { color: '#f8f5e9', fontSize: 35, lineHeight: 41, fontWeight: '500', letterSpacing: -1.1, textAlign: 'center' },
+  dialSpace: { flex: 1, justifyContent: 'center', alignItems: 'center', minHeight: 280, gap: 6 },
+  gestureHint: { minHeight: 44, maxWidth: 340, lineHeight: 21.25, paddingHorizontal: 8, fontSize: 15, color: '#c5cec1', textAlign: 'center' },
+  bottom: { paddingBottom: 18, gap: 12, paddingTop: 12 },
+  primary: { backgroundColor: '#f0f0dd', minHeight: 54, borderRadius: 18, paddingHorizontal: 22, paddingVertical: 15, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 14 },
+  primaryText: { color: '#27352c', fontSize: 14, fontWeight: '600', flexShrink: 1 },
+  footnote: { fontSize: 10, lineHeight: 15, color: '#c5cec1', textAlign: 'center' },
+  stepHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  back: { width: 40, height: 40, justifyContent: 'center' },
+  smallOrb: { width: 36, height: 36, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  optional: { fontSize: 12, color: '#c5cec1', textAlign: 'center' },
+  reasonSpace: { flex: 1, justifyContent: 'center', gap: 14, paddingVertical: 14 },
+  reasonGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  reason: { width: '48%', flexGrow: 1, minHeight: 76, borderRadius: 16, padding: 14, flexDirection: 'row', alignItems: 'center', gap: 10, borderWidth: 1, borderColor: '#ffffff29', backgroundColor: '#ffffff05' },
+  reasonSelected: { backgroundColor: '#ffffff15', borderColor: '#e4e9d3' },
+  reasonText: { fontSize: 12, color: '#eeeadd', flexShrink: 1 },
+  addReason: { minHeight: 78, borderWidth: 1, borderStyle: 'dashed', borderColor: '#ffffff50', borderRadius: 16, flexDirection: 'row', alignItems: 'center', gap: 13, padding: 15 },
+  privateLabel: { color: '#c5cec1', fontSize: 10, lineHeight: 16 },
+  done: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 23, paddingBottom: 40 },
+  doneOrb: { width: 132, height: 132, borderRadius: 70, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
+  doneTitle: { fontSize: 34, letterSpacing: -1.2, color: '#f8f5e9', textAlign: 'center' },
+  doneBody: { fontSize: 14, lineHeight: 24, textAlign: 'center', color: '#d1d8ca' },
+  supportLink: { minHeight: 46, flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 18, borderWidth: 1, borderColor: '#ffffff35', borderRadius: 25 },
+  supportLinkText: { color: '#e9e6d9', fontSize: 13 },
+  replay: { minHeight: 44, alignItems: 'center', justifyContent: 'center' },
+  secondaryText: { fontSize: 12, color: '#c5cec1', textDecorationLine: 'underline' },
   modalScroll: { flexGrow: 1, justifyContent: 'center', padding: 20 },
-  overlay: { flex: 1, backgroundColor: '#07110be0', justifyContent: 'center', padding: 20 }, sheet: { backgroundColor: '#202923', borderRadius: 24, padding: 24, gap: 20, width: '100%', maxWidth: 440, alignSelf: 'center', borderWidth: 1, borderColor: '#3b473d' }, sheetHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }, sheetKicker: { fontFamily: mono, fontSize: 10, letterSpacing: 1.5, color: '#c5cec1' }, sheetTitle: { fontSize: 28, lineHeight: 34, color: '#f8f5e9', letterSpacing: -0.7 }, sheetBody: { fontSize: 13, lineHeight: 21, color: '#ccd4c6' }, noteInput: { borderWidth: 1, borderColor: '#53614f', borderRadius: 13, minHeight: 96, textAlignVertical: 'top', color: '#f3f0e3', fontSize: 16, lineHeight: 23, padding: 14, backgroundColor: '#18201a' }, counter: { fontFamily: mono, fontSize: 10, color: '#b3c0ac', textAlign: 'right', marginTop: -10 }, privacyNote: { flexDirection: 'row', gap: 9, alignItems: 'flex-start' }, privacyNoteText: { flex: 1, fontSize: 11, lineHeight: 18, color: '#c5cec1' }, message: { color: '#f1efdf', fontSize: 14, lineHeight: 23, backgroundColor: '#18201a', padding: 16, borderRadius: 13 }, error: { fontSize: 12, lineHeight: 18, color: '#ffc1b6' },
+  overlay: { flex: 1, backgroundColor: '#07110be0', justifyContent: 'center', padding: 20 },
+  sheet: { backgroundColor: '#202923', borderRadius: 24, padding: 24, gap: 20, width: '100%', maxWidth: 440, alignSelf: 'center', borderWidth: 1, borderColor: '#3b473d' },
+  sheetHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  sheetKicker: { fontFamily: mono, fontSize: 10, letterSpacing: 1.5, color: '#c5cec1' },
+  sheetTitle: { fontSize: 28, lineHeight: 34, color: '#f8f5e9', letterSpacing: -0.7 },
+  sheetBody: { fontSize: 13, lineHeight: 21, color: '#ccd4c6' },
+  noteInput: { borderWidth: 1, borderColor: '#53614f', borderRadius: 13, minHeight: 96, textAlignVertical: 'top', color: '#f3f0e3', fontSize: 16, lineHeight: 23, padding: 14, backgroundColor: '#18201a' },
+  counter: { fontFamily: mono, fontSize: 10, color: '#b3c0ac', textAlign: 'right', marginTop: -10 },
+  privacyNote: { flexDirection: 'row', gap: 9, alignItems: 'flex-start' },
+  privacyNoteText: { flex: 1, fontSize: 11, lineHeight: 18, color: '#c5cec1' },
+  message: { color: '#f1efdf', fontSize: 14, lineHeight: 23, backgroundColor: '#18201a', padding: 16, borderRadius: 13 },
+  error: { fontSize: 12, lineHeight: 18, color: '#ffc1b6' }
 });
