@@ -1,6 +1,8 @@
 import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import { advanceGrowth, retainPersonalMoods, type Growth, type PersonalMood } from './personalHistoryLogic';
+import { isTreeSpecies, type TreeSpecies } from './treeGeometry';
+const speciesMemory = new Map<string, TreeSpecies>();
 const growthMemory = new Map<string, Growth>();
 const memory = new Map<string, PersonalMood[]>();
 const keyFor = (profile: string) => `eclaircie.history.${profile}`;
@@ -46,11 +48,22 @@ export async function clearPersonalHistory(profile: string, today: string) {
   for (const entry of entries) await remove(`${key}.${entry.day}`);
   await write(key, '[]'); memory.delete(key);
   await remove(`${key}.growth`); growthMemory.delete(key);
+  await remove(`${key}.species`); speciesMemory.delete(key);
 }
-export function clearPersonalMemory() { memory.clear(); growthMemory.clear(); }
+export function clearPersonalMemory() { memory.clear(); growthMemory.clear(); speciesMemory.clear(); }
 export async function readGrowth(profile: string): Promise<Growth> {
   const key = keyFor(profile);
   const stored = await read(`${key}.growth`);
   if (stored) { try { const parsed = JSON.parse(stored); if (Number.isSafeInteger(parsed.count) && parsed.count >= 0 && (parsed.lastDay === null || /^\d{4}-\d{2}-\d{2}$/.test(parsed.lastDay))) return parsed; } catch {} }
   return growthMemory.get(key) ?? { count: 0, lastDay: null };
+}
+
+export async function readTreeSpecies(profile: string): Promise<TreeSpecies> {
+  const key = keyFor(profile), stored = await read(`${key}.species`);
+  return isTreeSpecies(stored) ? stored : speciesMemory.get(key) ?? 'oak';
+}
+export async function saveTreeSpecies(profile: string, species: TreeSpecies) {
+  if (!isTreeSpecies(species)) throw new Error('Essence inconnue');
+  const key = keyFor(profile);
+  await write(`${key}.species`, species); speciesMemory.set(key, species);
 }

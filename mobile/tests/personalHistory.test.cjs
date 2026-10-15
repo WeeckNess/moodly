@@ -11,11 +11,12 @@ function load(name, modules = {}) {
   return module.exports;
 }
 const logic = load('personalHistoryLogic');
+const trees = load('treeGeometry');
 function harness(os) {
   const secure = new Map(), plain = new Map();
   const store = data => ({ getItem: async key => data.get(key) ?? null, setItem: async (key, value) => { data.set(key, value); }, removeItem: async key => { data.delete(key); } });
   const secureAdapter = store(secure);
-  const api = load('personalHistory', { 'react-native': { Platform: { OS: os } }, 'expo-secure-store': { getItemAsync: secureAdapter.getItem, setItemAsync: secureAdapter.setItem, deleteItemAsync: secureAdapter.removeItem }, '@react-native-async-storage/async-storage': { __esModule: true, default: store(plain) }, './personalHistoryLogic': logic });
+  const api = load('personalHistory', { 'react-native': { Platform: { OS: os } }, 'expo-secure-store': { getItemAsync: secureAdapter.getItem, setItemAsync: secureAdapter.setItem, deleteItemAsync: secureAdapter.removeItem }, '@react-native-async-storage/async-storage': { __esModule: true, default: store(plain) }, './personalHistoryLogic': logic, './treeGeometry': trees });
   return { api, secure, plain };
 }
 test('Un seul souvenir par jour, trente jours maximum, sans commentaire libre', () => {
@@ -80,4 +81,29 @@ test('L’arbre grandit une fois par jour, sans régresser après une pause ou u
   await api.clearPersonalHistory('garden', '2026-12-01');
   assert.equal((await api.readGrowth('garden')).count, 0);
   assert.deepEqual([0, 1, 5, 12, 24, 100].map(logic.growthStage), [0, 1, 2, 3, 4, 4]);
+});
+test('Les contours des arbres gardent une topologie stable et une croissance continue', () => {
+  const numbers = path => path.match(/-?\d+(?:\.\d+)?(?:e[+-]?\d+)?/gi).map(Number);
+  for (let species = 0; species <= 2; species += .25) for (const day of [0, .5, 1, 4.9, 5, 12, 24, 60]) for (let leaf = 0; leaf < 7; leaf++) {
+    const path = trees.canopyPath(day, species, leaf);
+    assert.equal((path.match(/Q/g) ?? []).length, 48);
+    assert.ok(numbers(path).every(Number.isFinite));
+    const before = numbers(trees.canopyPath(Math.max(0, day - .0001), species, leaf));
+    const after = numbers(trees.canopyPath(day + .0001, species, leaf));
+    assert.ok(before.every((value, i) => Math.abs(value - after[i]) < .1));
+  }
+  assert.notEqual(trees.canopyPath(24, 0, 0), trees.canopyPath(24, 1, 0));
+  assert.notEqual(trees.canopyPath(24, 1, 0), trees.canopyPath(24, 2, 0));
+  assert.ok(trees.trunkHeight(1, 0) > 30);
+});
+test('Le choix d’essence est privé, conservé sur mobile et supprimé avec le jardin', async () => {
+  const { api } = harness('ios');
+  assert.equal(await api.readTreeSpecies('a'), 'oak');
+  await api.saveTreeSpecies('a', 'willow');
+  api.clearPersonalMemory();
+  assert.equal(await api.readTreeSpecies('a'), 'willow');
+  assert.equal(await api.readTreeSpecies('b'), 'oak');
+  await assert.rejects(() => api.saveTreeSpecies('a', 'invalid'));
+  await api.clearPersonalHistory('a', '2026-10-15');
+  assert.equal(await api.readTreeSpecies('a'), 'oak');
 });
