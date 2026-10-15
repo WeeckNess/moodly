@@ -69,6 +69,10 @@ Téléphone et PC doivent être sur le même réseau. Redémarrer Expo après mo
 - Confidentialité, aide et déconnexion regroupées dans le profil, sans les anciennes pages ni barre d’onglets. Effacement local du récap et du compteur privé après confirmation.
 - Purge des réponses et journaux après 45 jours par défaut, au démarrage et quotidiennement à 3 h, avec conservation séparée des agrégats.
 
+## Rapports et accompagnement
+
+Le profil contient un arbre personnel qui grandit au fil des journées partagées, des rapports journaliers et des bilans glissants sur 7 et 30 jours. Les professionnels et services d’accompagnement se configurent dans Strapi, par équipe, sans transmettre automatiquement les moods. Voir [la configuration et les règles de confidentialité](docs/rapports-jardin-accompagnement.md).
+
 ## Structure
 
 ```text

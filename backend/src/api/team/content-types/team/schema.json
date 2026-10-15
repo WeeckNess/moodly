@@ -18,6 +18,11 @@
       "type": "relation",
       "relation": "manyToOne",
       "target": "plugin::users-permissions.user"
+    },
+    "supportContacts": {
+      "type": "component",
+      "repeatable": true,
+      "component": "support.contact"
     }
   }
 }

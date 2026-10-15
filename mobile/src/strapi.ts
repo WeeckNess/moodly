@@ -1,7 +1,8 @@
 import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 export type Role = 'collaborateur' | 'manager';
-export type Session = { name: string; role: Role; team: { name: string }; submitted: boolean; day: string; privateSupportKey?: string };
+export type SupportContact = { name: string; kind: 'psychologue' | 'prevention' | 'manager' | 'autre'; qualification?: string; details?: string; email?: string; phone?: string; bookingUrl?: string };
+export type Session = { name: string; role: Role; team: { name: string; supportContacts?: SupportContact[] }; submitted: boolean; day: string; privateSupportKey?: string };
 export type DailyStat = { day: string; average: number | null };
 export type TeamStats = { data: DailyStat[]; meta: { team: string; threshold: number; participation: number | null; maskedDays: number } };
 export class ApiError extends Error {

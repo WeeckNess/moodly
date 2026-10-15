@@ -61,3 +61,23 @@ test('Un nouveau profil reste vide et l’effacement ne recrée aucune donnée',
   api.clearPersonalMemory();
   assert.deepEqual(await api.readPersonalHistory('account-a', '2026-10-15'), []);
 });
+test('Les rapports ignorent les jours vides et comptent une raison une fois par journée', () => {
+  const entries = [{ day: '2026-10-15', score: 2, tags: ['Charge', 'Charge'] }, { day: '2026-10-14', score: 4, tags: ['Charge', 'Ambiance'] }, { day: '2026-10-01', score: 5, tags: ['Ambiance'] }];
+  assert.deepEqual(logic.personalReport(entries, '2026-10-15', 7), { count: 2, average: 3, tags: [['Charge', 2], ['Ambiance', 1]] });
+  assert.equal(logic.personalReport(entries, '2026-10-15', 30).count, 3);
+  assert.equal(logic.personalReport([], '2026-10-15', 7).average, null);
+});
+test('L’arbre grandit une fois par jour, sans régresser après une pause ou une purge', async () => {
+  const { api } = harness('ios');
+  await api.savePersonalMood('garden', { day: '2026-10-01', score: 1, tags: [] }, '2026-10-01');
+  await api.savePersonalMood('garden', { day: '2026-10-01', score: 5, tags: [] }, '2026-10-01');
+  assert.equal((await api.readGrowth('garden')).count, 1);
+  await api.savePersonalMood('garden', { day: '2026-10-15', score: 1, tags: [] }, '2026-10-15');
+  api.clearPersonalMemory();
+  await api.readPersonalHistory('garden', '2026-12-01');
+  assert.equal((await api.readGrowth('garden')).count, 2);
+  assert.deepEqual(await api.readGrowth('other'), { count: 0, lastDay: null });
+  await api.clearPersonalHistory('garden', '2026-12-01');
+  assert.equal((await api.readGrowth('garden')).count, 0);
+  assert.deepEqual([0, 1, 5, 12, 24, 100].map(logic.growthStage), [0, 1, 2, 3, 4, 4]);
+});

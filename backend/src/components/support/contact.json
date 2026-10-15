@@ -1,0 +1,38 @@
+{
+  "collectionName": "components_support_contacts",
+  "info": {
+    "displayName": "Contact d’accompagnement"
+  },
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true
+    },
+    "kind": {
+      "type": "enumeration",
+      "enum": [
+        "psychologue",
+        "prevention",
+        "manager",
+        "autre"
+      ],
+      "required": true
+    },
+    "qualification": {
+      "type": "string"
+    },
+    "details": {
+      "type": "text"
+    },
+    "email": {
+      "type": "email"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "bookingUrl": {
+      "type": "string",
+      "regex": "^https://"
+    }
+  }
+}

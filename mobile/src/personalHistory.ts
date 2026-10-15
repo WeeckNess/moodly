@@ -1,6 +1,7 @@
 import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
-import { retainPersonalMoods, type PersonalMood } from './personalHistoryLogic';
+import { advanceGrowth, retainPersonalMoods, type Growth, type PersonalMood } from './personalHistoryLogic';
+const growthMemory = new Map<string, Growth>();
 const memory = new Map<string, PersonalMood[]>();
 const keyFor = (profile: string) => `eclaircie.history.${profile}`;
 const read = (key: string) => Platform.OS === 'web' ? Promise.resolve(null) : SecureStore.getItemAsync(key);
@@ -32,6 +33,10 @@ export async function savePersonalMood(profile: string, entry: PersonalMood, tod
   if (!normalized) throw new Error('Météo personnelle invalide');
   await write(`${key}.${entry.day}`, JSON.stringify(normalized));
   await write(key, JSON.stringify(entries.map(value => value.day)));
+  const previousGrowth = await readGrowth(profile);
+  const growth = advanceGrowth(previousGrowth, entry.day);
+  await write(`${key}.growth`, JSON.stringify(growth));
+  growthMemory.set(key, growth);
   memory.set(key, entries);
   return entries;
 }
@@ -40,5 +45,12 @@ export async function clearPersonalHistory(profile: string, today: string) {
   const key = keyFor(profile);
   for (const entry of entries) await remove(`${key}.${entry.day}`);
   await write(key, '[]'); memory.delete(key);
+  await remove(`${key}.growth`); growthMemory.delete(key);
 }
-export function clearPersonalMemory() { memory.clear(); }
+export function clearPersonalMemory() { memory.clear(); growthMemory.clear(); }
+export async function readGrowth(profile: string): Promise<Growth> {
+  const key = keyFor(profile);
+  const stored = await read(`${key}.growth`);
+  if (stored) { try { const parsed = JSON.parse(stored); if (Number.isSafeInteger(parsed.count) && parsed.count >= 0 && (parsed.lastDay === null || /^\d{4}-\d{2}-\d{2}$/.test(parsed.lastDay))) return parsed; } catch {} }
+  return growthMemory.get(key) ?? { count: 0, lastDay: null };
+}

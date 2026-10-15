@@ -14,7 +14,7 @@ type Props = {
   score: number | null; onScore: (score: number) => void; tags: string[]; onTags: (tags: string[]) => void;
   submitted: boolean; sentNow: boolean; busy: boolean; error: string;
   supportPrompt: boolean; onDismissSupport: () => void;
-  onSubmit: () => void; onProfile: () => void;
+  onSubmit: () => void; onProfile: () => void; onSupport: () => void;
 };
 const INPUT = [1, 2, 3, 4, 5];
 export function MoodFlow(props: Props) {
@@ -84,7 +84,8 @@ export function MoodFlow(props: Props) {
       <View style={[styles.overlay, { padding: 0 }]}><ScrollView contentContainerStyle={styles.modalScroll}><View style={styles.sheet} accessibilityViewIsModal role="dialog" aria-modal={true}><View style={styles.sheetHeader}><ChatsCircleIcon size={30} color="#d8eda0" weight="duotone" /><Pressable accessibilityRole="button" accessibilityLabel="Fermer l’invitation à échanger" onPress={dismissSupport} style={styles.iconButton}><XIcon color="#eae7dd" size={21} /></Pressable></View><Text accessibilityRole="header" style={styles.sheetTitle}>{prepareMessage ? 'Un premier pas.' : 'Tu peux en parler.'}</Text>
         <Text style={styles.sheetBody}>{prepareMessage ? 'Voici un message que tu peux copier et adapter. Tu choisis à qui le transmettre.' : props.supportPrompt ? 'Tu as partagé trois météos « Très mal » sur des jours distincts au cours des 30 derniers jours. Si tu le souhaites, tu peux demander un temps d’échange avec ton manager ou une personne de confiance.' : 'Si tu en ressens le besoin, tu peux demander un temps d’échange avec ton manager ou une personne de confiance.'}</Text>
         {prepareMessage ? <Text selectable style={styles.message}>Bonjour, j’aimerais prendre un moment pour échanger sur mon ressenti au travail et sur ce qui pourrait m’aider. Serais-tu disponible pour en parler ?</Text> : <View style={styles.privacyNote}><ShieldCheckIcon size={18} color="#cedebd" /><Text style={styles.privacyNoteText}>Invitation privée. Aucune alerte ni réponse individuelle n’est envoyée à ton manager.</Text></View>}
-        <Pressable accessibilityRole="button" style={styles.primary} onPress={() => prepareMessage ? dismissSupport() : setPrepareMessage(true)}><Text style={styles.primaryText}>{prepareMessage ? 'Fermer' : 'Préparer un échange'}</Text><ArrowUpRightIcon color="#27352c" size={19} /></Pressable>{!prepareMessage && <Pressable accessibilityRole="button" onPress={dismissSupport} style={styles.replay}><Text style={styles.secondaryText}>Pas maintenant</Text></Pressable>}
+        <Pressable accessibilityRole="button" style={styles.primary} onPress={() => { dismissSupport(); props.onSupport(); }}><Text style={styles.primaryText}>Trouver un accompagnement</Text><ArrowUpRightIcon color="#27352c" size={19} /></Pressable>
+        <Pressable accessibilityRole="button" style={styles.replay} onPress={() => prepareMessage ? dismissSupport() : setPrepareMessage(true)}><Text style={styles.secondaryText}>{prepareMessage ? 'Fermer' : 'Préparer un échange'}</Text><ArrowUpRightIcon color="#27352c" size={19} /></Pressable>{!prepareMessage && <Pressable accessibilityRole="button" onPress={dismissSupport} style={styles.replay}><Text style={styles.secondaryText}>Pas maintenant</Text></Pressable>}
       </View></ScrollView></View>
     </Modal>
   </Animated.View>;

@@ -5,7 +5,7 @@ const query = (uid: string) => strapi.db.query(uid as any);
 async function getMember(ctx: any) {
   if (!ctx.state.user) { ctx.unauthorized('Connexion requise.'); return null; }
   const user = await query('plugin::users-permissions.user').findOne({
-    where: { id: ctx.state.user.id }, populate: ['role', 'team'],
+    where: { id: ctx.state.user.id }, populate: { role: true, team: { populate: ['supportContacts'] } },
   });
   if (!user || user.blocked || !user.team || !['collaborateur', 'manager'].includes(user.role?.type)) {
     ctx.forbidden('Votre compte doit être affecté à une équipe et un rôle Moodly.'); return null;
@@ -17,7 +17,7 @@ export default {
     const user = await getMember(ctx); if (!user) return;
     const day = today();
     const log = await query('api::submission-log.submission-log').findOne({ where: { user: user.id, day } });
-    ctx.body = { data: { name: user.username, role: user.role.type, team: { name: user.team.name }, submitted: Boolean(log), day, privateSupportKey: createHmac('sha256', process.env.JWT_SECRET!).update(`private-support:${user.id}`).digest('hex') } };
+    ctx.body = { data: { name: user.username, role: user.role.type, team: { name: user.team.name, supportContacts: (user.team.supportContacts ?? []).map((contact: any) => ({ name: contact.name, kind: contact.kind, qualification: contact.qualification, details: contact.details, email: contact.email, phone: contact.phone, bookingUrl: contact.bookingUrl })) }, submitted: Boolean(log), day, privateSupportKey: createHmac('sha256', process.env.JWT_SECRET!).update(`private-support:${user.id}`).digest('hex') } };
   },
   async create(ctx: any) {
     const user = await getMember(ctx); if (!user) return;
