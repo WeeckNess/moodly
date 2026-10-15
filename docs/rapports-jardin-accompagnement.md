@@ -8,7 +8,7 @@ Une météo enregistrée avec succès sur cet appareil ajoute une journée au ja
 
 Le compteur ne baisse pas lors d’une pause ni lorsque les souvenirs de plus de 30 jours sont purgés. Il conserve seulement un total et la dernière date comptabilisée. Une même journée ne compte pas deux fois. Aucun historique antérieur n’est inventé. Le compteur est privé, propre au compte et à l’appareil ; stockage sécurisé sur mobile, mémoire de session sur web. Effacer le récap efface également l’arbre et le compteur d’accompagnement. Aucun transfert au manager.
 
-Dans Expo en développement, « Tester l’évolution de l’arbre » permet de prévisualiser les cinq étapes puis de revenir à son arbre réel. Ces boutons ne modifient pas le stockage et ne sont pas inclus dans l’interface de production.
+Dans le profil salarié, les commandes « + 1 jour », « + 7 jours » et « Étape suivante » sont toujours visibles pour explorer la croissance. Les cinq étapes sont aussi sélectionnables directement. La simulation est temporaire, sans écriture dans le stockage ni effet sur les rapports. « Revenir à mon arbre réel » restaure immédiatement la progression personnelle.
 
 ## Rapports
 

@@ -10,7 +10,6 @@ import { useReducedMotion } from './MoodDial';
 export function PersonalGarden({ profile, history, today }: { profile?: string; history: PersonalMood[]; today: string }) {
   const [count, setCount] = useState<number | null>(null);
   const [previewCount, setPreviewCount] = useState<number | null>(null);
-  const [testing, setTesting] = useState(false);
   const shownCount = previewCount ?? count;
   const [period, setPeriod] = useState<7 | 30>(7);
   const [error, setError] = useState(false);
@@ -28,14 +27,16 @@ export function PersonalGarden({ profile, history, today }: { profile?: string; 
   return <>
     <View style={s.garden}>
       <View style={s.top}><Text style={s.kicker}>TON JARDIN INTÉRIEUR</Text><Text style={s.pill}>Personnel</Text></View>
-      {__DEV__ && <View style={s.testPanel}>
-        <Pressable accessibilityRole="button" accessibilityState={{ expanded: testing }} onPress={() => { setTesting(value => !value); setPreviewCount(null); }} style={s.testToggle}><Text style={s.tabText}>{testing ? 'Fermer les tests' : 'Tester l’évolution de l’arbre'}</Text></Pressable>
-        {testing && <>
-          <Text style={s.caption}>Prévisualisation temporaire · aucune journée ajoutée.</Text>
-          <View style={s.testSteps}>{[{ count: 0, label: 'Graine' }, { count: 1, label: 'Pousse' }, { count: 5, label: 'Jeune arbre' }, { count: 12, label: 'Croissance' }, { count: 24, label: 'Épanoui' }].map(step => <Pressable key={step.count} accessibilityRole="button" accessibilityLabel={`Tester l’arbre : ${step.label}`} accessibilityState={{ selected: previewCount === step.count }} onPress={() => setPreviewCount(step.count)} style={[s.testStep, previewCount === step.count && s.active]}><Text style={[s.tabText, previewCount === step.count && { color: c.ink }]}>{step.label}</Text><Text style={[s.caption, previewCount === step.count && { color: c.ink }]}>{step.count} j</Text></Pressable>)}</View>
-          <Pressable accessibilityRole="button" onPress={() => setPreviewCount(null)} style={s.testToggle}><Text style={s.linkText}>Revenir à mon arbre réel</Text></Pressable>
-        </>}
-      </View>}
+      <View style={s.testPanel}>
+        <Text style={s.subtitle}>Explorer l’évolution de mon arbre</Text>
+        <Text style={s.caption}>Ajoute des jours simulés pour voir la croissance. Tes rapports et ta progression réelle ne changent pas.</Text>
+        <View style={s.testSteps}>
+          {[1, 7].map(days => <Pressable key={days} accessibilityRole="button" accessibilityLabel={`Simuler ${days} jour${days > 1 ? 's' : ''} de plus`} onPress={() => setPreviewCount(value => (value ?? count ?? 0) + days)} style={[s.testStep, s.active]}><Text style={[s.tabText, { color: c.ink }]}>+ {days} jour{days > 1 ? 's' : ''}</Text></Pressable>)}
+          <Pressable accessibilityRole="button" accessibilityLabel="Voir la prochaine étape de l’arbre" disabled={stage === 4} onPress={() => setPreviewCount([1, 5, 12, 24][stage])} style={[s.testStep, stage === 4 && { opacity: 0.4 }]}><Text style={s.tabText}>Étape suivante</Text></Pressable>
+        </View>
+        <View style={s.testSteps}>{[{ count: 0, label: 'Graine' }, { count: 1, label: 'Pousse' }, { count: 5, label: 'Jeune arbre' }, { count: 12, label: 'Croissance' }, { count: 24, label: 'Épanoui' }].map(step => <Pressable key={step.count} accessibilityRole="button" accessibilityLabel={`Tester l’arbre : ${step.label}`} accessibilityState={{ selected: previewCount === step.count }} onPress={() => setPreviewCount(step.count)} style={[s.testStep, previewCount === step.count && s.active]}><Text style={[s.tabText, previewCount === step.count && { color: c.ink }]}>{step.label}</Text><Text style={[s.caption, previewCount === step.count && { color: c.ink }]}>{step.count} j</Text></Pressable>)}</View>
+        {previewCount !== null && <Pressable accessibilityRole="button" onPress={() => setPreviewCount(null)} style={s.testToggle}><Text style={s.linkText}>Revenir à mon arbre réel</Text></Pressable>}
+      </View>
       <Animated.View accessible accessibilityRole="image" accessibilityLabel={`Ton arbre : ${['graine', 'pousse', 'jeune arbre', 'arbre en croissance', 'arbre épanoui'][stage]}. ${shownCount ?? 0} journées ${previewCount === null ? 'partagées' : 'simulées'}.`} style={{ alignItems: 'center', transform: [{ scale: growth }] }}>
         <Svg width="100%" height={205} viewBox="0 0 320 205">
           <Circle cx={243} cy={43} r={22} fill="#edda8c" opacity={0.7} />
