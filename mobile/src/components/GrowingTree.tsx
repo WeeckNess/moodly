@@ -1,3 +1,4 @@
+import { svgTransform } from '../svgTransform';
 import { haptics } from '../haptics';
 import { useEffect, useRef, useState } from 'react';
 import { AppState, Platform, View } from 'react-native';
@@ -5,6 +6,7 @@ import Svg, { Circle, Ellipse, G, Path } from 'react-native-svg';
 import Animated, { cancelAnimation, Easing, interpolateColor, useAnimatedProps, useSharedValue, withRepeat, withTiming, type SharedValue } from 'react-native-reanimated';
 import { branchPath, canopyPath, clamp, gardenMilestones, fruitPath, fruitPosition, gardenLife, mix, ramp, treeProgress, trunkPath, type TreeSpecies } from '../treeGeometry';
 import { useReducedMotion } from './MoodDial';
+const WEB = Platform.OS === 'web';
 const APath = Animated.createAnimatedComponent(Path);
 const AG = Animated.createAnimatedComponent(G);
 const ACircle = Animated.createAnimatedComponent(Circle);
@@ -29,13 +31,13 @@ function Grass({ day, breeze, index }: { day: SharedValue<number>; breeze: Share
 }
 function GroundFlower({ day, breeze, index }: { day: SharedValue<number>; breeze: SharedValue<number>; index: number }) {
   const x = [64, 251, 95, 222, 43, 277][index], y = [214, 217, 210, 211, 220, 221][index];
-  const props = useAnimatedProps(() => { const size = ramp(day.value, 18 + index * 9, 36 + index * 9); return { transform: `translate(${x} ${y}) rotate(${Math.sin(breeze.value + index) * 4}) scale(${size})`, opacity: size }; });
+  const props = useAnimatedProps(() => { const size = ramp(day.value, 18 + index * 9, 36 + index * 9); return { ...svgTransform(WEB, x, y, Math.sin(breeze.value + index) * 4, size), opacity: size }; });
   return <AG animatedProps={props}><Path d="M0 3 Q-2 -4 0 -13" fill="none" stroke="#759b61" strokeWidth={1.4} />{[0, 1, 2, 3, 4].map(petal => <Ellipse key={petal} cx={0} cy={-16} rx={2.5} ry={4} fill={index % 2 ? '#b48bc8' : '#ecc85c'} transform={`rotate(${petal * 72} 0 -12)`} />)}<Circle cx={0} cy={-12} r={2} fill="#d6a341" /></AG>;
 }
 function OrchardFruit({ day, species, breeze, index }: { day: SharedValue<number>; species: SharedValue<number>; breeze: SharedValue<number>; index: number }) {
   const delay = index * 4;
-  const group = useAnimatedProps(() => { const p = fruitPosition(species.value, index); return { transform: `translate(${p.x} ${p.y}) rotate(${Math.sin(breeze.value + index) * 2.5})` }; });
-  const blossom = useAnimatedProps(() => { const size = gardenLife(day.value - delay).blossom; return { transform: `scale(${size})`, opacity: size }; });
+  const group = useAnimatedProps(() => { const p = fruitPosition(species.value, index); return { ...svgTransform(WEB, p.x, p.y, Math.sin(breeze.value + index) * 2.5) }; });
+  const blossom = useAnimatedProps(() => { const size = gardenLife(day.value - delay).blossom; return { ...svgTransform(WEB, 0, 0, 0, size), opacity: size }; });
   const fruit = useAnimatedProps(() => { const size = gardenLife(day.value - delay).fruit; return { d: fruitPath(species.value, size), fill: interpolateColor(species.value, [0, 1, 2], ['#d9ac66', '#e2cf88', '#b58d62']), opacity: size }; });
   const cap = useAnimatedProps(() => { const size = gardenLife(day.value - delay).fruit; return { d: `M${-5 * size},${-3 * size} Q0,${-8 * size} ${5 * size},${-3 * size} Q0,${-1 * size} ${-5 * size},${-3 * size}Z`, opacity: size * (1 - clamp(species.value)) }; });
   const stem = useAnimatedProps(() => ({ d: `M0,-2 Q2,-6 0,-10`, opacity: ramp(day.value - delay, 26, 38) }));
@@ -64,7 +66,7 @@ export function GrowingTree({ days, species, label, interactive = false }: { day
     return () => cancelAnimation(breeze);
   }, [reduced, active, breeze]);
   const trunk = useAnimatedProps(() => ({ d: trunkPath(progress.value, essence.value), strokeWidth: mix(2, 7, ramp(progress.value, 0, 24)), opacity: ramp(progress.value, 0, .5) }));
-  const sway = useAnimatedProps(() => ({ transform: `rotate(${Math.sin(breeze.value) * .7} 160 220)` }));
+  const sway = useAnimatedProps(() => ({ ...svgTransform(WEB, 0, 0, Math.sin(breeze.value) * .7, 1, 160, 220) }));
   const seed = useAnimatedProps(() => ({ rx: mix(6, 2, ramp(progress.value, 0, 2)), ry: mix(3.5, 1.5, ramp(progress.value, 0, 2)), opacity: mix(1, .4, ramp(progress.value, 0, 3)) }));
   const sun = useAnimatedProps(() => ({ opacity: .65 + .08 * Math.sin(breeze.value) }));
   return <View accessible accessibilityRole="image" accessibilityLabel={label}>

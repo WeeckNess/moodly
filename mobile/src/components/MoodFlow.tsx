@@ -58,7 +58,7 @@ export function MoodFlow(saved: Props) {
     }
     setStep(next);
     entrance.setValue(reduced ? 1 : 0);
-    NativeAnimated.timing(entrance, { toValue: 1, duration: reduced ? 0 : 280, useNativeDriver: true }).start();
+    NativeAnimated.timing(entrance, { toValue: 1, duration: reduced ? 0 : 280, useNativeDriver: Platform.OS !== 'web' }).start();
   }
   function restartSelection() {
     setTrialScore(3); setTrialTags([]); setPrivateReason(''); setReasonDraft(''); setReasonModal(false); setManualSupport(false);
