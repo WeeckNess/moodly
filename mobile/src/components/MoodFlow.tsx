@@ -50,6 +50,7 @@ export function MoodFlow(saved: Props) {
   }, [done]);
   useEffect(() => { setPrepareMessage(false); }, [supportVisible]);
   function go(next: 'mood' | 'reasons') {
+    if (next !== step) haptics.navigate();
     if (next === 'reasons') {
       const chosen = Math.round(motion.value);
       cancelAnimation(motion);
@@ -61,11 +62,13 @@ export function MoodFlow(saved: Props) {
     NativeAnimated.timing(entrance, { toValue: 1, duration: reduced ? 0 : 280, useNativeDriver: Platform.OS !== 'web' }).start();
   }
   function restartSelection() {
+    haptics.navigate();
     setTrialScore(3); setTrialTags([]); setPrivateReason(''); setReasonDraft(''); setReasonModal(false); setManualSupport(false);
     setExploring(true); setStep('mood');
     cancelAnimation(motion); motion.value = withTiming(3, { duration: reduced ? 0 : 350 });
   }
   function finishTrial() {
+    haptics.navigate();
     setExploring(false); setStep('mood'); setTrialTags([]); setPrivateReason(''); setReasonDraft(''); setReasonModal(false);
     cancelAnimation(motion); motion.value = withTiming(saved.score ?? 3, { duration: reduced ? 0 : 350 });
   }

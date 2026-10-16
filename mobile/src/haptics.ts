@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ExpoHaptics from 'expo-haptics';
 const key = 'eclaircie.preferences.haptics';
 let enabled = true, ready = false, initialization: Promise<void> | null = null;
-let lastTick = -Infinity, protectedUntil = 0;
+let lastTick = -Infinity, lastNavigation = -Infinity, protectedUntil = 0;
 const timers = new Set<ReturnType<typeof setTimeout>>();
 const listeners = new Set<() => void>();
 export const getHapticsEnabled = () => enabled;
@@ -27,11 +27,11 @@ export function activateHaptics() {
   return () => { listener.remove(); cancelHaptics(); };
 }
 const canPlay = () => ready && enabled && Platform.OS !== 'web' && AppState.currentState === 'active';
-type Pulse = 'tick' | 'settle' | 'add' | 'remove' | 'soft' | 'light';
+type Pulse = 'tick' | 'settle' | 'add' | 'remove' | 'soft' | 'light' | 'navigation';
 function pulse(kind: Pulse) {
   if (!canPlay()) return;
-  const android = { tick: ExpoHaptics.AndroidHaptics.Clock_Tick, settle: ExpoHaptics.AndroidHaptics.Gesture_End, add: ExpoHaptics.AndroidHaptics.Toggle_On, remove: ExpoHaptics.AndroidHaptics.Toggle_Off, soft: ExpoHaptics.AndroidHaptics.Keyboard_Tap, light: ExpoHaptics.AndroidHaptics.Context_Click };
-  const ios = { tick: ExpoHaptics.ImpactFeedbackStyle.Light, settle: ExpoHaptics.ImpactFeedbackStyle.Rigid, add: ExpoHaptics.ImpactFeedbackStyle.Soft, remove: ExpoHaptics.ImpactFeedbackStyle.Light, soft: ExpoHaptics.ImpactFeedbackStyle.Soft, light: ExpoHaptics.ImpactFeedbackStyle.Light };
+  const android = { tick: ExpoHaptics.AndroidHaptics.Segment_Tick, settle: ExpoHaptics.AndroidHaptics.Confirm, add: ExpoHaptics.AndroidHaptics.Virtual_Key, remove: ExpoHaptics.AndroidHaptics.Toggle_Off, soft: ExpoHaptics.AndroidHaptics.Context_Click, light: ExpoHaptics.AndroidHaptics.Confirm, navigation: ExpoHaptics.AndroidHaptics.Long_Press };
+  const ios = { tick: ExpoHaptics.ImpactFeedbackStyle.Medium, settle: ExpoHaptics.ImpactFeedbackStyle.Heavy, add: ExpoHaptics.ImpactFeedbackStyle.Rigid, remove: ExpoHaptics.ImpactFeedbackStyle.Light, soft: ExpoHaptics.ImpactFeedbackStyle.Medium, light: ExpoHaptics.ImpactFeedbackStyle.Heavy, navigation: ExpoHaptics.ImpactFeedbackStyle.Heavy };
   const operation = Platform.OS === 'android' ? ExpoHaptics.performAndroidHapticsAsync(android[kind]) : ExpoHaptics.impactAsync(ios[kind]);
   void operation.catch(() => {});
 }
@@ -44,6 +44,10 @@ function sequence(steps: [number, Pulse][]) {
   }
 }
 export const haptics = {
+  navigate() {
+    if (!canPlay() || Date.now() < protectedUntil || Date.now() - lastNavigation < 180) return;
+    lastNavigation = Date.now(); pulse('navigation');
+  },
   detent(arrival = false) { if (Date.now() - lastTick < 42 || Date.now() < protectedUntil || !canPlay()) return; lastTick = Date.now(); pulse(arrival ? 'settle' : 'tick'); },
   reason(selected: boolean) { if (Date.now() >= protectedUntil) pulse(selected ? 'add' : 'remove'); },
   confirm(celebrate = false) { sequence(celebrate ? [[0, 'soft'], [95, 'light'], [420, 'soft'], [530, 'light']] : [[0, 'soft'], [95, 'light']]); },

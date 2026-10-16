@@ -41,6 +41,12 @@ function Eclaircie() {
   const historyKey = session?.privateSupportKey ?? null;
 
   useEffect(activateHaptics, []);
+  const previousScreen = useRef<string | null>(null);
+  const screen = !session ? 'login' : page === 'home' && session.role === 'manager' ? `manager:${managerSection}` : page;
+  useEffect(() => {
+    if (previousScreen.current !== null && previousScreen.current !== screen) haptics.navigate();
+    previousScreen.current = screen;
+  }, [screen]);
   useEffect(() => {
     let active = true;
     void tokenStore.read().then(async token => {
