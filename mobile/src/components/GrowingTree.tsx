@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { haptics } from '../haptics';
+import { useEffect, useRef, useState } from 'react';
 import { AppState, Platform, View } from 'react-native';
 import Svg, { Circle, Ellipse, G, Path } from 'react-native-svg';
 import Animated, { cancelAnimation, Easing, interpolateColor, useAnimatedProps, useSharedValue, withRepeat, withTiming, type SharedValue } from 'react-native-reanimated';
-import { branchPath, canopyPath, clamp, fruitPath, fruitPosition, gardenLife, mix, ramp, treeProgress, trunkPath, type TreeSpecies } from '../treeGeometry';
+import { branchPath, canopyPath, clamp, gardenMilestones, fruitPath, fruitPosition, gardenLife, mix, ramp, treeProgress, trunkPath, type TreeSpecies } from '../treeGeometry';
 import { useReducedMotion } from './MoodDial';
 const APath = Animated.createAnimatedComponent(Path);
 const AG = Animated.createAnimatedComponent(G);
@@ -45,7 +46,9 @@ function OrchardFruit({ day, species, breeze, index }: { day: SharedValue<number
     <APath animatedProps={fruit} /><APath animatedProps={cap} fill="#927851" /><APath animatedProps={texture} stroke="#715b43" strokeWidth={.8} fill="none" />
   </AG>;
 }
-export function GrowingTree({ days, species, label }: { days: number; species: TreeSpecies; label: string }) {
+export function GrowingTree({ days, species, label, interactive = false }: { days: number; species: TreeSpecies; label: string; interactive?: boolean }) {
+  const previousDays = useRef(days);
+  useEffect(() => { if (interactive && gardenMilestones.some(step => step.day > previousDays.current && step.day <= days)) haptics.grow(); previousDays.current = days; }, [days, interactive]);
   const reduced = useReducedMotion();
   const [active, setActive] = useState(AppState.currentState === 'active');
   const progress = useSharedValue(treeProgress(days));

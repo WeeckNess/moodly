@@ -80,6 +80,10 @@ Le profil contient un arbre personnel qui grandit au fil des journées partagée
 
 **Mon équipe** conserve le graphe collectif. **Pour moi** propose une météo de manager strictement privée, son jardin, ses rapports, ses raisons adaptées et son accompagnement. **Agir ensemble** permet de préparer une discussion, publier et suivre une action collective, puis recueillir un bilan anonyme après sa réalisation. Voir [les parcours, règles de confidentialité et nouvelles routes](docs/espaces-manager.md).
 
+## Retours tactiles
+
+Signature de molette sur l’arc, sélection douce des raisons, double confirmation et célébration des étapes du jardin. Réglage et bouton d’essai dans le profil sur téléphone. Voir [les signatures et leur validation](docs/retours-tactiles.md).
+
 ## Structure
 
 ```text

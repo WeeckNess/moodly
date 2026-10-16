@@ -1,3 +1,5 @@
+import { gardenMilestones } from './src/treeGeometry';
+import { activateHaptics, haptics } from './src/haptics';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, AppState, StyleSheet, Text, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -5,8 +7,8 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ApiError, strapiApi, tokenStore, type Session, type TeamStats } from './src/strapi';
 import { localDay } from './src/date';
 import { clearPrivateSupport, clearSupportMemory, recordPrivateMood } from './src/support';
-import { clearPersonalHistory, clearPersonalMemory, readPersonalHistory, savePersonalMood } from './src/personalHistory';
-import type { PersonalMood } from './src/personalHistoryLogic';
+import { clearPersonalHistory, clearPersonalMemory, readPersonalHistory, readGrowth, savePersonalMood } from './src/personalHistory';
+import { type PersonalMood } from './src/personalHistoryLogic';
 import { colors as c } from './src/theme';
 import { LoginScreen } from './src/components/LoginScreen';
 import { ManagerWorkspace, type ManagerSection } from './src/components/ManagerWorkspace';
@@ -38,6 +40,7 @@ function Eclaircie() {
   const accountEpoch = useRef(0);
   const historyKey = session?.privateSupportKey ?? null;
 
+  useEffect(activateHaptics, []);
   useEffect(() => {
     let active = true;
     void tokenStore.read().then(async token => {
@@ -115,9 +118,11 @@ function Eclaircie() {
       if (session.role === 'manager') {
         if (!profile) throw new Error('Ton espace privé est indisponible. Reconnecte-toi.');
         const day = localDay();
+        const before = await readGrowth(profile);
         const entries = await savePersonalMood(profile, { day, score, tags }, day);
+        const after = await readGrowth(profile);
         if (epoch !== accountEpoch.current) return;
-        setHistory(entries); setHistoryError(''); setSentNow(true);
+        setHistory(entries); setHistoryError(''); setSentNow(true); haptics.confirm(gardenMilestones.some(step => step.day > before.count && step.day <= after.count));
         const prompt = await recordPrivateMood(profile, day, score);
         if (epoch === accountEpoch.current) setSupportPrompt(prompt);
         return;
@@ -127,11 +132,11 @@ function Eclaircie() {
       if (epoch !== accountEpoch.current) return;
       setSession({ ...session, submitted: true, day: submittedDay }); setSentNow(true);
       if (profile) {
-        try { const entries = await savePersonalMood(profile, { day: submittedDay, score, tags }, submittedDay); if (epoch === accountEpoch.current) { setHistory(entries); setHistoryError(''); } }
-        catch { if (epoch === accountEpoch.current) setHistoryError('Ta météo est partagée, mais son souvenir n’a pas pu être enregistré sur cet appareil.'); }
+        try { const before = await readGrowth(profile); const entries = await savePersonalMood(profile, { day: submittedDay, score, tags }, submittedDay); const after = await readGrowth(profile); if (epoch === accountEpoch.current) haptics.confirm(gardenMilestones.some(step => step.day > before.count && step.day <= after.count)); if (epoch === accountEpoch.current) { setHistory(entries); setHistoryError(''); } }
+        catch { if (epoch === accountEpoch.current) { haptics.confirm(); setHistoryError('Ta météo est partagée, mais son souvenir n’a pas pu être enregistré sur cet appareil.'); } }
         const prompt = await recordPrivateMood(profile, submittedDay, score);
         if (epoch === accountEpoch.current) setSupportPrompt(prompt);
-      }
+      } else haptics.confirm();
     } catch (err) {
       if (epoch !== accountEpoch.current) return;
       if (err instanceof ApiError && err.status === 409) { setSession({ ...session, submitted: true, day: localDay() }); setSentNow(false); }

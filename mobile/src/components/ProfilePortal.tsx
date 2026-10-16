@@ -8,6 +8,7 @@ import { colors as c, mono, moodPalette } from '../theme';
 import { weathers } from '../weather';
 import { monthCells, type PersonalMood } from '../personalHistoryLogic';
 import type { Session } from '../strapi';
+import { HapticSettings } from './HapticSettings';
 import { TeamActions } from './TeamActions';
 import { PersonalGarden } from './PersonalGarden';
 import { SupportResources } from './SupportResources';
@@ -75,6 +76,7 @@ export function ProfilePortal(props: Props) {
       {props.jwt && props.session.role === 'collaborateur' && <TeamActions jwt={props.jwt} />}
       <View onLayout={event => { supportTop.current = event.nativeEvent.layout.y; if (props.section === 'support') scroll.current?.scrollTo({ y: Math.max(0, supportTop.current - 12), animated: false }); }}><SupportResources contacts={props.session.team.supportContacts} /></View>
       <View style={s.settings}>
+        <HapticSettings />
         <Pressable accessibilityRole="button" accessibilityLabel="Mes données et confidentialité" accessibilityState={{ expanded: expanded === 'privacy' }} onPress={() => setExpanded(expanded === 'privacy' ? null : 'privacy')} style={s.setting}><Text style={s.settingText}>Mes données et confidentialité</Text><CaretDownIcon size={18} color={c.muted} /></Pressable>
         {expanded === 'privacy' && <View style={s.explanation}><Text style={s.body}>{employee ? 'Ton récap personnel conserve seulement tes notes et tes tags des 30 derniers jours sur cet appareil. Les souvenirs plus anciens sont effacés à l’ouverture de l’app. Ton arbre conserve seulement un nombre de journées partagées et la date de la dernière, sur cet appareil, jusqu’à l’effacement de ton récap. Il ne contient aucune note. Ta raison libre reste un brouillon et n’y est jamais ajoutée. Aucune route manager ne donne accès à ces souvenirs.' : 'Le manager voit les moyennes de son équipe sur 30 jours. Les journées avec moins de cinq réponses restent masquées, sans liste de participants.'}</Text><Text style={s.body}>{props.personalOnly ? 'Ta météo de manager reste privée sur cet appareil. Elle n’est ajoutée à aucun agrégat et n’est transmise ni aux RH ni à ta hiérarchie.' : <>La réponse collective est séparée : équipe, date, note et tags prédéfinis, sans lien vers ton compte. Le journal de participation retient uniquement si tu as répondu aujourd’hui. Réponses et journaux sont supprimés après 45 jours par défaut.</>}</Text><Text style={s.body}>L’invitation après trois météos « Très mal » sur des jours distincts reste privée. Aucun message ni alerte n’est envoyé automatiquement.</Text><Text style={s.caption}>Les accès techniques et l’information des salariés doivent être validés par l’organisation avant un usage réel.</Text></View>}
         <Pressable accessibilityRole="button" accessibilityState={{ expanded: expanded === 'guide' }} onPress={() => setExpanded(expanded === 'guide' ? null : 'guide')} style={s.setting}><Text style={s.settingText}>Comment ça marche ?</Text><CaretDownIcon size={18} color={c.muted} /></Pressable>

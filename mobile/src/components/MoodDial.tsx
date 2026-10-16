@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AccessibilityInfo, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
-import * as Haptics from 'expo-haptics';
+import { haptics } from '../haptics';
 import Svg, { Circle, Defs, LinearGradient, Path, Stop } from 'react-native-svg';
 import { weathers } from '../weather';
 import Animated, { Easing, ReduceMotion, runOnJS, useAnimatedReaction, useAnimatedProps, useAnimatedStyle, useSharedValue, withSpring, withTiming, interpolateColor, type SharedValue } from 'react-native-reanimated';
@@ -31,19 +31,18 @@ export function MoodDial({ score, onChange, motion, compact = false }: { score: 
   const raw = useSharedValue(score);
   const reduced = useReducedMotion();
   const { radius, cx, cy, orbSize, height } = dialGeometry(width, compact);
+  const settleTarget = useSharedValue(-1);
   const lastTick = useSharedValue(0);
   const reportStep = useCallback((value: number) => {
     onChange(value);
   }, [onChange]);
-  const tick = useCallback(() => {
-    if (Platform.OS !== 'web') void Haptics.selectionAsync().catch(() => {});
-  }, []);
+  const tick = useCallback((arrival: boolean) => haptics.detent(arrival), []);
   // Haptics follow integer marker crossings, independently from the nearest-label threshold.
   useAnimatedReaction(() => motion.value, (next, previous) => {
     if (previous === null) return;
     if (lastTick.value && Math.abs(next - lastTick.value) > 0.12) lastTick.value = 0;
     for (const stop of crossedStops(previous, next)) {
-      if (lastTick.value !== stop) { lastTick.value = stop; runOnJS(tick)(); }
+      if (lastTick.value !== stop) { lastTick.value = stop; runOnJS(tick)(stop === settleTarget.value); }
     }
   }, [tick]);
   useAnimatedReaction(() => Math.round(motion.value), (next, previous) => {
@@ -65,10 +64,11 @@ export function MoodDial({ score, onChange, motion, compact = false }: { score: 
         : reduced ? withTiming(value, { ...SWEEP, duration: 60 }) : withSpring(value, { ...FOLLOW, reduceMotion: ReduceMotion.Never });
     }
     return Gesture.Pan().minDistance(0)
-      .onBegin(event => { raw.value = motion.value; follow(event.x, event.y, true); })
+      .onBegin(event => { settleTarget.value = -1; raw.value = motion.value; follow(event.x, event.y, true); })
       .onUpdate(event => follow(event.x, event.y, false))
-      .onFinalize(() => {
+      .onFinalize(event => {
         const next = Math.round(raw.value);
+        settleTarget.value = Math.hypot(event.velocityX, event.velocityY) > 550 ? next : -1;
         if (next === Math.round(motion.value)) runOnJS(onChange)(next);
         motion.value = withTiming(next, { ...SWEEP, duration: sweepDuration(motion.value, next, reduced) });
       });
@@ -76,7 +76,7 @@ export function MoodDial({ score, onChange, motion, compact = false }: { score: 
   const start = pointForValue(1, radius, cx, cy), end = pointForValue(5, radius, cx, cy);
   const path = `M ${start.x} ${start.y} A ${radius} ${radius} 0 1 1 ${end.x} ${end.y}`;
   const weather = weathers[score - 1];
-  function change(value: number) { if (value === Math.round(motion.value)) onChange(value); raw.value = value; motion.value = withTiming(value, { ...SWEEP, duration: sweepDuration(motion.value, value, reduced) }); }
+  function change(value: number) { settleTarget.value = Math.abs(value - motion.value) >= 1.5 ? value : -1; if (value === Math.round(motion.value)) onChange(value); raw.value = value; motion.value = withTiming(value, { ...SWEEP, duration: sweepDuration(motion.value, value, reduced) }); }
   const keyboardProps = Platform.OS === 'web' ? {
     tabIndex: 0 as const,
     onKeyDown: (event: { nativeEvent: { key: string }; preventDefault: () => void }) => {
