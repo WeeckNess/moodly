@@ -20,7 +20,30 @@
     "label": {
       "type": "string",
       "required": true,
-      "unique": true
+      "unique": true,
+      "maxLength": 80
+    },
+    "audience": {
+      "type": "enumeration",
+      "enum": ["collaborateur", "manager", "both"],
+      "default": "collaborateur",
+      "required": true
+    },
+    "icon": {
+      "type": "customField",
+      "customField": "plugin::strapi-lucide-icons.icon",
+      "default": "compass",
+      "required": true
+    },
+    "enabled": {
+      "type": "boolean",
+      "default": true,
+      "required": true
+    },
+    "position": {
+      "type": "integer",
+      "default": 0,
+      "required": true
     }
   }
 }

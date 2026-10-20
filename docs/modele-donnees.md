@@ -9,7 +9,7 @@ npm run backend:install
 npm run backend:db:init
 ```
 
-La commande génère le fichier local `backend/.env` s'il manque, compile le backend et charge Strapi sans démarrer de serveur HTTP. Strapi synchronise les tables SQLite dans `backend/.tmp/data.db` par défaut. Le bootstrap initialise les rôles Collaborateur/Manager, les permissions et les six tags prédéfinis. Aucun compte ni historique fictif n'est ajouté par cette commande.
+La commande génère le fichier local `backend/.env` s'il manque, compile le backend et charge Strapi sans démarrer de serveur HTTP. Strapi synchronise les tables SQLite dans `backend/.tmp/data.db` par défaut. Le bootstrap initialise les rôles Collaborateur/Manager, les permissions et le catalogue de tags. Aucun compte ni historique fictif n'est ajouté par cette commande.
 
 La commande peut être relancée ; elle réutilise la base et les référentiels existants. Le bootstrap applique également la purge configurée des données expirées (45 jours par défaut). Arrêter le serveur avant de l'exécuter sur la même base. Le fichier SQLite et les secrets locaux ne sont pas versionnés ; les schémas et le bootstrap permettent de recréer la base.
 
@@ -35,7 +35,7 @@ Si `ERR_DLOPEN_FAILED` persiste après activation de Node 24, exécuter `npm reb
 | --- | --- | --- |
 | User (Users & Permissions) | username, email, mot de passe et rôle gérés par le plugin | team → Team ; role → rôle du plugin |
 | Team | name obligatoire | manager → User |
-| Tag | label obligatoire et unique | Référencé par MoodEntry |
+| Tag | label obligatoire et unique (80 caractères maximum), audience, icon, enabled, position | Référencé par MoodEntry |
 | MoodEntry | score entier obligatoire de 1 à 5 ; day obligatoire, date sans heure | team → Team ; tags → Tag, plusieurs et optionnels |
 | SubmissionLog | day obligatoire ; deduplicationKey obligatoire, unique et privée | user → User, relation privée |
 
@@ -45,7 +45,15 @@ La relation User → Team est ajoutée par `backend/src/extensions/users-permiss
 
 Des index SQL uniques explicites protègent `SubmissionLog.deduplicationKey`, `DailyAggregate.aggregateKey` et `Tag.label`. L'option d'attribut `unique: true` de Strapi v5 ne suffit pas ici à créer une contrainte SQL. Si une base existante contient des doublons, la synchronisation échoue au lieu de supprimer silencieusement des données.
 
-Les tags initiaux sont Charge, Ambiance, Sens, Équilibre, Reconnaissance et Outils. Les réponses et les journaux n'ont pas de routes REST génériques de lecture. Les horodatages techniques Strapi ne sont pas exposés par les réponses métier.
+Les tags initiaux du collaborateur sont Charge, Ambiance, Sens, Équilibre, Reconnaissance et Outils. Ceux du manager sont Arbitrages, Moyens, Conflits, Objectifs, Reconnaissance et Soutien hiérarchique. Reconnaissance appartient aux deux publics. Cette initialisation et la migration des six anciens tags ne s'exécutent qu'une fois, avec un marqueur en base : les tags renommés, désactivés ou supprimés ne sont pas réinitialisés aux redémarrages suivants.
+
+Dans **Content Manager → Tag**, l'administrateur peut ajouter ou modifier les libellés, choisir `audience` (`collaborateur`, `manager`, `both`), l'icône dans le sélecteur **Lucide Icons** avec recherche et aperçu (`strapi-lucide-icons`), `enabled` et `position` (les plus petits nombres apparaissent en premier). Préférer la désactivation à la suppression pour conserver les relations historiques. Les anciens libellés déjà enregistrés dans l'historique privé de l'appareil restent lisibles.
+
+Le champ `icon` est le custom field `plugin::strapi-lucide-icons.icon` et stocke un nom Lucide en kebab-case, par exemple `alarm-clock`. L'app le rend avec `lucide-react-native`. Les deux catalogues sont alignés sur la version 1.14.0. Les anciennes valeurs `chat` et `scales` sont migrées vers `message-circle` et `scale`, sans modifier les autres choix. Après installation des dépendances, redémarrer Strapi et recharger l'administration pour afficher le sélecteur. Lors d'un déploiement, reconstruire l'administration avec `npm --prefix backend run build`.
+
+L'app recharge les tags à chaque ouverture de l'étape des raisons. Une liste vide ou une erreur ne produit aucune liste de secours codée en dur ; l'utilisateur peut envoyer sa météo sans tag. Une icône générique couvre les icônes non reconnues par une ancienne version de l'app.
+
+Les réponses et les journaux n'ont pas de routes REST génériques de lecture. Les horodatages techniques Strapi ne sont pas exposés par les réponses métier.
 
 ## Agrégats et extensions existantes
 

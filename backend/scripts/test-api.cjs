@@ -27,7 +27,8 @@ function run(command, args, env = process.env) {
       await new Promise(resolve => setTimeout(resolve, 500));
     }
     if (!ready) throw new Error(`Serveur de test indisponible.\n${logs}`);
-    process.exitCode = await run(process.execPath, ['--test', 'tests/api.integration.cjs'], { ...process.env, TEST_API_URL: base });
+    process.exitCode = await run(process.execPath, ['--test', 'tests/api.integration.cjs'], { ...process.env, TEST_API_URL: base, TEST_DATABASE_FILENAME: path.join(folder, 'data.db') });
+    if (!process.exitCode) process.exitCode = await run(process.execPath, ['--test', '../mobile/tests/strapi.integration.cjs'], { ...process.env, TEST_API_URL: base });
   } catch (error) { console.error(error.message); process.exitCode = 1; }
   finally {
     if (server && server.exitCode === null) {

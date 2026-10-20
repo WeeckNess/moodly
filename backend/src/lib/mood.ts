@@ -1,4 +1,3 @@
-export const TAGS = ['Charge', 'Ambiance', 'Sens', 'Équilibre', 'Reconnaissance', 'Outils'];
 export const THRESHOLD = 5;
 export const TIMEZONE = 'Europe/Paris';
 export function today() {
@@ -18,7 +17,8 @@ export function validateMood(data: unknown): { score: number; tags: string[] } |
   if (Object.keys(input).some(key => !['score', 'tags'].includes(key))) return null;
   if (!Number.isInteger(input.score) || Number(input.score) < 1 || Number(input.score) > 5) return null;
   const tags = input.tags ?? [];
-  if (!Array.isArray(tags) || tags.length > TAGS.length || tags.some(tag => !TAGS.includes(tag))) return null;
+  // L'appartenance au catalogue actif est vérifiée en base par le contrôleur.
+  if (!Array.isArray(tags) || tags.length > 20 || tags.some(tag => typeof tag !== 'string' || !tag.trim() || tag.length > 80)) return null;
   return { score: Number(input.score), tags: [...new Set(tags)] };
 }
 export function safePoints(days: string[], aggregates: { day: string; responseCount: number; scoreSum: number }[]) {

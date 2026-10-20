@@ -15,8 +15,9 @@ test('Un jour sous cinq réponses ne révèle aucune moyenne ; cinq réponses re
   assert.equal(Object.keys(result[1]).join(','), 'day,average');
 });
 test('Refus des scores invalides, texte libre et champs permettant de forger une équipe ou une date', () => {
-  for (const data of [null, { score: 0 }, { score: 6 }, { score: 2.5 }, { score: '4' }, { score: 4, tags: ['secret'] }, { score: 4, team: 12 }, { score: 4, day: '2020-01-01' }, { score: 4, comment: 'hello' }]) assert.equal(validateMood(data), null);
+  for (const data of [null, { score: 0 }, { score: 6 }, { score: 2.5 }, { score: '4' }, { score: 4, tags: [42] }, { score: 4, tags: [''] }, { score: 4, tags: [' '.repeat(4)] }, { score: 4, tags: ['a'.repeat(81)] }, { score: 4, tags: Array(21).fill('Tag') }, { score: 4, team: 12 }, { score: 4, day: '2020-01-01' }, { score: 4, comment: 'hello' }]) assert.equal(validateMood(data), null);
   assert.equal(validateMood({ score: 4, tags: ['Charge', 'Charge'] }).tags.length, 1);
+  assert.equal(validateMood({ score: 4, tags: ['Nouveau tag administrable'] }).tags[0], 'Nouveau tag administrable');
 });
 test('La fenêtre contient exactement 30 dates consécutives, y compris au changement d’heure', () => {
   const days = dateRange('2026-10-30'); assert.equal(days.length, 30); assert.equal(days[0], '2026-10-01'); assert.equal(days[29], '2026-10-30'); assert.equal(new Set(days).size, 30);

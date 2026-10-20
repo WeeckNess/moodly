@@ -1,4 +1,4 @@
-import { CloudLightningIcon, CloudRainIcon, CloudIcon, CloudSunIcon, SunIcon, BriefcaseIcon, ChatsCircleIcon, CompassIcon, ScalesIcon, HeartIcon, WrenchIcon } from './icons';
+import { CloudLightningIcon, CloudRainIcon, CloudIcon, CloudSunIcon, SunIcon } from './icons';
 import { colors } from './theme';
 export const weathers = [
   { score: 1, title: 'Orage', label: 'Très mal', icon: CloudLightningIcon, color: colors.lavender, message: 'Tu mérites du soutien, à ton rythme.' },
@@ -7,12 +7,3 @@ export const weathers = [
   { score: 4, title: 'Éclaircies', label: 'Bien', icon: CloudSunIcon, color: colors.yellow, message: 'Savoure les petites éclaircies de ta journée.' },
   { score: 5, title: 'Soleil', label: 'Très bien', icon: SunIcon, color: colors.coral, message: 'Profite de cette belle énergie !' },
 ] as const;
-export const moodTags = [
-  { label: 'Charge', icon: BriefcaseIcon }, { label: 'Ambiance', icon: ChatsCircleIcon }, { label: 'Sens', icon: CompassIcon },
-  { label: 'Équilibre', icon: ScalesIcon }, { label: 'Reconnaissance', icon: HeartIcon }, { label: 'Outils', icon: WrenchIcon },
-];
-
-export const managerMoodTags = [
-  { label: 'Arbitrages', icon: ScalesIcon }, { label: 'Moyens', icon: WrenchIcon }, { label: 'Conflits', icon: ChatsCircleIcon },
-  { label: 'Objectifs', icon: CompassIcon }, { label: 'Soutien hiérarchique', icon: HeartIcon }, { label: 'Reconnaissance', icon: BriefcaseIcon },
-];

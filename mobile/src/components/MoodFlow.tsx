@@ -4,7 +4,9 @@ import { ActivityIndicator, Animated as NativeAnimated, KeyboardAvoidingView, Mo
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { ArrowLeftIcon, ArrowRightIcon, CaretRightIcon, ArrowUpRightIcon, CheckIcon, CheckCircleIcon, PlusCircleIcon, ShieldCheckIcon, XIcon, ChatsCircleIcon } from '../icons';
-import { managerMoodTags, moodTags, weathers } from '../weather';
+import { weathers } from '../weather';
+import { strapiApi, type MoodTag } from '../strapi';
+import { tagIcon } from '../tagIcons';
 import Animated, { cancelAnimation, interpolateColor, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { HeaderActions } from './HeaderActions';
 import { BrandMark } from './BrandMark';
@@ -12,6 +14,7 @@ import { colors as c, mono } from '../theme';
 import { MoodDial, moodAccents, moodBackgrounds, useReducedMotion, WeatherMorph } from './MoodDial';
 
 type Props = {
+  jwt: string;
   privateMood?: boolean; onBack?: () => void;
   score: number | null; onScore: (score: number) => void; tags: string[]; onTags: (tags: string[]) => void;
   submitted: boolean; sentNow: boolean; busy: boolean; error: string;
@@ -37,12 +40,31 @@ export function MoodFlow(saved: Props) {
   const [privateReason, setPrivateReason] = useState('');
   const [manualSupport, setManualSupport] = useState(false);
   const [prepareMessage, setPrepareMessage] = useState(false);
+  const [tagOptions, setTagOptions] = useState<MoodTag[]>([]);
+  const [tagsLoading, setTagsLoading] = useState(false);
+  const [tagsError, setTagsError] = useState('');
+  const [tagReload, setTagReload] = useState(0);
   const reduced = useReducedMotion();
   const motion = useSharedValue(props.score ?? 3);
   const entrance = useRef(new NativeAnimated.Value(1)).current;
   const backgroundStyle = useAnimatedStyle(() => ({ backgroundColor: interpolateColor(motion.value, INPUT, moodBackgrounds) }));
   const accentStyle = useAnimatedStyle(() => ({ backgroundColor: interpolateColor(motion.value, INPUT, moodAccents) }));
   const done = props.submitted && !trial;
+  useEffect(() => {
+    if (step !== 'reasons' || done) return;
+    let active = true;
+    setTagsLoading(true); setTagsError(''); setTagOptions([]);
+    void strapiApi.tags(saved.jwt).then(options => {
+      if (!active) return;
+      setTagOptions(options);
+      props.onTags(props.tags.filter(label => options.some(tag => tag.label === label)));
+    }).catch(() => {
+      if (!active) return;
+      props.onTags([]);
+      setTagsError('Les raisons ne sont pas disponibles. Tu peux réessayer ou continuer sans raison.');
+    }).finally(() => { if (active) setTagsLoading(false); });
+    return () => { active = false; };
+  }, [saved.jwt, step, done, tagReload]);
   const supportVisible = props.supportPrompt || manualSupport;
   useEffect(() => {
     if (!done) return;
@@ -92,10 +114,12 @@ export function MoodFlow(saved: Props) {
           <View style={styles.bottom}><Pressable accessibilityRole="button" accessibilityLabel="Continuer vers les raisons" onPress={() => go('reasons')} style={[styles.primary, { paddingVertical: 10 }]}><Text style={styles.primaryText}>Continuer</Text><View accessible={false} pointerEvents="none" style={styles.continueIcon}><CaretRightIcon size={21} weight="bold" color={c.cream} /></View></Pressable><Text style={styles.footnote}>{trial ? 'Ta réponse est déjà partagée. Cet essai ne sera pas envoyé.' : personal ? 'Pour toi uniquement · aucun envoi à l’entreprise' : 'Volontaire · Sans nom sur ta réponse'}</Text></View>
         </> : <>
           <View style={[styles.intro, compact && { paddingTop: 5, gap: 8 }]}><View style={styles.stepHeader}><Pressable accessibilityRole="button" accessibilityLabel="Retour à ma météo" onPress={() => go('mood')} style={styles.back}><ArrowLeftIcon size={18} color={c.text} /></Pressable><Text style={styles.eyebrow}>02 / CE QUI JOUE</Text><Animated.View style={[styles.smallOrb, accentStyle]}><WeatherMorph value={motion} size={23} /></Animated.View></View><Text accessibilityRole="header" style={[styles.title, compact && { fontSize: tiny ? 26 : 29, lineHeight: tiny ? 31 : 34 }]}>{tiny ? 'Ce qui joue aujourd’hui' : <>Qu’est-ce qui{ '\n' }fait la différence ?</>}</Text><Text style={styles.optional}>Tu peux aussi passer cette étape.</Text></View>
-          <View style={[styles.reasonSpace, compact && { gap: 8, paddingVertical: tiny ? 8 : 14 }]}><View style={styles.reasonGrid}>{(personal ? managerMoodTags : moodTags).map(tag => { const active = props.tags.includes(tag.label); return <Pressable key={tag.label} accessibilityRole="checkbox" accessibilityLabel={tag.label} accessibilityState={{ checked: active }} aria-checked={active} onPress={() => { haptics.reason(!active); props.onTags(active ? props.tags.filter(t => t !== tag.label) : [...props.tags, tag.label]); }} style={[styles.reason, active && styles.reasonSelected, compact && { minHeight: tiny ? 48 : 58, padding: tiny ? 12 : 14, gap: tiny ? 8 : 10 }]}><tag.icon style={{ flexShrink: 0 }} size={tiny ? 20 : 24} color={active ? c.ink : c.muted} weight={active ? 'fill' : 'regular'} /><Text numberOfLines={2} style={[styles.reasonText, tiny && { fontSize: 10 }]}>{tag.label}</Text>{active && <CheckIcon style={{ position: 'absolute', right: 7, top: 6 }} size={11} color={c.ink} />}</Pressable>; })}</View>
+          <ScrollView style={{ flex: 1 }} contentContainerStyle={[styles.reasonSpace, compact && { gap: 8, paddingVertical: tiny ? 8 : 14 }]}>
+            {tagsLoading ? <ActivityIndicator accessibilityLabel="Chargement des raisons" color={c.ink} /> : tagsError ? <View style={{ gap: 10 }}><Text accessibilityRole="alert" style={styles.error}>{tagsError}</Text><Pressable accessibilityRole="button" onPress={() => setTagReload(value => value + 1)} style={styles.supportSecondary}><Text style={styles.supportSecondaryText}>Réessayer de charger les raisons</Text></Pressable></View> : tagOptions.length === 0 ? <Text style={styles.optional}>Aucune raison proposée pour le moment. Tu peux continuer sans en choisir.</Text> : null}
+            <View style={styles.reasonGrid}>{tagOptions.map(tag => { const active = props.tags.includes(tag.label); const Icon = tagIcon(tag.icon); return <Pressable key={tag.id} accessibilityRole="checkbox" accessibilityLabel={tag.label} accessibilityState={{ checked: active }} aria-checked={active} disabled={tagsLoading || props.busy || (!active && props.tags.length >= 20)} onPress={() => { haptics.reason(!active); props.onTags(active ? props.tags.filter(t => t !== tag.label) : [...props.tags, tag.label]); }} style={[styles.reason, active && styles.reasonSelected, compact && { minHeight: tiny ? 48 : 58, padding: tiny ? 12 : 14, gap: tiny ? 8 : 10 }]}><Icon style={{ flexShrink: 0 }} size={tiny ? 20 : 24} color={active ? c.ink : c.muted} strokeWidth={active ? 2.5 : 2} /><Text numberOfLines={2} style={[styles.reasonText, tiny && { fontSize: 10 }]}>{tag.label}</Text>{active && <CheckIcon style={{ position: 'absolute', right: 7, top: 6 }} size={11} color={c.ink} />}</Pressable>; })}</View>
             <Pressable accessibilityRole="button" accessibilityLabel={privateReason ? 'Modifier ma raison personnelle' : 'Ajouter ma propre raison'} onPress={() => { setReasonDraft(privateReason); setReasonModal(true); }} style={[styles.addReason, compact && { minHeight: tiny ? 56 : 60 }]}><PlusCircleIcon size={25} color={c.text} /><View style={{ flex: 1, gap: 4 }}><Text style={styles.reasonText}>{privateReason || 'Ma propre raison'}</Text><Text style={styles.privateLabel}>Note personnelle · non partagée</Text></View>{privateReason ? <CheckIcon size={16} color={c.ink} /> : null}</Pressable>
-          </View>
-          <View style={styles.bottom}>{props.error ? <Text accessibilityRole="alert" style={styles.error}>{props.error}</Text> : null}<Pressable accessibilityRole="button" accessibilityLabel={trial ? 'Terminer l’essai' : personal ? 'Enregistrer ma météo privée' : 'Partager ma météo'} disabled={props.busy} onPress={props.onSubmit} style={[styles.primary, props.busy && { opacity: 0.65 }]}><Text style={styles.primaryText}>{trial ? 'Terminer l’essai' : personal ? 'Enregistrer pour moi' : props.tags.length ? 'Partager ma météo' : 'Partager sans raison collective'}</Text>{props.busy ? <ActivityIndicator size="small" color={c.ink} /> : <ArrowRightIcon size={21} color={c.ink} />}</Pressable><Text style={styles.footnote}>{trial ? 'Cet essai reste privé et ne modifie pas ta météo du jour.' : personal ? 'Conservé sur cet appareil. Aucun ajout au graphe collectif.' : 'Seuls les tags prédéfinis sont transmis.'}</Text></View>
+          </ScrollView>
+          <View style={styles.bottom}>{props.error ? <Text accessibilityRole="alert" style={styles.error}>{props.error}</Text> : null}<Pressable accessibilityRole="button" accessibilityLabel={trial ? 'Terminer l’essai' : personal ? 'Enregistrer ma météo privée' : 'Partager ma météo'} disabled={props.busy || tagsLoading} onPress={props.onSubmit} style={[styles.primary, props.busy && { opacity: 0.65 }]}><Text style={styles.primaryText}>{trial ? 'Terminer l’essai' : personal ? 'Enregistrer pour moi' : props.tags.length ? 'Partager ma météo' : 'Partager sans raison collective'}</Text>{props.busy ? <ActivityIndicator size="small" color={c.ink} /> : <ArrowRightIcon size={21} color={c.ink} />}</Pressable><Text style={styles.footnote}>{trial ? 'Cet essai reste privé et ne modifie pas ta météo du jour.' : personal ? 'Conservé sur cet appareil. Aucun ajout au graphe collectif.' : 'Seuls les tags prédéfinis sont transmis.'}</Text></View>
         </>}
       </NativeAnimated.View>
     </SafeAreaView>
@@ -159,7 +183,7 @@ const styles = StyleSheet.create({
   back: { width: 40, height: 40, justifyContent: 'center' },
   smallOrb: { width: 36, height: 36, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   optional: { fontSize: 12, color: c.muted, textAlign: 'center' },
-  reasonSpace: { flex: 1, justifyContent: 'center', gap: 14, paddingVertical: 14 },
+  reasonSpace: { flexGrow: 1, justifyContent: 'center', gap: 14, paddingVertical: 14 },
   reasonGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   reason: { width: '48%', flexGrow: 1, minHeight: 76, borderRadius: 16, padding: 14, flexDirection: 'row', alignItems: 'center', gap: 10, borderWidth: 1, borderColor: c.line, backgroundColor: c.surface },
   reasonSelected: { backgroundColor: c.selected, borderColor: c.link },

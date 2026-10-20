@@ -1,6 +1,7 @@
 import type { Core } from '@strapi/strapi';
 import { createHmac, randomUUID } from 'node:crypto';
-import { dateRange, TAGS, today } from './mood';
+import { dateRange, today } from './mood';
+import { setupTags } from './tags';
 export async function setup(strapi: Core.Strapi) {
   const q = (uid: string) => strapi.db.query(uid as any);
   const roles: Record<string, any> = {};
@@ -8,16 +9,14 @@ export async function setup(strapi: Core.Strapi) {
     roles[type] = await q('plugin::users-permissions.role').findOne({ where: { type } }) ?? await q('plugin::users-permissions.role').create({ data: { type, name, description: `Rôle Éclaircie : ${name}` } });
   }
   for (const type of ['collaborateur', 'manager']) {
-    for (const action of ['session', 'actions', ...(type === 'manager' ? ['stats', 'createAction', 'updateAction'] : ['create', 'actionFeedback'])]) {
+    for (const action of ['session', 'tags', 'actions', ...(type === 'manager' ? ['stats', 'createAction', 'updateAction'] : ['create', 'actionFeedback'])]) {
       const permission = `api::mood-entry.mood-entry.${action}`;
       if (!await q('plugin::users-permissions.permission').findOne({ where: { role: roles[type].id, action: permission } })) {
         await q('plugin::users-permissions.permission').create({ data: { role: roles[type].id, action: permission } });
       }
     }
   }
-  for (const label of TAGS) {
-    if (!await q('api::tag.tag').findOne({ where: { label } })) await strapi.documents('api::tag.tag' as any).create({ data: { label } });
-  }
+  await setupTags(strapi);
   const settings = strapi.store({ type: 'plugin', name: 'users-permissions', key: 'advanced' });
   const advanced = await settings.get() as Record<string, unknown>;
   await settings.set({ value: { ...advanced, allow_register: false } });

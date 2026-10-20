@@ -11,7 +11,7 @@ async function main() {
     const context = await compileStrapi();
     app = createStrapi(context);
     await app.load();
-    console.log('Base initialisée : schémas synchronisés, rôles Collaborateur/Manager et six tags prêts.');
+    console.log('Base initialisée : schémas synchronisés, rôles Collaborateur/Manager et catalogue de tags prêts.');
   } finally {
     if (app) await app.destroy();
   }

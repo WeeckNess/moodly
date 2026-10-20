@@ -24,6 +24,7 @@ const deniedTypes = [
 ];
 
 const config = ({ env }: Core.Config.Shared.ConfigParams): Core.Config.Plugin => ({
+  'strapi-lucide-icons': { enabled: true },
   'users-permissions': {
     config: {
       jwtManagement: 'legacy-support',

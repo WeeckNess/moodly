@@ -1,6 +1,7 @@
 import { listActions, createAction, updateAction, actionFeedback } from '../../../lib/teamActions';
 import { randomUUID, createHmac } from 'node:crypto';
 import { dateRange, safePoints, shiftDay, today, validateMood, THRESHOLD } from '../../../lib/mood';
+import { tagAudience } from '../../../lib/tags';
 
 const query = (uid: string) => strapi.db.query(uid as any);
 async function getMember(ctx: any) {
@@ -14,6 +15,14 @@ async function getMember(ctx: any) {
   return user;
 }
 export default {
+  async tags(ctx: any) {
+    const user = await getMember(ctx); if (!user) return;
+    const tags = await query('api::tag.tag').findMany({
+      where: tagAudience(user.role.type), orderBy: [{ position: 'asc' }, { label: 'asc' }],
+      select: ['documentId', 'label', 'icon'],
+    });
+    ctx.body = { data: tags.map(tag => ({ id: tag.documentId, label: tag.label, icon: tag.icon })) };
+  },
   async actions(ctx: any) { const user = await getMember(ctx); if (user) await listActions(ctx, user); },
   async createAction(ctx: any) { const user = await getMember(ctx); if (user) await createAction(ctx, user); },
   async updateAction(ctx: any) { const user = await getMember(ctx); if (user) await updateAction(ctx, user); },
@@ -34,7 +43,7 @@ export default {
     if (await query('api::submission-log.submission-log').findOne({ where: { deduplicationKey: key } })) {
       ctx.status = 409; ctx.body = { error: { message: 'Votre météo a déjà été envoyée aujourd’hui.' } }; return;
     }
-    const tagRecords = await query('api::tag.tag').findMany({ where: { label: { $in: input.tags } } });
+    const tagRecords = await query('api::tag.tag').findMany({ where: { ...tagAudience('collaborateur'), label: { $in: input.tags } } });
     if (tagRecords.length !== input.tags.length) return ctx.badRequest('Tags indisponibles.');
     try {
       await strapi.db.transaction(async ({ trx }) => {

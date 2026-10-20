@@ -13,6 +13,17 @@ async function login(email) {
 test('Parcours API et isolation des rôles sur des comptes fictifs', async t => {
   const manager = await login('manager@eclaircie.test');
   const tokens = await Promise.all(Array.from({ length: 6 }, (_, i) => login(`collaborateur${i + 1}@eclaircie.test`)));
+  await t.test('Catalogue protégé et filtré par le rôle, sans métadonnées internes', async () => {
+    assert.ok([401, 403].includes((await call('/api/mood-tags')).status));
+    const employeeTags = await call('/api/mood-tags?audience=manager', tokens[0]);
+    const managerTags = await call('/api/mood-tags?audience=collaborateur', manager);
+    assert.equal(employeeTags.status, 200); assert.equal(managerTags.status, 200);
+    assert.deepEqual(employeeTags.body.data.map(tag => tag.label), ['Charge', 'Ambiance', 'Sens', 'Équilibre', 'Reconnaissance', 'Outils']);
+    assert.ok(managerTags.body.data.some(tag => tag.label === 'Arbitrages'));
+    assert.ok(!employeeTags.body.data.some(tag => tag.label === 'Arbitrages'));
+    for (const tag of employeeTags.body.data) assert.deepEqual(Object.keys(tag).sort(), ['icon', 'id', 'label']);
+    assert.ok([403, 404, 405].includes((await call('/api/mood-tags', manager, { data: { label: 'Forgé' } })).status));
+  });
   await t.test('Accès non authentifié refusé', async () => {
     for (const path of ['/api/session', '/api/team-stats']) assert.ok([401, 403].includes((await call(path)).status));
     assert.ok([401, 403].includes((await call('/api/session', 'invalid-token')).status));
@@ -23,7 +34,7 @@ test('Parcours API et isolation des rôles sur des comptes fictifs', async t => 
     for (const path of ['/api/mood-entries', '/api/mood-entrys', '/api/submission-logs', '/api/daily-aggregates']) assert.ok([403, 404, 405].includes((await call(path, manager)).status));
   });
   await t.test('Champs forgés et saisies invalides refusés', async () => {
-    for (const data of [{ score: 8 }, { score: 4, team: 999 }, { score: 4, comment: 'hello' }, { score: 4, tags: ['unknown'] }]) assert.equal((await call('/api/mood-entries', tokens[0], { data })).status, 400);
+    for (const data of [{ score: 8 }, { score: 4, team: 999 }, { score: 4, comment: 'hello' }, { score: 4, tags: ['unknown'] }, { score: 4, tags: ['Arbitrages'] }]) assert.equal((await call('/api/mood-entries', tokens[0], { data })).status, 400);
   });
   await t.test('Deux saisies concurrentes produisent une réponse unique', async () => {
     const responses = await Promise.all([call('/api/mood-entries', tokens[0], { data: { score: 4, tags: ['Charge'] } }), call('/api/mood-entries', tokens[0], { data: { score: 4, tags: ['Charge'] } })]);
@@ -65,5 +76,33 @@ test('Parcours API et isolation des rôles sur des comptes fictifs', async t => 
     assert.ok(!JSON.stringify(result).includes('feedbackSum'));
     for (const path of ['/api/action-response-logs', '/api/team-action']) assert.ok([403, 404, 405].includes((await call(path, manager)).status));
   });
-
+  await t.test('Les changements du catalogue en base sont immédiatement lus et validés par l’API', async () => {
+    // Fixtures SQL uniquement dans la base temporaire du runner, jamais dans la base utilisateur.
+    assert.ok(process.env.TEST_DATABASE_FILENAME);
+    const Database = require('better-sqlite3');
+    const db = new Database(process.env.TEST_DATABASE_FILENAME);
+    const { randomUUID } = require('node:crypto');
+    try {
+      const id = db.prepare('INSERT INTO tags (document_id, label, audience, icon, enabled, position) VALUES (?, ?, ?, ?, ?, ?)').run(randomUUID(), 'Télétravail test', 'collaborateur', 'wrench', 1, -1).lastInsertRowid;
+      let catalogue = (await call('/api/mood-tags', tokens[5])).body.data;
+      assert.equal(catalogue[0].label, 'Télétravail test'); assert.equal(catalogue[0].icon, 'wrench');
+      db.prepare('UPDATE tags SET label = ?, icon = ? WHERE id = ?').run('Organisation test', 'alarm-clock', id);
+      catalogue = (await call('/api/mood-tags', tokens[5])).body.data;
+      assert.equal(catalogue[0].label, 'Organisation test'); assert.equal(catalogue[0].icon, 'alarm-clock');
+      assert.equal((await call('/api/mood-entries', tokens[5], { data: { score: 3, tags: ['Télétravail test'] } })).status, 400);
+      const other = await login('collaborateur8@eclaircie.test');
+      assert.equal((await call('/api/mood-entries', other, { data: { score: 3, tags: ['Organisation test'] } })).status, 201);
+      db.prepare('UPDATE tags SET enabled = 0 WHERE id = ?').run(id);
+      assert.ok(!(await call('/api/mood-tags', tokens[5])).body.data.some(tag => tag.label === 'Organisation test'));
+      assert.equal((await call('/api/mood-entries', tokens[5], { data: { score: 3, tags: ['Organisation test'] } })).status, 400);
+      const enabledIds = db.prepare('SELECT id FROM tags WHERE enabled = 1').all();
+      try {
+        db.prepare('UPDATE tags SET enabled = 0').run();
+        assert.deepEqual((await call('/api/mood-tags', tokens[5])).body.data, []);
+        assert.equal((await call('/api/mood-entries', tokens[5], { data: { score: 3, tags: [] } })).status, 201);
+      } finally {
+        for (const tag of enabledIds) db.prepare('UPDATE tags SET enabled = 1 WHERE id = ?').run(tag.id);
+      }
+    } finally { db.close(); }
+  });
 });
