@@ -16,6 +16,7 @@
     "demo": "node scripts/demo.cjs",
     "test": "node --test tests/*.test.cjs",
     "setup": "node scripts/setup.cjs",
+    "db:init": "node scripts/init-database.cjs",
     "predevelop": "node scripts/setup.cjs",
     "prestart": "node scripts/setup.cjs",
     "test:api": "node scripts/test-api.cjs"
@@ -38,7 +39,7 @@
     "typescript": "^5"
   },
   "engines": {
-    "node": ">=20.0.0 <=26.x.x",
+    "node": ">=24 <25",
     "npm": ">=6.0.0"
   }
 }

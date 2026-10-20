@@ -9,6 +9,13 @@
   "options": {
     "draftAndPublish": false
   },
+  "indexes": [
+    {
+      "name": "tags_label_unique",
+      "columns": ["label"],
+      "type": "unique"
+    }
+  ],
   "attributes": {
     "label": {
       "type": "string",

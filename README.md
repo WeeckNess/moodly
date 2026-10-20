@@ -25,8 +25,11 @@ Dans un second terminal, depuis la racine :
 
 ```sh
 npm run backend:install
+npm run backend:db:init
 npm run backend:dev
 ```
+
+La commande `backend:db:init` initialise la base, les rôles et les tags sans comptes fictifs. Le [modèle de données et la procédure d'initialisation](docs/modele-donnees.md) détaillent les relations et les règles de conservation.
 
 Pour des tests locaux uniquement, `npm run backend:demo` permet de créer des comptes et données fictifs. Ne pas utiliser ces données pour un lancement réel. Le premier démarrage de cette commande crée automatiquement `backend/.env` avec des secrets aléatoires, sans écraser un fichier existant. Le seed est explicite, idempotent et interdit en production. Il crée les rôles, une équipe, un manager, huit collaborateurs et 29 jours de données fictives. Aujourd’hui reste disponible pour tester la saisie.
 

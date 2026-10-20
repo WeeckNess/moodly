@@ -1,3 +1,12 @@
+if (Number(process.versions.node.split('.')[0]) !== 24) {
+  throw new Error(
+    `Le backend nécessite Node.js 24 (version active : ${process.version}). ` +
+    'Activez Node 24 avant de lancer npm. Sur ce Mac avec Homebrew : ' +
+    'export PATH="/opt/homebrew/opt/node@24/bin:$PATH". ' +
+    'Si SQLite signale encore ERR_DLOPEN_FAILED, exécutez npm rebuild --prefix backend better-sqlite3 depuis la racine.'
+  );
+}
+
 const fs = require('node:fs');
 const path = require('node:path');
 const { randomBytes } = require('node:crypto');
