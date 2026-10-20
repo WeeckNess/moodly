@@ -50,7 +50,9 @@ Créer `mobile/.env` à partir de `mobile/.env.example`, puis remplacer `localho
 EXPO_PUBLIC_API_URL=http://192.168.1.20:1337
 ```
 
-Téléphone et PC doivent être sur le même réseau. Redémarrer Expo après modification. Utiliser HTTPS pour un déploiement. Les navigateurs web nécessitent aussi une origine autorisée dans `CORS_ORIGINS` ; l’app native n’est pas soumise au CORS navigateur.
+Téléphone et PC doivent être sur le même réseau. Redémarrer Expo après modification. Utiliser HTTPS pour un déploiement. En développement, Strapi autorise automatiquement les adresses réseau de la machine qui le lance, sur les ports Expo 8081 et 8082. Un autre PC sur le même réseau doit ouvrir `http://IP_DU_PC_SERVEUR:8081` (pas son propre `localhost`). Le port 1337 doit aussi être accessible ; certains Wi-Fi publics isolent les appareils. Après un changement de réseau, mettre à jour `mobile/.env` et redémarrer Expo et Strapi. L’app native n’est pas soumise au CORS navigateur.
+
+En production, seules les origines déclarées dans `CORS_ORIGINS` sont autorisées (ou les origines localhost par défaut si la variable est absente), sans ajout automatique des IP réseau. Pour tester depuis un autre réseau, il faut héberger l’app **et** l’API avec des adresses HTTPS accessibles ; le lien Expo seul ne publie pas Strapi.
 
 ## Fonctionnalités livrées
 
