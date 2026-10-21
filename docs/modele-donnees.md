@@ -45,7 +45,7 @@ La relation User → Team est ajoutée par `backend/src/extensions/users-permiss
 
 Des index SQL uniques explicites protègent `SubmissionLog.deduplicationKey`, `DailyAggregate.aggregateKey` et `Tag.label`. L'option d'attribut `unique: true` de Strapi v5 ne suffit pas ici à créer une contrainte SQL. Si une base existante contient des doublons, la synchronisation échoue au lieu de supprimer silencieusement des données.
 
-Les tags initiaux du collaborateur sont Charge, Ambiance, Sens, Équilibre, Reconnaissance et Outils. Ceux du manager sont Arbitrages, Moyens, Conflits, Objectifs, Reconnaissance et Soutien hiérarchique. Reconnaissance appartient aux deux publics. Cette initialisation et la migration des six anciens tags ne s'exécutent qu'une fois, avec un marqueur en base : les tags renommés, désactivés ou supprimés ne sont pas réinitialisés aux redémarrages suivants.
+Les tags initiaux du collaborateur sont Charge, Ambiance, Sens, Équilibre, Reconnaissance et Outils. Ceux du manager sont Arbitrages, Moyens, Conflits, Objectifs, Reconnaissance et Soutien hiérarchique. Reconnaissance appartient aux deux publics. Le catalogue de départ n'est installé qu'une fois, avec un marqueur en base : les tags renommés, désactivés ou supprimés ne sont pas réinitialisés aux redémarrages suivants. Le remplissage des anciens champs vides et la conversion des anciens noms d'icônes restent idempotents au démarrage.
 
 Dans **Content Manager → Tag**, l'administrateur peut ajouter ou modifier les libellés, choisir `audience` (`collaborateur`, `manager`, `both`), l'icône dans le sélecteur **Lucide Icons** avec recherche et aperçu (`strapi-lucide-icons`), `enabled` et `position` (les plus petits nombres apparaissent en premier). Préférer la désactivation à la suppression pour conserver les relations historiques. Les anciens libellés déjà enregistrés dans l'historique privé de l'appareil restent lisibles.
 
@@ -62,3 +62,5 @@ Les réponses et les journaux n'ont pas de routes REST génériques de lecture. 
 Le dépôt contient également les actions collectives (`TeamAction`, `ActionResponseLog`) et les contacts d'accompagnement de Team. Ces extensions sont conservées avec le modèle de base.
 
 Les comptes, réponses et journaux sont des données locales ; ils ne font pas partie des fichiers à committer. Le contrat des routes est décrit dans `docs/api.md`.
+
+La procédure de création des équipes, comptes et relations manager figure dans [administration-strapi.md](administration-strapi.md). Les sauvegardes sont hors périmètre de la version locale, par décision du porteur du projet du 20 octobre 2026.

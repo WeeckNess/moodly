@@ -24,6 +24,33 @@ test('Parcours API et isolation des rôles sur des comptes fictifs', async t => 
     for (const tag of employeeTags.body.data) assert.deepEqual(Object.keys(tag).sort(), ['icon', 'id', 'label']);
     assert.ok([403, 404, 405].includes((await call('/api/mood-tags', manager, { data: { label: 'Forgé' } })).status));
   });
+  await t.test('Le listing serveur Lucide fonctionne sous Node 24, sans ouvrir de nouveaux droits applicatifs', async () => {
+    const route = '/api/strapi-lucide-icons/icons';
+    assert.ok([401, 403].includes((await call(route)).status));
+    assert.equal((await call(route, manager)).status, 403);
+    assert.ok(process.env.TEST_DATABASE_FILENAME);
+    // Permission éphémère exclusivement dans la base isolée, pour exercer le vrai service étendu.
+    const Database = require('better-sqlite3');
+    const db = new Database(process.env.TEST_DATABASE_FILENAME);
+    let permission;
+    try {
+      const role = db.prepare('SELECT id FROM up_roles WHERE type = ?').get('manager');
+      permission = db.prepare('INSERT INTO up_permissions (action) VALUES (?)').run('plugin::strapi-lucide-icons.icons.list').lastInsertRowid;
+      db.prepare('INSERT INTO up_permissions_role_lnk (permission_id, role_id) VALUES (?, ?)').run(permission, role.id);
+      const result = await call(route, manager);
+      assert.equal(result.status, 200);
+      assert.ok(result.body.icons.includes('alarm-clock'));
+      assert.ok(result.body.icons.includes('message-circle'));
+      assert.equal(new Set(result.body.icons).size, result.body.icons.length);
+    } finally {
+      if (permission) {
+        db.prepare('DELETE FROM up_permissions_role_lnk WHERE permission_id = ?').run(permission);
+        db.prepare('DELETE FROM up_permissions WHERE id = ?').run(permission);
+      }
+      db.close();
+    }
+    assert.equal((await call(route, manager)).status, 403);
+  });
   await t.test('Accès non authentifié refusé', async () => {
     for (const path of ['/api/session', '/api/team-stats']) assert.ok([401, 403].includes((await call(path)).status));
     assert.ok([401, 403].includes((await call('/api/session', 'invalid-token')).status));
