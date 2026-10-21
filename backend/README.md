@@ -1,61 +1,38 @@
-# 🚀 Getting started with Strapi
+# Backend Strapi — Éclaircie
 
-Strapi comes with a full featured [Command Line Interface](https://docs.strapi.io/dev-docs/cli) (CLI) which lets you scaffold and manage your project in seconds.
+Strapi 5.57.0, Node.js 24, TypeScript et SQLite pour le MVP local Moodly.
 
-### `develop`
+## Démarrer depuis la racine du dépôt
 
-Start your Strapi application with autoReload enabled. [Learn more](https://docs.strapi.io/dev-docs/cli#strapi-develop)
-
-```
-npm run develop
-# or
-yarn develop
+```sh
+npm run backend:install
+npm run backend:db:init
+npm run backend:dev
 ```
 
-### `start`
+L'administration est disponible sur [localhost:1337/admin](http://localhost:1337/admin). Le compte administrateur est distinct des comptes de l'app. La commande d'initialisation se termine après synchronisation ; le serveur de développement reste actif.
 
-Start your Strapi application with autoReload disabled. [Learn more](https://docs.strapi.io/dev-docs/cli#strapi-start)
+Pour ajouter volontairement les comptes et l'historique fictifs, utiliser `npm run backend:demo` à la place de `backend:dev`. Les identifiants sont dans le [README du projet](../README.md).
 
-```
-npm run start
-# or
-yarn start
-```
+## Fonctionnement
 
-### `build`
+- Connexion JWT, rôles Collaborateur et Manager et équipe résolus côté serveur.
+- Une déclaration quotidienne sans relation vers son auteur ; journal de participation séparé.
+- Statistiques collectives sur 30 jours, masquées sous cinq réponses.
+- Policy `global::is-manager` sur les statistiques et les écritures d'actions collectives.
+- Catalogue de tags administrable avec sélecteur Lucide et service serveur corrigé pour Node 24.
+- Purge des réponses et journaux après 45 jours par défaut ; agrégats conservés séparément.
 
-Build your admin panel. [Learn more](https://docs.strapi.io/dev-docs/cli#strapi-build)
+Les sauvegardes sont hors périmètre ici, selon la décision du porteur du projet du 20 octobre 2026. Les tests et les essais sur téléphone sont confirmés fonctionnels par celui-ci à cette date.
 
-```
-npm run build
-# or
-yarn build
-```
+## Documentation et vérifications
 
-## ⚙️ Deployment
+- [Guide d'administration : comptes, équipes, rôles, tags et contacts](../docs/administration-strapi.md).
+- [Modèle de données et initialisation](../docs/modele-donnees.md).
+- [Contrat API](../docs/api.md).
+- [État du backend](../docs/etat-strapi.md).
+- [Validation et commandes de test](../docs/validation.md).
 
-Strapi gives you many possible deployment options for your project including [Strapi Cloud](https://cloud.strapi.io). Browse the [deployment section of the documentation](https://docs.strapi.io/dev-docs/deployment) to find the best solution for your use case.
+Depuis la racine, `npm run backend:test` vérifie les règles métier et la policy. `npm run backend:test:api` compile le backend et l'administration, démarre une API sur une base fictive temporaire, vérifie aussi le client du front et ferme cette instance. Installer les dépendances de `mobile` avant ce dernier contrôle.
 
-```
-yarn strapi deploy
-```
-
-## 📚 Learn more
-
-- [Resource center](https://strapi.io/resource-center) - Strapi resource center.
-- [Strapi documentation](https://docs.strapi.io) - Official Strapi documentation.
-- [Strapi tutorials](https://strapi.io/tutorials) - List of tutorials made by the core team and the community.
-- [Strapi blog](https://strapi.io/blog) - Official Strapi blog containing articles made by the Strapi team and the community.
-- [Changelog](https://strapi.io/changelog) - Find out about the Strapi product updates, new features and general improvements.
-
-Feel free to check out the [Strapi GitHub repository](https://github.com/strapi/strapi). Your feedback and contributions are welcome!
-
-## ✨ Community
-
-- [Discord](https://discord.strapi.io) - Come chat with the Strapi community including the core team.
-- [Forum](https://forum.strapi.io/) - Place to discuss, ask questions and find answers, show your Strapi project and get feedback or just talk with other Community members.
-- [Awesome Strapi](https://github.com/strapi/awesome-strapi) - A curated list of awesome things related to Strapi.
-
----
-
-<sub>🤫 Psst! [Strapi is hiring](https://strapi.io/careers).</sub>
+Pour une compilation seule : `npm --prefix backend run build`. Les secrets `.env`, la base `.tmp/data.db` et les dépendances ne sont pas versionnés.

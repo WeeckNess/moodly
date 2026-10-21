@@ -45,6 +45,8 @@ Pour lancer le serveur sans créer les comptes fictifs : `npm run backend:dev`.
 
 Administration : http://localhost:1337/admin. Le compte administrateur est distinct des comptes de l’app et doit être créé à la première ouverture.
 
+Le [guide d'administration Strapi](docs/administration-strapi.md) explique la création des équipes et des comptes, l'affectation des rôles, la désignation du manager, les tags et les contacts d'accompagnement. L'[état du backend](docs/etat-strapi.md) décrit le périmètre finalisé au 20 octobre 2026. Les sauvegardes sont hors périmètre de cette version locale, à la demande du porteur du projet.
+
 ### Connexion du front à Strapi
 
 La connexion, la session, la saisie quotidienne, les statistiques et les actions collectives passent par `mobile/src/strapi.ts`. Les rôles et l'équipe proviennent de Strapi ; les comptes de l'administration ne sont pas des comptes applicatifs.
@@ -82,7 +84,7 @@ En production, seules les origines déclarées dans `CORS_ORIGINS` sont autoris�
 - Journal et réponse créés dans une transaction ; contrainte unique pour bloquer les requêtes concurrentes.
 - Vue manager : un graphique sur 30 jours, moyennes masquées sous 5 réponses et résumé texte.
 - Participation collective sur 7 jours, masquée sous 5 participants distincts.
-- Routes manager limitées à l’équipe gérée par le compte ; aucune route de lecture des réponses ou journaux.
+- Policy `global::is-manager` sur les statistiques et les écritures d'actions : compte actif, rôle manager et équipe effectivement gérée. Aucune route de lecture des réponses ou journaux.
 - Profil personnel : carte météo quotidienne inspirée des souvenirs BeReal, calendrier des 30 derniers jours et tendance personnelle sur 7 jours. Stockage sécurisé par compte sur mobile ; mémoire de session uniquement sur le web réel. Aucun nouvel historique individuel côté serveur ou manager.
 - Confidentialité, aide et déconnexion regroupées dans le profil, sans les anciennes pages ni barre d’onglets. Effacement local du récap et du compteur privé après confirmation.
 - Purge des réponses et journaux après 45 jours par défaut, au démarrage et quotidiennement à 3 h, avec conservation séparée des agrégats.
@@ -113,6 +115,8 @@ mobile/src/support.ts                Compteur privé sur l’appareil
 mobile/src/strapi.ts                  Client API et stockage du jeton
 backend/src/api/                     Modèles, routes et contrôleurs
 backend/src/lib/                     Validation, seed et conservation
+backend/src/policies/                Contrôle d'accès manager
+backend/src/extensions/              Relations utilisateur et correctif serveur Lucide
 backend/tests/                       Règles métier et intégration API
 docs/                               Conception, API et état du serveur
 ```
@@ -145,13 +149,15 @@ npm run backend:test:api
 
 Le script compile le serveur, démarre l’instance isolée, exécute les tests backend puis le client du front contre cette même API et supprime uniquement sa base temporaire. Le test du client vérifie connexion, session, saisie persistée, doublon refusé, rôles et graphe collectif. Il nécessite les dépendances de `mobile` et `backend`. Voir `docs/validation.md`.
 
+Le porteur du projet confirme le 20 octobre 2026 que les tests et les essais sur téléphone fonctionnent. Le correctif du listing serveur Lucide et la policy manager sont également couverts par les vérifications automatisées du backend.
+
 ## Limites avant utilisation réelle
 
 Le MVP limite ce que voit le manager ; ce n’est pas une preuve d’anonymat absolu. Les accès administrateur, horodatages, identifiants internes et journaux techniques peuvent permettre des recoupements. Une validation de confidentialité et de conformité reste nécessaire avant une utilisation avec de vrais salariés. Voir `docs/conception.md`.
 
 Le compteur d’accompagnement est isolé par compte à l’aide d’une clé opaque délivrée dans `/api/session`. Sur mobile, il utilise le stockage sécurisé système. Sur le web réel, il reste en mémoire pendant la session et se réinitialise à la déconnexion ou au rechargement. Il ne synchronise pas les appareils et ne reconstitue pas les anciennes réponses. Les dates hors fenêtre sont écartées lors de la prochaine saisie. Ce dispositif d’accompagnement ne constitue pas une validation RGPD.
 
-Les dépendances du starter présentent des alertes npm audit : leur revue reste à mener avant un déploiement. Notifications locales, historique personnel et export CSV ne font pas partie de cette version.
+La revue des dépendances et la configuration HTTPS relèvent de la préparation d'un éventuel déploiement. Les notifications locales et l'export CSV ne sont pas intégrés. L'historique personnel existe et reste local à l'appareil.
 
 ## Références visuelles et techniques
 

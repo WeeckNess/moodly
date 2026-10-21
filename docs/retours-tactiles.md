@@ -19,4 +19,4 @@ Les séquences de confirmation ont priorité sur les crans et les sélections po
 
 ## Validation
 
-Tests automatisés avec horloge et moteur tactile simulés : double confirmation, signatures Android distinctes, limitation des crans, préférence persistée, annulation des impulsions, absence de vibration avant chargement, sur web et en arrière-plan. Contrôle du réglage dans le navigateur et exports Expo web/iOS/Android. Le ressenti physique doit être essayé dans Expo Go sur téléphone compatible.
+Tests automatisés avec horloge et moteur tactile simulés : double confirmation, signatures Android distinctes, limitation des crans, préférence persistée, annulation des impulsions, absence de vibration avant chargement, sur web et en arrière-plan. Contrôle du réglage dans le navigateur et exports Expo web/iOS/Android. Le porteur du projet confirme le 20 octobre 2026 que les essais sur téléphone fonctionnent ; voir [validation.md](validation.md) pour la provenance et les limites de cette validation.

@@ -2,6 +2,8 @@
 
 Toutes les routes métier exigent un JWT Strapi valide. Les rôles et permissions sont initialisés au démarrage. Aucun paramètre client ne permet de changer l’équipe consultée ou la date d’une saisie.
 
+La policy `global::is-manager` est attachée à `GET /api/team-stats`, `POST /api/team-actions` et `PATCH /api/team-actions/:documentId`. Elle relit le compte, refuse les comptes bloqués ou sans rôle Manager et exige que `User.team` corresponde à une équipe dont `Team.manager` désigne ce compte. Les contrôleurs conservent leurs vérifications métier. Le refus de policy produit un statut 403.
+
 ## POST /api/auth/local
 
 Authentification native Users & Permissions :
@@ -67,3 +69,20 @@ La création, la modification, la désactivation et la suppression des tags pass
 ## Accès fermés
 
 Aucune route REST générique de lecture, modification ou suppression de MoodEntry, SubmissionLog ou DailyAggregate. Les comptes applicatifs n’ont pas d’accès à l’administration Strapi.
+
+## Actions collectives
+
+| Route | Accès |
+| --- | --- |
+| `GET /api/team-actions` | Collaborateurs et managers, actions de leur équipe. |
+| `POST /api/team-actions` | Manager de l'équipe, policy `is-manager`. |
+| `PATCH /api/team-actions/:documentId` | Manager de l'équipe, policy `is-manager`, transitions prévues uniquement. |
+| `POST /api/team-actions/:documentId/feedback` | Collaborateur, une réponse anonyme par action après sa réalisation. |
+
+Les contrats et la période de bilan figurent dans [espaces-manager.md](espaces-manager.md).
+
+## Catalogue technique Lucide
+
+Le service du plugin associé à `GET /api/strapi-lucide-icons/icons` renvoie `{ "icons": ["alarm-clock", "..."] }` lorsqu'une permission explicite lui est accordée. Une extension du projet corrige l'import du catalogue `.mjs` sous Node 24 et conserve le normaliseur du plugin. Le bootstrap n'accorde cette route ni aux comptes Public, ni aux rôles applicatifs ; le front utilise uniquement `/api/mood-tags`. Aucune permission supplémentaire n'est nécessaire pour le sélecteur de l'administration.
+
+Pour créer et affecter les comptes correctement, voir [le guide d'administration](administration-strapi.md).

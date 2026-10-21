@@ -1,5 +1,7 @@
 # Validation Éclaircie
 
+Mis à jour le 20 octobre 2026. Les tests et les essais sur téléphone sont confirmés fonctionnels par le porteur du projet à cette date ; les plateformes, modèles et versions de téléphone ne sont pas précisés. Les commandes ci-dessous permettent de reproduire les vérifications automatisées.
+
 ## Commandes
 
 Depuis la racine :
@@ -11,7 +13,7 @@ npm run backend:test
 npm run backend:test:api
 ```
 
-Le dernier script crée sa propre base temporaire sous `backend/.tmp/`, utilise un port disponible et des comptes fictifs, puis ferme son serveur et supprime sa base de test. Il ne modifie pas la base de démonstration.
+Le dernier script compile le backend et l'administration, crée sa propre base temporaire sous `backend/.tmp/`, utilise un port disponible et des comptes fictifs, exécute les tests API puis le client du front contre cette API. Il ferme ensuite son serveur et supprime sa base de test. Il ne modifie pas la base de démonstration. Les dépendances de `backend` et de `mobile` doivent être installées avec Node 24.
 
 ## Couverture
 
@@ -20,12 +22,17 @@ Le dernier script crée sa propre base temporaire sous `backend/.tmp/`, utilise 
 - Fenêtre de 30 jours stable au changement d’heure.
 - Accès sans authentification refusé.
 - Rôles manager et collaborateur séparés.
+- Policy manager : compte actif, rôle actuel et désignation comme manager de l'équipe de rattachement ; refus si le compte est absent, bloqué, rétrogradé ou mal affecté.
 - Aucune route de lecture brute des réponses ou journaux.
 - Deux envois simultanés créent une seule réponse ; l’autre reçoit 409.
 - Le blocage journalier est visible dans la session.
 - Statistiques limitées à l’équipe du compte même avec un paramètre d’équipe ajouté.
 - Statistiques sans auteur ni horodatage technique.
-- Parcours web : démo, sélection météo/tags, confirmation, navigation, connexion et saisie réelles.
+- Tags chargés depuis Strapi, filtrés par rôle, triés, renommés et désactivés en base ; refus des tags indisponibles et maintien d'une saisie sans tag.
+- Le bootstrap conserve les modifications du catalogue et migre les anciens noms d'icônes.
+- Sélecteur Lucide contrôlé dans l'administration ; rendu SVG natif, alias et icône de repli testés.
+- Service serveur Lucide corrigé et appelé via HTTP sous Node 24, sans nouvelle permission sur les rôles applicatifs. La permission du test est créée et retirée uniquement dans sa base isolée.
+- Parcours web : connexion aux comptes Strapi, sélection météo/tags, confirmation, navigation et conservation du statut de participation après reconnexion.
 - Contrôle visuel à 320 × 568, 390 × 844 et sur grand écran.
 - Correspondance des coordonnées du geste avec les cinq valeurs de l’arc et clamp dans l’ouverture inférieure.
 - Glissement, flèches clavier et valeur ARIA du curseur.
@@ -42,7 +49,7 @@ Le dernier script crée sa propre base temporaire sous `backend/.tmp/`, utilise 
 
 ## Limites
 
-La validation navigateur ne remplace pas un test Android/iOS sur téléphone réel. Le retour haptique est intégré avec expo-haptics ; sa sensation et sa disponibilité restent à vérifier sur un téléphone compatible. Un export Expo n’est ni un APK signé ni une publication sur les stores. Ces contrôles ne constituent pas un audit de conformité ou une preuve d’anonymat absolu.
+La confirmation des essais sur téléphone provient du porteur du projet ; elle est distincte des vérifications navigateur et des adaptateurs simulés. Un export Expo n'est ni un APK signé ni une publication sur les stores. Ces contrôles ne constituent pas un audit de conformité ou une preuve d'anonymat absolu. Les sauvegardes sont hors périmètre de la version locale à la demande du porteur du projet.
 
 ## Revue de la DA et du portail manager
 
@@ -50,4 +57,4 @@ Voir [revue-da.md](revue-da.md) pour les corrections, les parcours vérifiés, l
 
 ## Profil personnel — 15 octobre 2026
 
-Douze tests mobiles couvrent désormais également le calendrier, la rétention à trente jours, la tendance sur sept jours, l’isolation des comptes, les adaptateurs de stockage simulés et l’effacement des exemples de démo. La validation navigateur couvre la connexion des deux rôles, la carte du jour après une saisie de démo, l’absence du brouillon libre dans le récap et l’absence d’exemples dans un compte réel. Voir [profil-personnel.md](profil-personnel.md). Les adaptateurs simulés ne constituent pas un test sur téléphone réel.
+Les tests mobiles couvrent également le calendrier, la rétention à trente jours, la tendance sur sept jours, l'isolation des comptes, les adaptateurs de stockage simulés et l'effacement local. La validation navigateur couvre la connexion des deux rôles et l'absence du brouillon libre dans le récap. Le récap commence avec les saisies enregistrées sur cet appareil. Voir [profil-personnel.md](profil-personnel.md).
