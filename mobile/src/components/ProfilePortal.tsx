@@ -9,12 +9,11 @@ import { weathers } from '../weather';
 import { monthCells, type PersonalMood } from '../personalHistoryLogic';
 import type { Session } from '../strapi';
 import { HapticSettings } from './HapticSettings';
-import { TeamActions } from './TeamActions';
 import { PersonalGarden } from './PersonalGarden';
 import { SupportResources } from './SupportResources';
 import { WeatherMorph } from './WeatherMorph';
 export type ProfileSection = 'privacy' | 'guide' | 'support' | null;
-type Props = { personalOnly?: boolean; jwt?: string; session: Session; today: string; history: PersonalMood[]; loading: boolean; error: string; section: ProfileSection; onBack: () => void; onLogout: () => void; onClear: () => Promise<void> };
+type Props = { personalOnly?: boolean; session: Session; today: string; history: PersonalMood[]; loading: boolean; error: string; section: ProfileSection; onBack: () => void; onLogout: () => void; onClear: () => Promise<void> };
 export function ProfilePortal(props: Props) {
   const scroll = useRef<ScrollView>(null);
   const cardTop = useRef(0);
@@ -73,7 +72,6 @@ export function ProfilePortal(props: Props) {
         </>}
         <View style={s.privateNotice}><LockSimpleIcon size={15} color={c.muted} /><Text style={[s.caption, { flex: 1 }]}>{Platform.OS === 'web' ? 'Ce récap reste dans cette session web. Il disparaît à la fermeture ou à la déconnexion.' : '30 jours sur ce téléphone, dans son stockage sécurisé. Ton manager n’y a pas accès.'}</Text></View>
       </> : <View style={s.managerAccount}><ShieldCheckIcon size={34} color={c.sage} /><Text accessibilityRole="header" style={s.title}>Un espace{ '\n' }pour le collectif.</Text><Text style={s.body}>Tu consultes la météo anonyme de ton équipe. Le profil ne contient aucune réponse individuelle de tes collaborateurs.</Text></View>}
-      {props.jwt && props.session.role === 'collaborateur' && <TeamActions jwt={props.jwt} />}
       <View onLayout={event => { supportTop.current = event.nativeEvent.layout.y; if (props.section === 'support') scroll.current?.scrollTo({ y: Math.max(0, supportTop.current - 12), animated: false }); }}><SupportResources contacts={props.session.team.supportContacts} /></View>
       <View style={s.settings}>
         <HapticSettings />
