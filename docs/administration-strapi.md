@@ -60,7 +60,7 @@ Dans **Content Manager → Team → supportContacts**, renseigner les interlocut
 
 ## Données de démonstration et conservation
 
-`npm run backend:demo` démarre le serveur avec un seed explicite : une équipe fictive, un manager, huit collaborateurs et 29 jours d'historique. Les comptes et mots de passe de démonstration figurent dans le [README](../README.md). Un démarrage normal n'ajoute pas ces données. Le seed est interdit en production et ne réinitialise pas les mots de passe existants.
+Les données fictives sont interdites dans la base applicative. Les fixtures restent disponibles uniquement via `npm run backend:test:api`, dans une base temporaire supprimée après les tests. Créer les comptes et les équipes réels dans l’administration Strapi.
 
 Les réponses et journaux de participation sont purgés au démarrage et chaque jour à 3 h, fuseau Europe/Paris, après 45 jours par défaut. `MOODLY_RETENTION_DAYS` peut modifier cette durée avec un minimum de 30 jours. Les agrégats sont conservés séparément. L'historique personnel et la météo privée du manager restent sur l'appareil.
 

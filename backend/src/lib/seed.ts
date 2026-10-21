@@ -2,6 +2,7 @@ import type { Core } from '@strapi/strapi';
 import { createHmac, randomUUID } from 'node:crypto';
 import { dateRange, today } from './mood';
 import { setupTags } from './tags';
+import { assertTestFixtureDatabase } from './testFixtures';
 export async function setup(strapi: Core.Strapi) {
   const q = (uid: string) => strapi.db.query(uid as any);
   const roles: Record<string, any> = {};
@@ -21,7 +22,7 @@ export async function setup(strapi: Core.Strapi) {
   const advanced = await settings.get() as Record<string, unknown>;
   await settings.set({ value: { ...advanced, allow_register: false } });
   if (process.env.MOODLY_DEMO_SEED !== 'true') return;
-  if (process.env.NODE_ENV === 'production') throw new Error('Seed de démonstration interdit en production.');
+  assertTestFixtureDatabase(process.env.NODE_ENV, process.env.DATABASE_FILENAME);
   const userService = strapi.plugin('users-permissions').service('user');
   const password = process.env.MOODLY_DEMO_PASSWORD || 'EclaircieDemo2026!';
   let manager = await q('plugin::users-permissions.user').findOne({ where: { email: 'manager@eclaircie.test' } });

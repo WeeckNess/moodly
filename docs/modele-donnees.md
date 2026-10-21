@@ -13,7 +13,7 @@ La commande génère le fichier local `backend/.env` s'il manque, compile le bac
 
 La commande peut être relancée ; elle réutilise la base et les référentiels existants. Le bootstrap applique également la purge configurée des données expirées (45 jours par défaut). Arrêter le serveur avant de l'exécuter sur la même base. Le fichier SQLite et les secrets locaux ne sont pas versionnés ; les schémas et le bootstrap permettent de recréer la base.
 
-Pour lancer ensuite l'API : `npm run backend:dev`. Pour ajouter volontairement les comptes et l'historique de démonstration : `npm run backend:demo`.
+Les données fictives sont interdites dans la base applicative. Les fixtures restent disponibles uniquement via `npm run backend:test:api`, dans une base temporaire supprimée après les tests. Créer les comptes et les équipes réels dans l’administration Strapi.
 
 ## Version de Node et pilote SQLite
 

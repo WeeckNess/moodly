@@ -9,7 +9,7 @@ La policy `global::is-manager` est attachée à `GET /api/team-stats`, `POST /ap
 Authentification native Users & Permissions :
 
 ```json
-{ "identifier": "collaborateur1@eclaircie.test", "password": "EclaircieDemo2026!" }
+{ "identifier": "utilisateur@entreprise.fr", "password": "mot-de-passe-du-compte" }
 ```
 
 Renvoie un JWT de 8 heures. L’auto-inscription publique est désactivée.

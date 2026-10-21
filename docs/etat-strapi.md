@@ -44,6 +44,6 @@ npm run backend:db:init
 npm run backend:dev
 ```
 
-Pour une démonstration avec comptes et historique fictifs : remplacer la dernière commande par `npm run backend:demo`.
+Les données fictives sont interdites dans la base applicative. Les fixtures restent disponibles uniquement via `npm run backend:test:api`, dans une base temporaire supprimée après les tests. Créer les comptes et les équipes réels dans l’administration Strapi.
 
 Administration : http://localhost:1337/admin. Les identifiants de démonstration figurent dans le README. Contrat détaillé dans `docs/api.md`.

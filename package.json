@@ -2,7 +2,7 @@
   "name": "moodly-starter",
   "version": "0.1.0",
   "private": true,
-  "description": "Éclaircie mobile app and Strapi API",
+  "description": "\u00c9claircie mobile app and Strapi API",
   "scripts": {
     "postinstall": "npm ci --prefix mobile",
     "start": "npm --prefix mobile start",
@@ -13,7 +13,6 @@
     "backend:install": "npm ci --prefix backend",
     "backend:db:init": "npm --prefix backend run db:init",
     "backend:dev": "npm --prefix backend run develop",
-    "backend:demo": "npm --prefix backend run demo",
     "backend:test": "npm --prefix backend test",
     "backend:test:api": "npm --prefix backend run test:api",
     "test": "npm --prefix mobile test"

@@ -15,7 +15,7 @@ npm ci
 npm start
 ```
 
-Scanner le QR code sur téléphone, ou utiliser `npm run web`. Dans Expo en développement, les boutons « Test salarié » et « Test manager » connectent directement aux comptes fictifs locaux ci-dessous, via l’authentification Strapi normale. Le serveur et les comptes de test doivent être disponibles. Ces raccourcis ne sont pas affichés dans la version de production.
+Scanner le QR code sur téléphone, ou utiliser `npm run web`. Connecte-toi avec un compte applicatif réel créé dans Strapi et rattaché à une équipe et un rôle Moodly.
 
 La connexion à Strapi est obligatoire. Le rôle et l’équipe du compte déterminent la vue affichée ; aucun mode fictif n’est proposé dans l’interface.
 
@@ -31,17 +31,9 @@ npm run backend:dev
 
 La commande `backend:db:init` initialise la base, les rôles et les tags sans comptes fictifs. Le [modèle de données et la procédure d'initialisation](docs/modele-donnees.md) détaillent les relations et les règles de conservation.
 
-Pour des tests locaux uniquement, `npm run backend:demo` permet de créer des comptes et données fictifs. Ne pas utiliser ces données pour un lancement réel. Le premier démarrage de cette commande crée automatiquement `backend/.env` avec des secrets aléatoires, sans écraser un fichier existant. Le seed est explicite, idempotent et interdit en production. Il crée les rôles, une équipe, un manager, huit collaborateurs et 29 jours de données fictives. Aujourd’hui reste disponible pour tester la saisie.
+Le démarrage initialise uniquement les schémas, les rôles, les permissions et le catalogue de raisons. Aucun compte, équipe, historique ou agrégat fictif n’est créé. Les anciennes commandes de démonstration et la connexion rapide ont été retirées. Les fixtures des tests API sont autorisées uniquement dans une base temporaire isolée.
 
-| Compte fictif | Identifiant | Mot de passe local par défaut |
-| --- | --- | --- |
-| Manager | `manager@eclaircie.test` | `EclaircieDemo2026!` |
-| Collaborateur 1 | `collaborateur1@eclaircie.test` | `EclaircieDemo2026!` |
-| Collaborateur 2 à 8 | `collaborateur2@eclaircie.test` à `collaborateur8@eclaircie.test` | `EclaircieDemo2026!` |
-
-`MOODLY_DEMO_PASSWORD` permet de choisir un autre mot de passe **avant la première création**. Les mots de passe des comptes existants ne sont pas réinitialisés. Ces comptes sont réservés à une démonstration locale avec des données fictives.
-
-Pour lancer le serveur sans créer les comptes fictifs : `npm run backend:dev`.
+Créer les équipes et les comptes réels dans Strapi avant utilisation : voir [l’administration](docs/administration-strapi.md). Le compte administrateur est conservé et reste distinct des comptes applicatifs.
 
 Administration : http://localhost:1337/admin. Le compte administrateur est distinct des comptes de l’app et doit être créé à la première ouverture.
 

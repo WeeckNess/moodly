@@ -12,7 +12,7 @@ npm run backend:dev
 
 L'administration est disponible sur [localhost:1337/admin](http://localhost:1337/admin). Le compte administrateur est distinct des comptes de l'app. La commande d'initialisation se termine après synchronisation ; le serveur de développement reste actif.
 
-Pour ajouter volontairement les comptes et l'historique fictifs, utiliser `npm run backend:demo` à la place de `backend:dev`. Les identifiants sont dans le [README du projet](../README.md).
+Les données fictives sont interdites dans la base applicative. Les fixtures restent disponibles uniquement via `npm run backend:test:api`, dans une base temporaire supprimée après les tests. Créer les comptes et les équipes réels dans l’administration Strapi.
 
 ## Fonctionnement
 
