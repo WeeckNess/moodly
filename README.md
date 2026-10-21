@@ -56,7 +56,7 @@ En production, seules les origines déclarées dans `CORS_ORIGINS` sont autoris�
 
 ## Fonctionnalités livrées
 
-- Jardin : animation SVG fournie intégrée au chêne, de la graine aux fleurs, avec racines visibles et 628 séquences pilotées par les journées enregistrées. Compatible Expo web/Android/iOS, contrôles de test adaptés et préférence de réduction du mouvement. Voir [l’intégration du dessin](docs/arbre-fourni.md).
+- Jardin : animation SVG fournie intégrée au chêne, de la graine aux fleurs, avec racines visibles et 628 séquences pilotées par les journées enregistrées. Compatible Expo web/Android/iOS, progression réelle et préférence de réduction du mouvement. Voir [l’intégration du dessin](docs/arbre-fourni.md).
 
 - Identité Éclaircie : fonds pastel lumineux, textes vert profond, grands titres, filets fins, accents sauge, jaune, lavande et pêche, cinq météos Phosphor.
 - Interface mobile et web simplifiée : météo et profil. Le profil regroupe la confidentialité et la déconnexion. La vue salarié ou manager est définie par Strapi, sans bascule de rôle côté client.
