@@ -1,3 +1,4 @@
+import { hydrateSampleProfile, disableSampleProfile } from './src/sampleProfile';
 import { gardenMilestones } from './src/treeGeometry';
 import { activateHaptics, haptics } from './src/haptics';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -61,7 +62,7 @@ function Eclaircie() {
     setHistory([]); setHistoryError('');
     if (!historyKey || !session) { setHistoryLoading(false); return; }
     setHistoryLoading(true);
-    void readPersonalHistory(historyKey, localDay()).then(entries => { if (active) setHistory(entries); }).catch(() => { if (active) setHistoryError('Ton récap local n’a pas pu être chargé. Ta météo collective reste indépendante.'); }).finally(() => { if (active) setHistoryLoading(false); });
+    void hydrateSampleProfile(historyKey, localDay()).then(() => readPersonalHistory(historyKey, localDay())).then(entries => { if (active) setHistory(entries); }).catch(() => { if (active) setHistoryError('Ton récap local n’a pas pu être chargé. Ta météo collective reste indépendante.'); }).finally(() => { if (active) setHistoryLoading(false); });
     return () => { active = false; };
   }, [historyKey, session?.role, session?.day]);
   const refreshStats = useCallback(async (background = false) => {
@@ -161,6 +162,7 @@ function Eclaircie() {
   }
   async function clearHistory() {
     if (!historyKey) throw new Error('Profil indisponible');
+    await disableSampleProfile(historyKey, localDay());
     await clearPersonalHistory(historyKey, localDay());
     await clearPrivateSupport(historyKey);
     setHistory([]); setHistoryError(''); setSupportPrompt(false);
