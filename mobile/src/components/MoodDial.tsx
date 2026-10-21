@@ -1,11 +1,12 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { AccessibilityInfo, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useMemo, useState } from 'react';
+import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { haptics } from '../haptics';
 import Svg, { Circle, Defs, LinearGradient, Path, Stop } from 'react-native-svg';
 import { weathers } from '../weather';
-import Animated, { Easing, ReduceMotion, runOnJS, useAnimatedReaction, useAnimatedProps, useAnimatedStyle, useSharedValue, withSpring, withTiming, interpolateColor, type SharedValue } from 'react-native-reanimated';
+import Animated, { Easing, ReduceMotion, runOnJS, useAnimatedReaction, useAnimatedProps, useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming, interpolateColor, type SharedValue } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { WeatherMorph } from './WeatherMorph';
+import { useReducedMotion } from '../motionPreferences';
 import { colors as c, mono, moodPalette } from '../theme';
 import { continuousValueFromPoint, crossedStops, dialGeometry, pointForValue, sweepDuration, valueFromPoint } from '../dialMath';
 
@@ -15,20 +16,13 @@ const INPUT = [1, 2, 3, 4, 5];
 const ACircle = Animated.createAnimatedComponent(Circle);
 const FOLLOW = { damping: 40, stiffness: 600, mass: 0.65, overshootClamping: true };
 const SWEEP = { easing: Easing.inOut(Easing.cubic), reduceMotion: ReduceMotion.Never };
-export function useReducedMotion() {
-  const [reduced, setReduced] = useState(false);
-  useEffect(() => {
-    let active = true;
-    void AccessibilityInfo.isReduceMotionEnabled().then(value => { if (active) setReduced(value); });
-    const listener = AccessibilityInfo.addEventListener('reduceMotionChanged', setReduced);
-    return () => { active = false; listener.remove(); };
-  }, []);
-  return reduced;
-}
+export { useReducedMotion } from '../motionPreferences';
 export { WeatherMorph } from './WeatherMorph';
 export function MoodDial({ score, onChange, motion, compact = false }: { score: number; onChange: (value: number) => void; motion: SharedValue<number>; compact?: boolean }) {
   const [width, setWidth] = useState(320);
   const raw = useSharedValue(score);
+  const engaged = useSharedValue(0);
+  const landing = useSharedValue(0);
   const reduced = useReducedMotion();
   const { radius, cx, cy, orbSize, height } = dialGeometry(width, compact);
   const settleTarget = useSharedValue(-1);
@@ -42,13 +36,17 @@ export function MoodDial({ score, onChange, motion, compact = false }: { score: 
     if (previous === null) return;
     if (lastTick.value && Math.abs(next - lastTick.value) > 0.12) lastTick.value = 0;
     for (const stop of crossedStops(previous, next)) {
-      if (lastTick.value !== stop) { lastTick.value = stop; runOnJS(tick)(stop === settleTarget.value); }
+      if (lastTick.value !== stop) {
+        lastTick.value = stop;
+        if (!reduced) landing.value = withSequence(withTiming(1, { duration: 75 }), withSpring(0, { damping: 16, stiffness: 210, mass: .65 }));
+        runOnJS(tick)(stop === settleTarget.value);
+      }
     }
-  }, [tick]);
+  }, [tick, reduced]);
   useAnimatedReaction(() => Math.round(motion.value), (next, previous) => {
     if (previous !== null && next !== previous) runOnJS(reportStep)(next);
   }, [reportStep]);
-  const orbStyle = useAnimatedStyle(() => ({ backgroundColor: interpolateColor(motion.value, INPUT, moodAccents) }));
+  const orbStyle = useAnimatedStyle(() => ({ backgroundColor: interpolateColor(motion.value, INPUT, moodAccents), transform: [{ scale: 1 + (reduced ? 0 : engaged.value * .012 + landing.value * .018) }] }));
   const thumbProps = useAnimatedProps(() => {
     const point = pointForValue(motion.value, radius, cx, cy);
     return { cx: point.x, cy: point.y };
@@ -64,15 +62,16 @@ export function MoodDial({ score, onChange, motion, compact = false }: { score: 
         : reduced ? withTiming(value, { ...SWEEP, duration: 60 }) : withSpring(value, { ...FOLLOW, reduceMotion: ReduceMotion.Never });
     }
     return Gesture.Pan().minDistance(0)
-      .onBegin(event => { settleTarget.value = -1; raw.value = motion.value; follow(event.x, event.y, true); })
+      .onBegin(event => { engaged.value = reduced ? 0 : withTiming(1, { duration: 120 }); settleTarget.value = -1; raw.value = motion.value; follow(event.x, event.y, true); })
       .onUpdate(event => follow(event.x, event.y, false))
       .onFinalize(event => {
+        engaged.value = withTiming(0, { duration: reduced ? 0 : 240 });
         const next = Math.round(raw.value);
         settleTarget.value = Math.hypot(event.velocityX, event.velocityY) > 550 ? next : -1;
         if (next === Math.round(motion.value)) runOnJS(onChange)(next);
         motion.value = withTiming(next, { ...SWEEP, duration: sweepDuration(motion.value, next, reduced) });
       });
-  }, [cx, cy, radius, reduced, motion, raw, onChange]);
+  }, [cx, cy, radius, reduced, motion, raw, engaged, onChange]);
   const start = pointForValue(1, radius, cx, cy), end = pointForValue(5, radius, cx, cy);
   const path = `M ${start.x} ${start.y} A ${radius} ${radius} 0 1 1 ${end.x} ${end.y}`;
   const weather = weathers[score - 1];
@@ -102,7 +101,7 @@ export function MoodDial({ score, onChange, motion, compact = false }: { score: 
         <ACircle animatedProps={thumbProps} r={3} fill={c.cream} />
       </Svg>
       <View pointerEvents="none" style={[styles.center, { top: cy - orbSize / 2, left: cx - orbSize / 2, width: orbSize }]}>
-        <Animated.View style={[styles.orb, { width: orbSize, height: orbSize, borderRadius: orbSize / 2 }, orbStyle]}><WeatherMorph value={motion} size={(compact ? 65 : 78) * 1.25} /></Animated.View>
+        <Animated.View style={[styles.orb, { width: orbSize, height: orbSize, borderRadius: orbSize / 2 }, orbStyle]}><WeatherMorph animate value={motion} size={(compact ? 65 : 78) * 1.25} /></Animated.View>
       </View>
       <View pointerEvents="none" style={[styles.value, { top: cy + orbSize / 2 + 6, width }]}><Text style={styles.valueTitle}>{weather.label}</Text><Text style={styles.weatherName}>{weather.title.toUpperCase()} · {score}/5</Text></View>
     </View></GestureDetector>

@@ -97,3 +97,28 @@ test('La boule entière reste dans le SVG, notamment au sommet sur petit écran'
     }
   }
 });
+
+test('Les micro-mouvements météo bouclent sans rupture et restent dans leur cadre', () => {
+  for (const layer of ['fill', 'ink']) {
+    for (let value = 1; value <= 5; value += .25) {
+      const first = weatherMorphPath(value, weatherContours, layer, 0);
+      assert.equal(weatherMorphPath(value, weatherContours, layer, Math.PI * 2), first);
+      for (const phase of [Math.PI / 4, Math.PI / 2, Math.PI, Math.PI * 1.5]) {
+        const path = weatherMorphPath(value, weatherContours, layer, phase);
+        assert.equal((path.match(/M/g) || []).length, weatherContours[0][layer].length);
+        for (const coordinate of path.match(/-?\d+(?:\.\d+)?/g).map(Number)) assert.ok(coordinate >= 0 && coordinate <= 256);
+      }
+    }
+  }
+  assert.notEqual(weatherMorphPath(3, weatherContours, 'ink', Math.PI / 2), weatherMorphPath(3, weatherContours, 'ink', 0));
+});
+test('Le nuage respire autour de son centre sans inclinaison et le détail de pluie reste local', () => {
+  const { contourLife, detailDrift } = load('weatherMorphGeometry');
+  for (const phase of [0, Math.PI / 2, Math.PI, Math.PI * 1.5]) {
+    const outer = contourLife(2, 0, phase), inner = contourLife(2, 1, phase);
+    assert.deepEqual(outer, inner);
+    assert.ok(Math.abs(outer.x - 1) <= .0081 && Math.abs(outer.y - 1) <= .0061);
+    assert.equal(detailDrift(1, 128, phase), 0);
+    assert.equal(detailDrift(2, 220, phase), 0);
+  }
+});
