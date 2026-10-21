@@ -4,8 +4,9 @@ import { colors as c, mono } from '../theme';
 import { growthStage, personalReport, type PersonalMood } from '../personalHistoryLogic';
 import { readGrowth, readTreeSpecies, saveTreeSpecies } from '../personalHistory';
 import { weathers } from '../weather';
+import { botanicalMilestones, botanicalStage } from '../gardenAnimation';
 import { GrowingTree } from './GrowingTree';
-import { gardenMilestones, gardenTitle, nextGardenMilestone, treeSpecies, type TreeSpecies } from '../treeGeometry';
+import { gardenMilestones, gardenTitle, treeSpecies, type TreeSpecies } from '../treeGeometry';
 
 export function PersonalGarden({ profile, history, today }: { profile?: string; history: PersonalMood[]; today: string }) {
   const [species, setSpecies] = useState<TreeSpecies>('oak');
@@ -18,6 +19,9 @@ export function PersonalGarden({ profile, history, today }: { profile?: string; 
   const [period, setPeriod] = useState<7 | 30>(7);
   const [error, setError] = useState(false);
   const stage = growthStage(shownCount ?? 0);
+  const milestones = species === 'oak' ? botanicalMilestones : gardenMilestones;
+  const nextMilestone = milestones.find(step => step.day > (shownCount ?? 0))?.day ?? null;
+  const stageLabel = species === 'oak' ? botanicalStage(shownCount ?? 0).label.toLowerCase() : ['graine', 'pousse', 'jeune arbre', 'arbre en croissance', 'arbre épanoui'][stage];
   useEffect(() => {
     let active = true;
     setCount(null); setError(false);
@@ -44,20 +48,20 @@ export function PersonalGarden({ profile, history, today }: { profile?: string; 
       <View style={s.testSteps}>{treeSpecies.map(tree => <Pressable key={tree.id} accessibilityRole="button" accessibilityLabel={`Choisir le ${tree.name.toLowerCase()}`} accessibilityState={{ selected: species === tree.id, disabled: savingSpecies }} disabled={savingSpecies} onPress={() => void chooseSpecies(tree.id)} style={({ pressed }) => [s.speciesButton, species === tree.id && s.active, pressed && { transform: [{ scale: .96 }], opacity: .85 }]}><Text style={[s.tabText, species === tree.id && { color: c.ink }]}>{tree.name}</Text></Pressable>)}</View>
       <Text style={s.caption}>{treeSpecies.find(tree => tree.id === species)!.description} Tu peux changer d’essence sans perdre ta progression.</Text>
       {speciesError ? <Text accessibilityRole="alert" style={s.error}>{speciesError}</Text> : null}
-      <GrowingTree interactive={previewCount !== null} days={shownCount ?? 0} species={species} label={`${treeSpecies.find(tree => tree.id === species)!.name} : ${['graine', 'pousse', 'jeune arbre', 'arbre en croissance', 'arbre épanoui'][stage]}. ${shownCount ?? 0} journées ${previewCount === null ? 'enregistrées' : 'simulées'}.`} />
+      <GrowingTree interactive={previewCount !== null} days={shownCount ?? 0} species={species} label={`${treeSpecies.find(tree => tree.id === species)!.name} : ${stageLabel}. ${shownCount ?? 0} journées ${previewCount === null ? 'enregistrées' : 'simulées'}.`} />
       <View style={s.testPanel}>
         <Pressable accessibilityRole="button" accessibilityLabel="Tester l’évolution du jardin" accessibilityState={{ expanded: testOpen }} onPress={() => setTestOpen(value => !value)} style={s.testToggle}><Text style={s.testLabel}>{testOpen ? 'Masquer les tests −' : 'Tester l’évolution +'}{previewCount !== null ? ` · ${previewCount} j simulés` : ''}</Text></Pressable>
         {testOpen && <>
           <Text style={s.caption}>Aperçu temporaire. Aucune donnée personnelle modifiée.</Text>
           <View style={s.testSteps}>
             {[1, 7, 30].map(days => <Pressable key={days} accessibilityRole="button" accessibilityLabel={`Simuler ${days} jour${days > 1 ? 's' : ''} de plus`} onPress={() => setPreviewCount(value => (value ?? count ?? 0) + days)} style={s.testStep}><Text style={s.testLabel}>+ {days} j</Text></Pressable>)}
-            <Pressable accessibilityRole="button" accessibilityLabel="Voir la prochaine étape de l’arbre" disabled={nextGardenMilestone(shownCount ?? 0) === null} onPress={() => setPreviewCount(nextGardenMilestone(shownCount ?? 0))} style={[s.testStep, nextGardenMilestone(shownCount ?? 0) === null && { opacity: .4 }]}><Text style={s.testLabel}>Étape suivante</Text></Pressable>
+            <Pressable accessibilityRole="button" accessibilityLabel="Voir la prochaine étape de l’arbre" disabled={nextMilestone === null} onPress={() => setPreviewCount(nextMilestone)} style={[s.testStep, nextMilestone === null && { opacity: .4 }]}><Text style={s.testLabel}>Étape suivante</Text></Pressable>
           </View>
-          <View style={s.testSteps}>{gardenMilestones.map(step => <Pressable key={step.day} accessibilityRole="button" accessibilityLabel={`Tester l’arbre : ${step.label}`} accessibilityState={{ selected: previewCount === step.day }} onPress={() => setPreviewCount(step.day)} style={[s.testStep, previewCount === step.day && s.testSelected]}><Text style={s.testLabel}>{step.label} · {step.day} j</Text></Pressable>)}</View>
+          <View style={s.testSteps}>{milestones.map(step => <Pressable key={step.day} accessibilityRole="button" accessibilityLabel={`Tester l’arbre : ${step.label}`} accessibilityState={{ selected: previewCount === step.day }} onPress={() => setPreviewCount(step.day)} style={[s.testStep, previewCount === step.day && s.testSelected]}><Text style={s.testLabel}>{step.label} · {step.day} j</Text></Pressable>)}</View>
           {previewCount !== null && <Pressable accessibilityRole="button" onPress={() => setPreviewCount(null)} style={s.testToggle}><Text style={s.testLabel}>Revenir à mon arbre réel</Text></Pressable>}
         </>}
       </View>
-      <Text accessibilityRole="header" style={s.title}>{gardenTitle(shownCount ?? 0)}</Text>
+      <Text accessibilityRole="header" style={s.title}>{species === 'oak' ? `${botanicalStage(shownCount ?? 0).label}. À ton rythme.` : gardenTitle(shownCount ?? 0)}</Text>
       <Text style={s.body}>{previewCount !== null ? `Aperçu à ${previewCount} journée${previewCount > 1 ? 's' : ''}. Ta progression réelle reste inchangée.` : error ? 'Ton arbre n’a pas pu être chargé. Réouvre ton profil pour réessayer.' : count === null ? 'Ton jardin arrive…' : `${count} météo${count > 1 ? 's' : ''} enregistrée${count > 1 ? 's' : ''}. Chaque météo compte, de l’orage au soleil.`}</Text>
       <Text style={s.caption}>Aucun objectif, aucune série à maintenir. Ton arbre ne régresse pas lors d’une pause. {Platform.OS === 'web' ? 'Sur le web, il reste dans cette session.' : 'Il grandit sur cet appareil, sans partager sa progression.'}</Text>
 

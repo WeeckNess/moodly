@@ -1,3 +1,4 @@
+import { BotanicalTree } from './BotanicalTree';
 import { svgTransform } from '../svgTransform';
 import { haptics } from '../haptics';
 import { useEffect, useRef, useState } from 'react';
@@ -48,7 +49,7 @@ function OrchardFruit({ day, species, breeze, index }: { day: SharedValue<number
     <APath animatedProps={fruit} /><APath animatedProps={cap} fill="#927851" /><APath animatedProps={texture} stroke="#715b43" strokeWidth={.8} fill="none" />
   </AG>;
 }
-export function GrowingTree({ days, species, label, interactive = false }: { days: number; species: TreeSpecies; label: string; interactive?: boolean }) {
+function LegacyGrowingTree({ days, species, label, interactive = false }: { days: number; species: TreeSpecies; label: string; interactive?: boolean }) {
   const previousDays = useRef(days);
   useEffect(() => { if (interactive && gardenMilestones.some(step => step.day > previousDays.current && step.day <= days)) haptics.grow(); previousDays.current = days; }, [days, interactive]);
   const reduced = useReducedMotion();
@@ -84,4 +85,8 @@ export function GrowingTree({ days, species, label, interactive = false }: { day
       {Array.from({ length: 6 }, (_, index) => <GroundFlower key={index} index={index} day={progress} breeze={breeze} />)}
     </Svg>
   </View>;
+}
+
+export function GrowingTree(props: { days: number; species: TreeSpecies; label: string; interactive?: boolean }) {
+  return props.species === 'oak' ? <BotanicalTree days={props.days} label={props.label} interactive={props.interactive} /> : <LegacyGrowingTree {...props} />;
 }
