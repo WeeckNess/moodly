@@ -9,6 +9,13 @@
   "options": {
     "draftAndPublish": false
   },
+  "indexes": [
+    {
+      "name": "daily_aggregates_aggregate_key_unique",
+      "columns": ["aggregate_key"],
+      "type": "unique"
+    }
+  ],
   "attributes": {
     "day": {
       "type": "date",

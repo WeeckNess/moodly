@@ -18,6 +18,8 @@ Compte avec rôle Moodly et équipe requis. Renvoie uniquement le prénom/nom d�
 
 ## POST /api/mood-entries
 
+Les tags proposés proviennent de `GET /api/mood-tags`, pas d'une liste dans le front. Lors de la saisie, le serveur accepte uniquement les libellés actuellement actifs pour les collaborateurs (ou les deux publics), jusqu'à 20 choix. Un libellé inexistant, renommé, désactivé ou réservé au manager est refusé avec un statut 400.
+
 Rôle Collaborateur uniquement :
 
 ```json
@@ -49,6 +51,18 @@ Rôle Manager uniquement. La fenêtre est fixée à 30 jours. Seule l’équipe 
 ```
 
 La réponse réelle contient 30 dates. `average` vaut `null` sous 5 réponses ou sans données. Aucun nombre exact de réponses par jour, auteur, tag individuel ou horodatage technique n’est exposé. Le taux de participation porte sur les 7 derniers jours et vaut `null` sous 5 participants distincts.
+
+## GET /api/mood-tags
+
+JWT et compte affecté à une équipe requis. Renvoie le catalogue actif correspondant au rôle du compte, trié par `position` puis par libellé. Les paramètres client ne permettent pas de changer le public consulté. Exemple :
+
+```json
+{ "data": [{ "id": "documentId-du-tag", "label": "Charge", "icon": "briefcase" }] }
+```
+
+La création, la modification, la désactivation et la suppression des tags passent par l'administration Strapi. Les rôles applicatifs disposent uniquement de cette route de lecture. Les tags du manager servent à sa météo privée et ne sont pas transmis au serveur lors de sa saisie.
+
+`icon` contient le nom Lucide choisi avec le plugin `strapi-lucide-icons`, par exemple `message-circle`, `scale` ou `alarm-clock`. La valeur est une chaîne, jamais du code SVG ni du HTML.
 
 ## Accès fermés
 

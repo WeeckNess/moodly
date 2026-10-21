@@ -1,7 +1,9 @@
-import { Platform } from 'react-native';
+import { NativeModules, Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
+import { resolveApiUrl } from './apiConfig';
 export type TeamAction = { id: string; title: string; description: string; dueDay: string; status: 'planned' | 'active' | 'completed'; reviewUntil: string | null; reviewClosed: boolean; hasResponded: boolean; feedback: { count: number; average: number } | null; threshold: number };
 export type Role = 'collaborateur' | 'manager';
+export type MoodTag = { id: string; label: string; icon: string };
 export type SupportContact = { name: string; kind: 'psychologue' | 'prevention' | 'manager' | 'autre'; qualification?: string; details?: string; email?: string; phone?: string; bookingUrl?: string };
 export type Session = { name: string; role: Role; team: { name: string; supportContacts?: SupportContact[] }; submitted: boolean; day: string; privateSupportKey?: string };
 export type DailyStat = { day: string; average: number | null };
@@ -9,14 +11,23 @@ export type TeamStats = { data: DailyStat[]; meta: { team: string; threshold: nu
 export class ApiError extends Error {
   constructor(message: string, public status: number) { super(message); }
 }
-const baseUrl = (process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:1337').replace(/\/$/, '');
+function apiUrl() {
+  return resolveApiUrl({
+    configuredUrl: process.env.EXPO_PUBLIC_API_URL,
+    development: __DEV__,
+    webOrigin: Platform.OS === 'web' && typeof window !== 'undefined' ? window.location.origin : undefined,
+    bundleUrl: __DEV__ && Platform.OS !== 'web' ? NativeModules.SourceCode?.scriptURL : undefined,
+  });
+}
 async function request(path: string, init: RequestInit = {}) {
+  const baseUrl = apiUrl();
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 12000);
   try {
     const response = await fetch(`${baseUrl}${path}`, { ...init, signal: controller.signal, headers: { 'Content-Type': 'application/json', ...init.headers } });
-    const body = await response.json();
-    if (!response.ok) throw new ApiError(body.error?.message ?? 'Le service est momentanément indisponible.', response.status);
+    const body = await response.json().catch(() => null);
+    if (!response.ok) throw new ApiError(body?.error?.message ?? 'Le service est momentanément indisponible.', response.status);
+    if (!body) throw new ApiError('La réponse du serveur est illisible. Réessaie dans un instant.', 502);
     return body;
   } catch (error) {
     if (error instanceof ApiError) throw error;
@@ -31,6 +42,7 @@ export const tokenStore = {
   clear: () => Platform.OS === 'web' ? Promise.resolve() : SecureStore.deleteItemAsync('eclaircie.jwt'),
 };
 export const strapiApi = {
+  tags: async (jwt: string): Promise<MoodTag[]> => (await request('/api/mood-tags', { headers: auth(jwt) })).data,
   actions: async (jwt: string): Promise<TeamAction[]> => (await request('/api/team-actions', { headers: auth(jwt) })).data,
   createAction: (jwt: string, data: { title: string; description: string; dueDay: string }) => request('/api/team-actions', { method: 'POST', headers: auth(jwt), body: JSON.stringify({ data }) }),
   updateAction: (jwt: string, id: string, status: 'active' | 'completed') => request(`/api/team-actions/${id}`, { method: 'PATCH', headers: auth(jwt), body: JSON.stringify({ data: { status } }) }),

@@ -25,8 +25,11 @@ Dans un second terminal, depuis la racine :
 
 ```sh
 npm run backend:install
+npm run backend:db:init
 npm run backend:dev
 ```
+
+La commande `backend:db:init` initialise la base, les rôles et les tags sans comptes fictifs. Le [modèle de données et la procédure d'initialisation](docs/modele-donnees.md) détaillent les relations et les règles de conservation.
 
 Pour des tests locaux uniquement, `npm run backend:demo` permet de créer des comptes et données fictifs. Ne pas utiliser ces données pour un lancement réel. Le premier démarrage de cette commande crée automatiquement `backend/.env` avec des secrets aléatoires, sans écraser un fichier existant. Le seed est explicite, idempotent et interdit en production. Il crée les rôles, une équipe, un manager, huit collaborateurs et 29 jours de données fictives. Aujourd’hui reste disponible pour tester la saisie.
 
@@ -42,15 +45,23 @@ Pour lancer le serveur sans créer les comptes fictifs : `npm run backend:dev`.
 
 Administration : http://localhost:1337/admin. Le compte administrateur est distinct des comptes de l’app et doit être créé à la première ouverture.
 
-### Sur un téléphone physique
+### Connexion du front à Strapi
 
-Créer `mobile/.env` à partir de `mobile/.env.example`, puis remplacer `localhost` par l’IP du PC sur le réseau local :
+La connexion, la session, la saisie quotidienne, les statistiques et les actions collectives passent par `mobile/src/strapi.ts`. Les rôles et l'équipe proviennent de Strapi ; les comptes de l'administration ne sont pas des comptes applicatifs.
+
+En développement, laisser `EXPO_PUBLIC_API_URL` vide (ou ne pas créer `mobile/.env`) : sur le web, le client utilise l'hôte de la page au port 1337 ; sur téléphone avec Expo Go en mode LAN, il utilise l'hôte du bundle Metro au même port. Le front et Strapi doivent donc tourner sur le même PC.
+
+Pour une API sur une autre machine, un tunnel Expo ou une version de production, créer `mobile/.env` à partir de `mobile/.env.example` et renseigner explicitement l'adresse de l'API :
 
 ```env
 EXPO_PUBLIC_API_URL=http://192.168.1.20:1337
 ```
 
-Téléphone et PC doivent être sur le même réseau. Redémarrer Expo après modification. Utiliser HTTPS pour un déploiement. En développement, Strapi autorise automatiquement les adresses réseau de la machine qui le lance, sur les ports Expo 8081 et 8082. Un autre PC sur le même réseau doit ouvrir `http://IP_DU_PC_SERVEUR:8081` (pas son propre `localhost`). Le port 1337 doit aussi être accessible ; certains Wi-Fi publics isolent les appareils. Après un changement de réseau, mettre à jour `mobile/.env` et redémarrer Expo et Strapi. L’app native n’est pas soumise au CORS navigateur.
+Téléphone et PC doivent être sur le même réseau. Redémarrer Expo après modification du fichier `.env`. Utiliser HTTPS pour un déploiement. En développement, Strapi autorise automatiquement les adresses réseau de la machine qui le lance, sur les ports Expo 8081 et 8082. Un autre PC sur le même réseau doit ouvrir `http://IP_DU_PC_SERVEUR:8081` (pas son propre `localhost`). Le port 1337 doit aussi être accessible ; certains Wi-Fi publics isolent les appareils. Après un changement de réseau, relancer Expo en mode LAN et Strapi ; si une IP est définie explicitement dans `.env`, la mettre à jour aussi. L’app native n’est pas soumise au CORS navigateur.
+
+Les jetons JWT restent en mémoire sur le web et dans SecureStore sur mobile. Le récap personnel et la météo privée du manager restent sur l'appareil. Seule la déclaration collective du collaborateur est envoyée à Strapi, sans raison libre ni auteur dans la réponse enregistrée.
+
+Les raisons proposées sont gérées dans **Strapi → Content Manager → Tag** : libellé, public collaborateur/manager/les deux, icône, activation et ordre. Le plugin `strapi-lucide-icons` fournit le sélecteur d'icônes Lucide avec recherche et aperçu ; l'app utilise `lucide-react-native` pour les afficher. L'app lit `GET /api/mood-tags` à chaque ouverture de l'écran des raisons. Les changements ne nécessitent pas de recompilation du front tant que l'icône appartient au catalogue embarqué. Voir [le modèle et la gestion du catalogue](docs/modele-donnees.md).
 
 En production, seules les origines déclarées dans `CORS_ORIGINS` sont autorisées (ou les origines localhost par défaut si la variable est absente), sans ajout automatique des IP réseau. Pour tester depuis un autre réseau, il faut héberger l’app **et** l’API avec des adresses HTTPS accessibles ; le lien Expo seul ne publie pas Strapi.
 
@@ -92,7 +103,8 @@ Signature de molette sur l’arc, sélection douce des raisons, double confirmat
 
 ```text
 mobile/App.tsx                       Parcours et écrans
-mobile/src/weather.ts                Météos et tags Phosphor
+mobile/src/weather.ts                Météos Phosphor
+mobile/src/tagIcons.ts               Rendu des icônes Lucide choisies dans Strapi
 mobile/src/theme.ts                  Palette et typographie
 mobile/src/components/MoodChart.tsx   Graphique accessible
 mobile/src/components/MoodDial.tsx    Arc et transitions météo
@@ -131,7 +143,7 @@ Les tests API utilisent automatiquement une base SQLite temporaire et un port li
 npm run backend:test:api
 ```
 
-Le script compile le serveur, démarre l’instance isolée, exécute les tests et supprime uniquement sa base temporaire. Voir `docs/validation.md`.
+Le script compile le serveur, démarre l’instance isolée, exécute les tests backend puis le client du front contre cette même API et supprime uniquement sa base temporaire. Le test du client vérifie connexion, session, saisie persistée, doublon refusé, rôles et graphe collectif. Il nécessite les dépendances de `mobile` et `backend`. Voir `docs/validation.md`.
 
 ## Limites avant utilisation réelle
 
@@ -145,6 +157,7 @@ Les dépendances du starter présentent des alertes npm audit : leur revue reste
 
 - [ArtCraft — inspiration de la structure visuelle](https://getartcraft.com/apps) : contraste sombre, titres généreux, repères numérotés, filets et accents colorés. Aucun logo, visuel ou texte ArtCraft réutilisé.
 - [Phosphor React Native](https://github.com/duongdev/phosphor-react-native)
+- [Strapi Lucide Icons](https://github.com/shx08/strapi-lucide-icons) et [Lucide React Native](https://lucide.dev/guide/packages/lucide-react-native) : sélecteur et icônes des tags, [licence ISC et notices](docs/LUCIDE-LICENSE.txt).
 - [Expo](https://docs.expo.dev/)
 - [Strapi v5](https://docs.strapi.io/cms/quick-start)
 

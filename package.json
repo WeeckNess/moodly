@@ -11,6 +11,7 @@
     "ios": "npm --prefix mobile run ios",
     "typecheck": "npm --prefix mobile run typecheck",
     "backend:install": "npm ci --prefix backend",
+    "backend:db:init": "npm --prefix backend run db:init",
     "backend:dev": "npm --prefix backend run develop",
     "backend:demo": "npm --prefix backend run demo",
     "backend:test": "npm --prefix backend test",

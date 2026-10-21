@@ -9,6 +9,13 @@
   "options": {
     "draftAndPublish": false
   },
+  "indexes": [
+    {
+      "name": "submission_logs_deduplication_key_unique",
+      "columns": ["deduplication_key"],
+      "type": "unique"
+    }
+  ],
   "attributes": {
     "user": {
       "type": "relation",
