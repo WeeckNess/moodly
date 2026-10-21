@@ -64,10 +64,11 @@ function Eclaircie() {
     void readPersonalHistory(historyKey, localDay()).then(entries => { if (active) setHistory(entries); }).catch(() => { if (active) setHistoryError('Ton récap local n’a pas pu être chargé. Ta météo collective reste indépendante.'); }).finally(() => { if (active) setHistoryLoading(false); });
     return () => { active = false; };
   }, [historyKey, session?.role, session?.day]);
-  const refreshStats = useCallback(async () => {
+  const refreshStats = useCallback(async (background = false) => {
     if (session?.role !== 'manager') return;
     const version = ++requestVersion.current;
-    setStatsLoading(true); setStatsError('');
+    if (!background) setStatsLoading(true);
+    setStatsError('');
     try {
       const data = await strapiApi.teamStats(jwt!);
       if (version === requestVersion.current) setStats(data);
@@ -75,7 +76,15 @@ function Eclaircie() {
       if (version === requestVersion.current) { setStats(null); setStatsError(err instanceof ApiError && err.status === 401 ? 'Ta session a expiré. Reconnecte-toi depuis ton profil.' : err instanceof Error ? err.message : 'Chargement impossible.'); }
     } finally { if (version === requestVersion.current) setStatsLoading(false); }
   }, [session?.role, jwt]);
-  useEffect(() => { void refreshStats(); }, [refreshStats]);
+  useEffect(() => {
+    if (session?.role !== 'manager' || page !== 'home' || managerSection !== 'team') return;
+    const refreshVisibleTeam = (background = false) => {
+      if (AppState.currentState === 'active') void refreshStats(background);
+    };
+    refreshVisibleTeam();
+    const timer = setInterval(() => refreshVisibleTeam(true), 60000);
+    return () => clearInterval(timer);
+  }, [session?.role, page, managerSection, refreshStats]);
   useEffect(() => {
     function refreshSession() {
       if (!session) return;

@@ -6,6 +6,8 @@ Trois vues reprennent la palette pastel et les composants de l’app : **Mon éq
 
 Le graphique collectif sur 30 jours reste inchangé. Aucun mood individuel, classement, diagnostic automatique ou auteur de réponse n’est disponible. Le bouton d’aide ouvre désormais les outils pour agir.
 
+Le graphique et la participation sont chargés depuis `GET /api/team-stats`, filtré côté serveur sur l’équipe gérée par le compte. Le retour sur « Mon équipe » recharge les données. Tant que cet onglet est affiché et l’app au premier plan, une actualisation se fait chaque minute. Le bouton Actualiser reste disponible. Les moyennes restent masquées sous cinq réponses, sans liste de salariés.
+
 ## Pour moi
 
 Le manager dispose du sélecteur météo, de raisons adaptées (arbitrages, moyens, conflits, objectifs, soutien hiérarchique, reconnaissance), de son jardin et de ses rapports privés. La saisie manager n’appelle pas l’API des moods collectifs : elle reste dans son stockage sécurisé sur mobile, ou en mémoire de session sur web. Elle ne rejoint aucun agrégat d’équipe, y compris celui de son équipe. Elle bénéficie de l’invitation privée après trois « Très mal » et des mêmes modalités d’effacement.
