@@ -41,7 +41,9 @@ export const tokenStore = {
   write: (jwt: string) => Platform.OS === 'web' ? Promise.resolve() : SecureStore.setItemAsync('eclaircie.jwt', jwt),
   clear: () => Platform.OS === 'web' ? Promise.resolve() : SecureStore.deleteItemAsync('eclaircie.jwt'),
 };
+export type CreatedEmployee = { name: string; email: string; team: string; initialPassword: string };
 export const strapiApi = {
+  createEmployee: async (jwt: string, data: { name: string; email: string }): Promise<CreatedEmployee> => (await request('/api/team-members', { method: 'POST', headers: auth(jwt), body: JSON.stringify({ data }) })).data,
   tags: async (jwt: string): Promise<MoodTag[]> => (await request('/api/mood-tags', { headers: auth(jwt) })).data,
   actions: async (jwt: string): Promise<TeamAction[]> => (await request('/api/team-actions', { headers: auth(jwt) })).data,
   createAction: (jwt: string, data: { title: string; description: string; dueDay: string }) => request('/api/team-actions', { method: 'POST', headers: auth(jwt), body: JSON.stringify({ data }) }),

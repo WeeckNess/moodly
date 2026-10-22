@@ -132,4 +132,39 @@ test('Parcours API et isolation des rôles sur des comptes fictifs', async t => 
       }
     } finally { db.close(); }
   });
+  await t.test('Un manager crée un salarié dans sa propre équipe, sans élévation de droits', async () => {
+    const route = '/api/team-members';
+    const data = { name: 'Léa Martin', email: ' Lea.Martin@example.test ' };
+    assert.ok([401, 403].includes((await call(route, null, { data })).status));
+    assert.equal((await call(route, tokens[0], { data })).status, 403);
+    for (const forged of [{ ...data, role: 'manager' }, { ...data, team: 999 }, { ...data, password: 'injected' }, { name: 'L', email: data.email }, { name: 'Léa', email: 'invalid' }]) assert.equal((await call(route, manager, { data: forged })).status, 400);
+    const created = await call(route, manager, { data });
+    assert.equal(created.status, 201);
+    const employee = created.body.data;
+    assert.deepEqual(Object.keys(employee).sort(), ['email', 'initialPassword', 'name', 'team']);
+    assert.equal(employee.email, 'lea.martin@example.test');
+    assert.equal(employee.team, 'Studio · Démonstration');
+    assert.ok(employee.initialPassword.length >= 24);
+    const auth = await call('/api/auth/local', null, { identifier: employee.email, password: employee.initialPassword });
+    assert.equal(auth.status, 200);
+    const info = await call('/api/session', auth.body.jwt);
+    assert.equal(info.body.data.name, 'Léa Martin');
+    assert.equal(info.body.data.role, 'collaborateur');
+    assert.equal(info.body.data.team.name, employee.team);
+    assert.equal(info.body.data.submitted, false);
+    assert.equal((await call('/api/team-stats', auth.body.jwt)).status, 403);
+    assert.equal((await call(route, auth.body.jwt, { data: { name: 'Autre', email: 'other@example.test' } })).status, 403);
+    assert.equal((await call(route, manager, { data })).status, 409);
+    const Database = require('better-sqlite3');
+    const db = new Database(process.env.TEST_DATABASE_FILENAME);
+    try {
+      const record = db.prepare('SELECT password FROM up_users WHERE email = ?').get(employee.email);
+      assert.notEqual(record.password, employee.initialPassword);
+      assert.match(record.password, /^\$2/);
+    } finally { db.close(); }
+    const pair = await Promise.all([1, 2].map(() => call(route, manager, { data: { name: 'Léa Martin', email: 'lea.homonyme@example.test' } })));
+    assert.deepEqual(pair.map(result => result.status).sort(), [201, 409]);
+    assert.notEqual(pair.find(result => result.status === 201).body.data.initialPassword, employee.initialPassword);
+  });
+
 });

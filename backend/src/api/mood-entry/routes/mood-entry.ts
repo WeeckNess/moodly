@@ -1,6 +1,7 @@
 // Pas de routes REST génériques : aucune lecture de réponses individuelles.
 export default {
   routes: [
+    { method: 'POST', path: '/team-members', handler: 'mood-entry.createMember', config: { auth: { scope: ['api::mood-entry.mood-entry.createMember'] }, policies: ['global::is-manager'] } },
     { method: 'GET', path: '/mood-tags', handler: 'mood-entry.tags', config: { auth: { scope: ['api::mood-entry.mood-entry.tags'] } } },
     { method: 'GET', path: '/session', handler: 'mood-entry.session', config: { auth: { scope: ['api::mood-entry.mood-entry.session'] } } },
     { method: 'POST', path: '/mood-entries', handler: 'mood-entry.create', config: { auth: { scope: ['api::mood-entry.mood-entry.create'] } } },

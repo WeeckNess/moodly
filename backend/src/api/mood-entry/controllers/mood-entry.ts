@@ -1,3 +1,4 @@
+import { createTeamMember } from '../../../lib/teamMembers';
 import { listActions, createAction, updateAction, actionFeedback } from '../../../lib/teamActions';
 import { randomUUID, createHmac } from 'node:crypto';
 import { dateRange, safePoints, shiftDay, today, validateMood, THRESHOLD } from '../../../lib/mood';
@@ -15,6 +16,7 @@ async function getMember(ctx: any) {
   return user;
 }
 export default {
+  async createMember(ctx: any) { const user = await getMember(ctx); if (user) await createTeamMember(ctx, user); },
   async tags(ctx: any) {
     const user = await getMember(ctx); if (!user) return;
     const tags = await query('api::tag.tag').findMany({
@@ -31,7 +33,7 @@ export default {
     const user = await getMember(ctx); if (!user) return;
     const day = today();
     const log = await query('api::submission-log.submission-log').findOne({ where: { user: user.id, day } });
-    ctx.body = { data: { name: user.username, role: user.role.type, team: { name: user.team.name, supportContacts: (user.team.supportContacts ?? []).map((contact: any) => ({ name: contact.name, kind: contact.kind, qualification: contact.qualification, details: contact.details, email: contact.email, phone: contact.phone, bookingUrl: contact.bookingUrl })) }, submitted: Boolean(log), day, privateSupportKey: createHmac('sha256', process.env.JWT_SECRET!).update(`private-support:${user.id}`).digest('hex') } };
+    ctx.body = { data: { name: user.displayName || user.username, role: user.role.type, team: { name: user.team.name, supportContacts: (user.team.supportContacts ?? []).map((contact: any) => ({ name: contact.name, kind: contact.kind, qualification: contact.qualification, details: contact.details, email: contact.email, phone: contact.phone, bookingUrl: contact.bookingUrl })) }, submitted: Boolean(log), day, privateSupportKey: createHmac('sha256', process.env.JWT_SECRET!).update(`private-support:${user.id}`).digest('hex') } };
   },
   async create(ctx: any) {
     const user = await getMember(ctx); if (!user) return;

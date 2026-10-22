@@ -29,7 +29,7 @@ test('La policy refuse une session absente et relit le rôle actuel au lieu de c
 });
 test('La policy est attachée aux statistiques et aux écritures manager, la lecture des actions reste partagée', () => {
   const { routes } = load('api/mood-entry/routes/mood-entry.ts');
-  for (const route of routes.filter(route => ['stats', 'createAction', 'updateAction'].some(action => route.handler === `mood-entry.${action}`))) {
+  for (const route of routes.filter(route => ['stats', 'createAction', 'updateAction', 'createMember'].some(action => route.handler === `mood-entry.${action}`))) {
     assert.ok(route.config.policies.includes('global::is-manager'));
   }
   assert.equal(routes.find(route => route.method === 'GET' && route.path === '/team-actions').config.policies, undefined);

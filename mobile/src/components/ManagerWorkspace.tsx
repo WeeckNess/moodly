@@ -1,3 +1,4 @@
+import { EmployeeCreation } from './EmployeeCreation';
 import { TourTarget } from './tour/OnboardingTour';
 import { useState, type ComponentProps } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -20,7 +21,7 @@ export function ManagerWorkspace(props: Props) {
   const section = props.section, setSection = props.onSection;
   const trend = personalTrend(props.history, localDay());
   const submitted = props.history.some(entry => entry.day === localDay());
-  const navigation = <TourTarget id="manager-nav" style={s.navigation}>{tabs.map(tab => <Pressable key={tab.id} accessibilityRole="button" accessibilityLabel={`Espace manager : ${tab.label}`} accessibilityState={{ selected: section === tab.id }} onPress={() => setSection(tab.id)} style={[s.tab, section === tab.id && s.activeTab]}><Text style={[s.tabText, section === tab.id && { color: c.ink, fontWeight: '600' }]}>{tab.label}</Text></Pressable>)}</TourTarget>;
+  const navigation = <><TourTarget id="manager-nav" style={s.navigation}>{tabs.map(tab => <Pressable key={tab.id} accessibilityRole="button" accessibilityLabel={`Espace manager : ${tab.label}`} accessibilityState={{ selected: section === tab.id }} onPress={() => setSection(tab.id)} style={[s.tab, section === tab.id && s.activeTab]}><Text style={[s.tabText, section === tab.id && { color: c.ink, fontWeight: '600' }]}>{tab.label}</Text></Pressable>)}</TourTarget><EmployeeCreation jwt={props.jwt} team={props.session.team.name} /></>;
   if (section === 'team') return <ManagerPortal {...props} navigation={navigation} onHelp={() => setSection('act')} />;
   return <SafeAreaView style={s.safe}><StatusBar style="dark" /><View style={s.header}><BrandMark /><HeaderActions onProfile={props.onProfile} /></View>{navigation}<ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={s.content}>
     {section === 'self' ? <>

@@ -41,3 +41,13 @@ test('Une réponse serveur invalide et une panne réseau sont distinguées', asy
   const offline = loadStrapiClient({ fetch: async () => { throw new TypeError('fetch failed'); } });
   await assert.rejects(offline.strapiApi.teamStats('test'), /Impossible de joindre le serveur/);
 });
+
+test('La création salarié transmet le JWT manager et seulement le nom et l’e-mail', async () => {
+  const calls = [];
+  const result = { name: 'Léa Martin', email: 'lea@example.test', team: 'Studio', initialPassword: 'secret-initial' };
+  const { strapiApi } = loadStrapiClient({ fetch: async (url, init) => { calls.push({ url, init }); return new Response(JSON.stringify({ data: result }), { status: 201 }); } });
+  assert.deepEqual(await strapiApi.createEmployee('manager-token', { name: result.name, email: result.email }), result);
+  assert.ok(calls[0].url.endsWith('/api/team-members'));
+  assert.equal(calls[0].init.headers.Authorization, 'Bearer manager-token');
+  assert.deepEqual(JSON.parse(calls[0].init.body), { data: { name: result.name, email: result.email } });
+});

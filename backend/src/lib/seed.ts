@@ -10,7 +10,7 @@ export async function setup(strapi: Core.Strapi) {
     roles[type] = await q('plugin::users-permissions.role').findOne({ where: { type } }) ?? await q('plugin::users-permissions.role').create({ data: { type, name, description: `Rôle Éclaircie : ${name}` } });
   }
   for (const type of ['collaborateur', 'manager']) {
-    for (const action of ['session', 'tags', 'actions', ...(type === 'manager' ? ['stats', 'createAction', 'updateAction'] : ['create', 'actionFeedback'])]) {
+    for (const action of ['session', 'tags', 'actions', ...(type === 'manager' ? ['stats', 'createAction', 'updateAction', 'createMember'] : ['create', 'actionFeedback'])]) {
       const permission = `api::mood-entry.mood-entry.${action}`;
       if (!await q('plugin::users-permissions.permission').findOne({ where: { role: roles[type].id, action: permission } })) {
         await q('plugin::users-permissions.permission').create({ data: { role: roles[type].id, action: permission } });
