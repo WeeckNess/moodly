@@ -152,7 +152,32 @@ test('Parcours API et isolation des rôles sur des comptes fictifs', async t => 
     assert.equal(info.body.data.role, 'collaborateur');
     assert.equal(info.body.data.team.name, employee.team);
     assert.equal(info.body.data.submitted, false);
-    assert.equal((await call('/api/team-stats', auth.body.jwt)).status, 403);
+    assert.equal(info.body.data.mustChangePassword, true);
+    assert.equal((await call('/api/mood-tags', auth.body.jwt)).status, 403);
+    assert.equal((await call('/api/mood-entries', auth.body.jwt, { data: { score: 3 } })).status, 403);
+    const newPassword = 'UnePhrasePersonnelle2026!';
+    const change = (currentPassword, password, passwordConfirmation = password) => call('/api/auth/change-password', auth.body.jwt, { currentPassword, password, passwordConfirmation });
+    assert.equal((await change('incorrect', newPassword)).status, 400);
+    assert.equal((await change(employee.initialPassword, 'court')).status, 400);
+    assert.equal((await change(employee.initialPassword, newPassword, 'AutrePhrase')).status, 400);
+    assert.equal((await change(employee.initialPassword, employee.initialPassword)).status, 400);
+    const changed = await change(employee.initialPassword, newPassword);
+    assert.equal(changed.status, 200);
+    const personalToken = changed.body.jwt;
+    assert.equal((await call('/api/session', personalToken)).body.data.mustChangePassword, false);
+    assert.equal((await call('/api/mood-tags', personalToken)).status, 200);
+    assert.equal((await call('/api/session', auth.body.jwt)).status, 401);
+    // Vérification du mot de passe via le service réel, sans consommer le quota de connexions du runner.
+    const bcrypt = require('bcryptjs');
+    const DatabasePassword = require('better-sqlite3');
+    const passwordDb = new DatabasePassword(process.env.TEST_DATABASE_FILENAME);
+    try {
+      const row = passwordDb.prepare('SELECT password, must_change_password FROM up_users WHERE email = ?').get(employee.email);
+      assert.equal(await bcrypt.compare(employee.initialPassword, row.password), false);
+      assert.equal(await bcrypt.compare(newPassword, row.password), true);
+      assert.equal(row.must_change_password, 0);
+    } finally { passwordDb.close(); }
+    assert.equal((await call('/api/team-stats', personalToken)).status, 403);
     assert.equal((await call(route, auth.body.jwt, { data: { name: 'Autre', email: 'other@example.test' } })).status, 403);
     assert.equal((await call(route, manager, { data })).status, 409);
     const Database = require('better-sqlite3');

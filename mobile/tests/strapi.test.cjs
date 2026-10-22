@@ -51,3 +51,12 @@ test('La création salarié transmet le JWT manager et seulement le nom et l’e
   assert.equal(calls[0].init.headers.Authorization, 'Bearer manager-token');
   assert.deepEqual(JSON.parse(calls[0].init.body), { data: { name: result.name, email: result.email } });
 });
+
+test('Le changement de mot de passe utilise la session du salarié et confirme le nouveau secret', async () => {
+  const calls = [];
+  const { strapiApi } = loadStrapiClient({ fetch: async (url, init) => { calls.push({ url, init }); return new Response(JSON.stringify({ jwt: 'new-token' }), { status: 200 }); } });
+  assert.deepEqual(await strapiApi.changePassword('initial-token', 'initial', 'UnePhraseLongue2026', 'UnePhraseLongue2026'), { jwt: 'new-token' });
+  assert.ok(calls[0].url.endsWith('/api/auth/change-password'));
+  assert.equal(calls[0].init.headers.Authorization, 'Bearer initial-token');
+  assert.deepEqual(JSON.parse(calls[0].init.body), { currentPassword: 'initial', password: 'UnePhraseLongue2026', passwordConfirmation: 'UnePhraseLongue2026' });
+});

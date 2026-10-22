@@ -21,7 +21,7 @@ export async function createTeamMember(ctx: any, manager: any) {
   const password = `Ec!${randomBytes(18).toString('base64url')}7a`;
   try {
     // Le service Strapi chiffre le mot de passe ; aucun rôle ni rattachement ne vient du client.
-    await strapi.plugin('users-permissions').service('user').add({ username: input.email, displayName: input.name, email: input.email, password, provider: 'local', confirmed: true, blocked: false, role: role.id, team: team.id });
+    await strapi.plugin('users-permissions').service('user').add({ username: input.email, displayName: input.name, email: input.email, password, mustChangePassword: true, provider: 'local', confirmed: true, blocked: false, role: role.id, team: team.id });
   } catch (error) {
     if (await existing()) return conflict();
     throw error;

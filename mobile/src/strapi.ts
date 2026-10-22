@@ -5,7 +5,7 @@ export type TeamAction = { id: string; title: string; description: string; dueDa
 export type Role = 'collaborateur' | 'manager';
 export type MoodTag = { id: string; label: string; icon: string };
 export type SupportContact = { name: string; kind: 'psychologue' | 'prevention' | 'manager' | 'autre'; qualification?: string; details?: string; email?: string; phone?: string; bookingUrl?: string };
-export type Session = { name: string; role: Role; team: { name: string; supportContacts?: SupportContact[] }; submitted: boolean; day: string; privateSupportKey?: string };
+export type Session = { mustChangePassword?: boolean; name: string; role: Role; team: { name: string; supportContacts?: SupportContact[] }; submitted: boolean; day: string; privateSupportKey?: string };
 export type DailyStat = { day: string; average: number | null };
 export type TeamStats = { data: DailyStat[]; meta: { team: string; threshold: number; participation: number | null; maskedDays: number } };
 export class ApiError extends Error {
@@ -43,6 +43,7 @@ export const tokenStore = {
 };
 export type CreatedEmployee = { name: string; email: string; team: string; initialPassword: string };
 export const strapiApi = {
+  changePassword: (jwt: string, currentPassword: string, password: string, passwordConfirmation: string): Promise<{ jwt: string }> => request('/api/auth/change-password', { method: 'POST', headers: auth(jwt), body: JSON.stringify({ currentPassword, password, passwordConfirmation }) }),
   createEmployee: async (jwt: string, data: { name: string; email: string }): Promise<CreatedEmployee> => (await request('/api/team-members', { method: 'POST', headers: auth(jwt), body: JSON.stringify({ data }) })).data,
   tags: async (jwt: string): Promise<MoodTag[]> => (await request('/api/mood-tags', { headers: auth(jwt) })).data,
   actions: async (jwt: string): Promise<TeamAction[]> => (await request('/api/team-actions', { headers: auth(jwt) })).data,

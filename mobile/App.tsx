@@ -1,3 +1,4 @@
+import { FirstPasswordScreen } from './src/components/FirstPasswordScreen';
 import { OnboardingTour } from './src/components/tour/OnboardingTour';
 import { hydrateSampleProfile, disableSampleProfile } from './src/sampleProfile';
 import { gardenMilestones } from './src/treeGeometry';
@@ -61,11 +62,11 @@ function Eclaircie() {
   useEffect(() => {
     let active = true;
     setHistory([]); setHistoryError('');
-    if (!historyKey || !session) { setHistoryLoading(false); return; }
+    if (!historyKey || !session || session.mustChangePassword) { setHistoryLoading(false); return; }
     setHistoryLoading(true);
     void hydrateSampleProfile(historyKey, localDay()).then(() => readPersonalHistory(historyKey, localDay())).then(entries => { if (active) setHistory(entries); }).catch(() => { if (active) setHistoryError('Ton récap local n’a pas pu être chargé. Ta météo collective reste indépendante.'); }).finally(() => { if (active) setHistoryLoading(false); });
     return () => { active = false; };
-  }, [historyKey, session?.role, session?.day]);
+  }, [historyKey, session?.role, session?.day, session?.mustChangePassword]);
   const refreshStats = useCallback(async (background = false) => {
     if (session?.role !== 'manager') return;
     const version = ++requestVersion.current;
@@ -119,6 +120,18 @@ function Eclaircie() {
     } catch (err) { if (epoch === accountEpoch.current) setError(err instanceof ApiError && [400, 401].includes(err.status) ? 'Adresse ou mot de passe incorrect.' : err instanceof Error ? err.message : 'Connexion impossible.'); }
     finally { if (epoch === accountEpoch.current) setBusy(false); }
   }
+  async function changeInitialPassword(current: string, password: string, confirmation: string) {
+    if (!jwt || !session) throw new Error('Reconnecte-toi pour modifier ton mot de passe.');
+    const epoch = accountEpoch.current;
+    let result;
+    try { result = await strapiApi.changePassword(jwt, current, password, confirmation); }
+    catch (err) { if (err instanceof ApiError && err.status === 400 && /current password|different than/.test(err.message)) throw new Error('Vérifie ton mot de passe initial et choisis un nouveau mot de passe différent.'); throw err; }
+    const info = await strapiApi.session(result.jwt);
+    if (epoch !== accountEpoch.current) return;
+    await tokenStore.write(result.jwt);
+    if (epoch !== accountEpoch.current) return;
+    setJwt(result.jwt); setSession(info); setPage('home'); haptics.confirm();
+  }
   async function logout() {
     try { await tokenStore.clear(); }
     catch { setHistoryError('La déconnexion n’a pas pu aboutir. Réessaie.'); return; }
@@ -170,6 +183,7 @@ function Eclaircie() {
   }
   if (restoring) return <View style={s.loading}><ActivityIndicator color={c.accent} /><Text style={s.body}>Un instant…</Text></View>;
   if (!session) return <LoginScreen identifier={identifier} password={password} onIdentifier={setIdentifier} onPassword={setPassword} onLogin={() => void login()} busy={busy} error={error} />;
+  if (session.mustChangePassword) return <FirstPasswordScreen logoutError={historyError} onChange={changeInitialPassword} onLogout={() => void logout()} />;
   const content = page === 'profile' ? <ProfilePortal personalOnly={session.role === 'manager'} session={session} today={localDay()} history={history} loading={historyLoading} error={historyError} section={profileSection} onBack={() => setPage('home')} onLogout={() => void logout()} onClear={clearHistory} /> : session.role === 'manager' && page !== 'manager-mood' ? <ManagerWorkspace section={managerSection} onSection={setManagerSection} jwt={jwt!} history={history} onMood={() => { const own = history.find(entry => entry.day === localDay()); setScore(own?.score ?? null); setTags(own?.tags ?? []); setPage('manager-mood'); }} session={session} stats={stats} loading={statsLoading} error={statsError} onRefresh={() => void refreshStats()} onProfile={() => openProfile()} onHelp={() => openProfile('guide')} /> : <MoodFlow jwt={jwt!} privateMood={session.role === 'manager'} onBack={session.role === 'manager' ? () => { setManagerSection('self'); setPage('home'); } : undefined} key={session.privateSupportKey ?? session.name} score={score} onScore={setScore} tags={tags} onTags={setTags} submitted={session.role === 'manager' ? history.some(entry => entry.day === localDay()) : session.submitted} sentNow={sentNow} busy={busy} error={error} supportPrompt={supportPrompt} onDismissSupport={() => setSupportPrompt(false)} onSubmit={() => void submit()} onProfile={() => openProfile()} onSupport={() => openProfile('support')} />;
   return <OnboardingTour key={`${session.role}:${session.privateSupportKey ?? session.name}`} account={session.privateSupportKey ?? session.name} name={session.name} manager={session.role === 'manager'} onNavigate={route => { if (route === 'profile' || route === 'support') openProfile(route === 'support' ? 'support' : null); else { setPage('home'); if (session.role === 'manager') setManagerSection(route === 'self' ? 'self' : route === 'act' ? 'act' : 'team'); } }}>{content}</OnboardingTour>;
 }
