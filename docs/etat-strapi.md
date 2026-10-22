@@ -34,7 +34,7 @@ La création des comptes et équipes, leurs relations, les droits, les tags, les
 
 ## Hébergement Vercel
 
-Projet `moodly-backend`, PostgreSQL Neon gratuit à Francfort, base indépendante de SQLite. Le conteneur Node 24, la purge externe authentifiée et le blocage des ajouts de médias sont configurés et testés localement avec Neon. Le premier compte administrateur est créé ; les équipes, comptes applicatifs et réponses restent absents. Le déploiement en ligne doit être confirmé par les contrôles de santé et de connexion après publication. Voir [le guide de déploiement](deploiement-vercel.md).
+Projet `moodly-backend`, PostgreSQL Neon gratuit à Francfort, base indépendante de SQLite. Le conteneur Node 24, la purge externe authentifiée et le blocage des ajouts de médias sont configurés et vérifiés localement puis en HTTPS sur Vercel. Administration disponible sur [moodly-backend-theta.vercel.app/admin](https://moodly-backend-theta.vercel.app/admin) ; connexion et sélecteur Lucide vérifiés dans le navigateur. Le premier compte administrateur et les 11 tags sont créés ; les équipes, comptes applicatifs et réponses restent absents. Voir [le guide de déploiement](deploiement-vercel.md), qui détaille aussi les limites et les alertes de dépendances restant à examiner.
 
 ## À finaliser avant un usage réel
 
