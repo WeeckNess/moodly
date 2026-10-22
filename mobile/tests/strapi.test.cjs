@@ -60,3 +60,9 @@ test('Le changement de mot de passe utilise la session du salarié et confirme l
   assert.equal(calls[0].init.headers.Authorization, 'Bearer initial-token');
   assert.deepEqual(JSON.parse(calls[0].init.body), { currentPassword: 'initial', password: 'UnePhraseLongue2026', passwordConfirmation: 'UnePhraseLongue2026' });
 });
+
+test('Le front Vercel utilise le relais API de son propre domaine, sans modifier Expo Go', () => {
+  assert.equal(resolveApiUrl({ development: false, configuredUrl: '/', webOrigin: 'https://moodly.example.test' }), 'https://moodly.example.test');
+  assert.throws(() => resolveApiUrl({ development: false, configuredUrl: '/' }), /origine web/);
+  assert.equal(resolveApiUrl({ development: false, configuredUrl: 'https://api.example.test', bundleUrl: 'https://example.test/bundle' }), 'https://api.example.test');
+});

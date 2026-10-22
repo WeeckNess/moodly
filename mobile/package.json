@@ -35,7 +35,8 @@
     "typecheck": "tsc --noEmit",
     "test": "node --test tests/*.test.cjs",
     "assets:weather": "node scripts/build-weather-morph.cjs",
-    "assets:garden": "python3 scripts/build-garden.py"
+    "assets:garden": "python3 scripts/build-garden.py",
+    "build": "expo export --platform web"
   },
   "private": true
 }
