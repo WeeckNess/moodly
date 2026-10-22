@@ -1,3 +1,4 @@
+import { TourTarget, TourReplayButton } from './tour/OnboardingTour';
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -17,7 +18,6 @@ type Props = { personalOnly?: boolean; session: Session; today: string; history:
 export function ProfilePortal(props: Props) {
   const scroll = useRef<ScrollView>(null);
   const cardTop = useRef(0);
-  const supportTop = useRef(0);
   const employee = props.session.role === 'collaborateur' || props.personalOnly === true;
   const [selected, setSelected] = useState(props.today);
   useEffect(() => {
@@ -53,16 +53,16 @@ export function ProfilePortal(props: Props) {
       {props.error ? <Text accessibilityRole="alert" style={s.error}>{props.error}</Text> : null}
       {employee ? <>
         <View style={s.intro}><Text style={s.kicker}>JUSTE POUR TOI</Text><Text accessibilityRole="header" style={s.title}>Tes jours,{ '\n' }ta météo.</Text><Text style={s.body}>Un souvenir de ton ressenti, jour après jour.</Text></View>
-        <PersonalGarden profile={props.session.privateSupportKey} history={props.history} today={props.today} />
+        <PersonalGarden profile={props.session.privateSupportKey} history={props.history} today={props.today} tourScroll={scroll} />
         {props.loading ? <View style={s.loading}><ActivityIndicator color={c.text} /><Text style={s.body}>Tes souvenirs arrivent…</Text></View> : <>
-          <View style={s.calendar}><View style={s.monthRow}><Pressable accessibilityRole="button" accessibilityLabel="Mois précédent" disabled={month <= first.slice(0, 7)} onPress={() => moveMonth(-1)} style={[s.icon, month <= first.slice(0, 7) && { opacity: 0.3 }]}><ArrowLeftIcon size={18} color={c.text} /></Pressable><Text style={s.month}>{monthName}</Text><Pressable accessibilityRole="button" accessibilityLabel="Mois suivant" disabled={month >= props.today.slice(0, 7)} onPress={() => moveMonth(1)} style={[s.icon, month >= props.today.slice(0, 7) && { opacity: 0.3 }]}><ArrowRightIcon size={18} color={c.text} /></Pressable></View>
+          <TourTarget id="calendar" scroll={scroll} style={s.calendar}><View style={s.monthRow}><Pressable accessibilityRole="button" accessibilityLabel="Mois précédent" disabled={month <= first.slice(0, 7)} onPress={() => moveMonth(-1)} style={[s.icon, month <= first.slice(0, 7) && { opacity: 0.3 }]}><ArrowLeftIcon size={18} color={c.text} /></Pressable><Text style={s.month}>{monthName}</Text><Pressable accessibilityRole="button" accessibilityLabel="Mois suivant" disabled={month >= props.today.slice(0, 7)} onPress={() => moveMonth(1)} style={[s.icon, month >= props.today.slice(0, 7) && { opacity: 0.3 }]}><ArrowRightIcon size={18} color={c.text} /></Pressable></View>
             <View style={s.grid}>{['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((label, index) => <Text key={index} style={s.weekday}>{label}</Text>)}{monthCells(month).map((day, index) => {
               const mood = props.history.find(entry => entry.day === day);
               const weather = mood ? weathers[mood.score - 1] : null;
               const unavailable = !day || day > props.today || day < first;
               return <View key={day ?? `blank-${index}`} style={s.cell}>{day && <Pressable accessibilityRole="button" accessibilityLabel={`${new Date(day + 'T12:00:00Z').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}, ${weather?.label ?? 'aucune météo'}`} accessibilityState={{ selected: selected === day, disabled: unavailable }} aria-pressed={selected === day} disabled={unavailable} onPress={() => { setSelected(day); scroll.current?.scrollTo({ y: Math.max(0, cardTop.current - 12), animated: false }); }} style={[s.dayButton, weather && { backgroundColor: weather.color }, selected === day && s.selectedDay, unavailable && { opacity: 0.25 }]}>{weather && <weather.icon size={20} color={c.ink} weight="duotone" />}<Text style={[s.dayNumber, weather && { color: c.ink }, day === props.today && { fontWeight: '700' }]}>{Number(day.slice(-2))}</Text></Pressable>}</View>;
             })}</View><Text style={s.calendarHint}>Touche un jour pour retrouver ta météo. Les jours sans réponse restent vides.</Text>
-          </View>
+          </TourTarget>
           <View onLayout={event => { cardTop.current = event.nativeEvent.layout.y; }} accessibilityLiveRegion="polite">{entry ? <Animated.View style={[s.dayCard, dayStyle]}>
             <View style={s.dayHeader}><Text style={s.dayKicker}>RAPPORT JOURNALIER</Text><View style={s.privatePill}><LockSimpleIcon size={12} color={c.ink} /><Text style={s.privateText}>Privé</Text></View></View>
             <View style={s.dayArt}><WeatherMorph value={motion} size={112} /><View style={s.miniAvatar}><UserCircleIcon size={25} color={c.ink} /><Text style={s.miniAvatarText}>Moi</Text></View></View>
@@ -71,7 +71,8 @@ export function ProfilePortal(props: Props) {
           </Animated.View> : <View style={s.empty}><LockSimpleIcon size={25} color={c.muted} /><Text style={s.emptyTitle}>{selected === props.today ? (props.session.submitted ? 'Ta météo a été partagée.' : 'Ta journée reste à raconter.') : 'Une journée sans souvenir.'}</Text><Text style={s.body}>{selected === props.today && props.session.submitted ? 'Ta météo a déjà été partagée aujourd’hui. Elle n’est pas enregistrée dans ce récapitulatif local.' : 'Aucune météo enregistrée pour cette date. Tu gardes le choix de partager, à ton rythme.'}</Text>{selected === props.today && !props.session.submitted && <Pressable accessibilityRole="button" onPress={props.onBack} style={s.primary}><Text style={s.primaryText}>Partager ma météo</Text><ArrowRightIcon size={18} color={c.ink} /></Pressable>}<Text style={s.caption}>{prettyDay}</Text></View>}</View>
         </>}
       </> : <View style={s.managerAccount}><ShieldCheckIcon size={34} color={c.sage} /><Text accessibilityRole="header" style={s.title}>Un espace{ '\n' }pour le collectif.</Text><Text style={s.body}>Tu consultes la météo anonyme de ton équipe. Le profil ne contient aucune réponse individuelle de tes collaborateurs.</Text></View>}
-      <View onLayout={event => { supportTop.current = event.nativeEvent.layout.y; if (props.section === 'support') scroll.current?.scrollTo({ y: Math.max(0, supportTop.current - 12), animated: false }); }}><SupportResources contacts={props.session.team.supportContacts} /></View>
+      <TourTarget id="support" scroll={scroll} revealOnMount={props.section === 'support'}><SupportResources contacts={props.session.team.supportContacts} /></TourTarget>
+      <TourTarget id="guide" scroll={scroll}><TourReplayButton /></TourTarget>
       <View style={s.settings}>
         <HapticSettings />
         <Pressable accessibilityRole="button" accessibilityLabel="Mes données et confidentialité" accessibilityState={{ expanded: expanded === 'privacy' }} onPress={() => setExpanded(expanded === 'privacy' ? null : 'privacy')} style={s.setting}><Text style={s.settingText}>Mes données et confidentialité</Text><CaretDownIcon size={18} color={c.muted} /></Pressable>

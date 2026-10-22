@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
-import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { TourTarget } from './tour/OnboardingTour';
+import { useEffect, useState, type RefObject } from 'react';
+import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { colors as c, mono } from '../theme';
 import { personalReport, type PersonalMood } from '../personalHistoryLogic';
 import { readGrowth } from '../personalHistory';
@@ -7,7 +8,7 @@ import { weathers } from '../weather';
 import { botanicalStage } from '../gardenAnimation';
 import { BotanicalTree } from './BotanicalTree';
 
-export function PersonalGarden({ profile, history, today }: { profile?: string; history: PersonalMood[]; today: string }) {
+export function PersonalGarden({ profile, history, today, tourScroll }: { tourScroll?: RefObject<ScrollView | null>; profile?: string; history: PersonalMood[]; today: string }) {
   const [count, setCount] = useState<number | null>(null);
   const [period, setPeriod] = useState<7 | 30>(7);
   const [error, setError] = useState(false);
@@ -19,13 +20,13 @@ export function PersonalGarden({ profile, history, today }: { profile?: string; 
   }, [profile, history]);
   const report = personalReport(history, today, period);
   return <>
-    <View style={s.garden}>
+    <TourTarget id="garden" scroll={tourScroll} style={s.garden}>
       <BotanicalTree days={count ?? 0} label={`Ton arbre : ${botanicalStage(count ?? 0).label.toLowerCase()}. ${count ?? 0} journées enregistrées.`} />
       <Text accessibilityRole="header" style={s.title}>{`${botanicalStage(count ?? 0).label}. À ton rythme.`}</Text>
       <Text style={s.body}>{error ? 'Ton arbre n’a pas pu être chargé. Réouvre ton profil pour réessayer.' : count === null ? 'Ton jardin arrive…' : `${count} météo${count > 1 ? 's' : ''} enregistrée${count > 1 ? 's' : ''}. Chaque météo compte, de l’orage au soleil.`}</Text>
       <Text style={s.caption}>Aucun objectif, aucune série à maintenir. Ton arbre ne régresse pas lors d’une pause. {Platform.OS === 'web' ? 'Sur le web, il reste dans cette session.' : 'Il grandit sur cet appareil, sans partager sa progression.'}</Text>
 
-    </View>
+    </TourTarget>
     <View style={s.report}>
       <Text style={s.kicker}>PRENDRE DU RECUL</Text>
       <Text accessibilityRole="header" style={s.title}>Tes rapports personnels.</Text>
