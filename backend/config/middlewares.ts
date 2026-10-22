@@ -20,6 +20,7 @@ const config: Core.Config.Middlewares = [
   'strapi::errors',
   'strapi::security',
   { name: 'strapi::cors', config: { origin: [...origins] } },
+  'global::media-uploads',
   'strapi::poweredBy',
   'strapi::query',
   'strapi::body',

@@ -1,0 +1,16 @@
+node_modules
+.env*
+.tmp
+.vercel
+.strapi
+.agents
+.claude
+skills-lock.json
+.strapi-updater.json
+dist
+build
+tests
+public/uploads/*
+!public/uploads/.gitkeep
+*.log
+.git

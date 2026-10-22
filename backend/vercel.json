@@ -1,0 +1,9 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "services": {
+    "strapi": { "root": ".", "runtime": "container", "entrypoint": "Dockerfile.vercel" }
+  },
+  "rewrites": [{ "source": "/(.*)", "destination": { "service": "strapi" } }],
+  "regions": ["fra1"],
+  "crons": [{ "path": "/api/maintenance/retention", "schedule": "0 2 * * *" }]
+}

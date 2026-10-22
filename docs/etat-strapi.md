@@ -1,6 +1,6 @@
 # État du serveur Strapi — Éclaircie
 
-Mis à jour le 20 octobre 2026.
+Mis à jour le 22 octobre 2026.
 
 ## Opérationnel
 
@@ -17,8 +17,8 @@ Mis à jour le 20 octobre 2026.
 - Journal de déduplication et réponse créés dans une transaction ; doubles requêtes refusées.
 - Statistiques collectives uniquement, masquées sous 5 réponses.
 - Purge des réponses/journaux après 45 jours et agrégats conservés séparément.
-- Seed local optionnel : un manager, huit collaborateurs et historique fictif.
-- Application mobile et web reliée au serveur ; les raccourcis de test utilisent les comptes Strapi fictifs, sans mode démo autonome. L'adresse de l'API est déduite de l'hôte en développement ou renseignée par `EXPO_PUBLIC_API_URL`.
+- Les fixtures fictives sont limitées aux tests API dans une base temporaire isolée ; aucun compte ni historique fictif dans la base applicative.
+- Application mobile et web reliée au serveur, sans connexion fictive. L'adresse de l'API est déduite de l'hôte en développement ou renseignée par `EXPO_PUBLIC_API_URL`.
 - Actions collectives : création, avancement, bilan anonyme et résultats visibles après clôture, à partir de cinq retours.
 - Clé opaque dans la session pour isoler le compteur privé local par compte. Le serveur ne calcule ni ne transmet d’alerte individuelle au manager ; les raisons personnelles ne sont pas envoyées.
 
@@ -31,6 +31,10 @@ Les parcours ont été contrôlés dans le navigateur. Le porteur du projet conf
 ## Périmètre local finalisé
 
 La création des comptes et équipes, leurs relations, les droits, les tags, les icônes et les contacts sont documentés dans [le guide d'administration](administration-strapi.md). Les sauvegardes sont hors périmètre ici, par décision du porteur du projet du 20 octobre 2026.
+
+## Hébergement Vercel
+
+Projet `moodly-backend`, PostgreSQL Neon gratuit à Francfort, base indépendante de SQLite. Le conteneur Node 24, la purge externe authentifiée et le blocage des ajouts de médias sont configurés et testés localement avec Neon. Le premier compte administrateur est créé ; les équipes, comptes applicatifs et réponses restent absents. Le déploiement en ligne doit être confirmé par les contrôles de santé et de connexion après publication. Voir [le guide de déploiement](deploiement-vercel.md).
 
 ## À finaliser avant un usage réel
 
@@ -46,4 +50,4 @@ npm run backend:dev
 
 Les données fictives sont interdites dans la base applicative. Les fixtures restent disponibles uniquement via `npm run backend:test:api`, dans une base temporaire supprimée après les tests. Créer les comptes et les équipes réels dans l’administration Strapi.
 
-Administration : http://localhost:1337/admin. Les identifiants de démonstration figurent dans le README. Contrat détaillé dans `docs/api.md`.
+Administration locale : http://localhost:1337/admin. Contrat détaillé dans `docs/api.md`.

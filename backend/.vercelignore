@@ -1,0 +1,15 @@
+node_modules
+.env*
+.tmp
+.strapi
+.agents
+.claude
+skills-lock.json
+.strapi-updater.json
+!.dockerignore
+dist
+build
+tests
+public/uploads/*
+!public/uploads/.gitkeep
+*.log

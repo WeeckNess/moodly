@@ -6,6 +6,8 @@ export default {
   async bootstrap({ strapi }: { strapi: Core.Strapi }) {
     await setup(strapi);
     await purgeExpired(strapi);
-    strapi.cron.add({ moodlyRetention: { task: () => purgeExpired(strapi), options: { rule: '0 0 3 * * *', tz: 'Europe/Paris' } } });
+    if (strapi.config.get('server.cron.enabled')) {
+      strapi.cron.add({ moodlyRetention: { task: () => purgeExpired(strapi), options: { rule: '0 0 3 * * *', tz: 'Europe/Paris' } } });
+    }
   },
 };

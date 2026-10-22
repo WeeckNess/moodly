@@ -11,7 +11,11 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { randomBytes } = require('node:crypto');
 const destination = path.join(__dirname, '..', '.env');
-if (!fs.existsSync(destination)) {
+if (process.env.NODE_ENV === 'production') {
+  const required = ['APP_KEYS', 'API_TOKEN_SALT', 'ADMIN_JWT_SECRET', 'TRANSFER_TOKEN_SALT', 'JWT_SECRET', 'ENCRYPTION_KEY'];
+  const missing = required.filter(key => !process.env[key]);
+  if (missing.length) throw new Error(`Variables de production manquantes : ${missing.join(', ')}`);
+} else if (!fs.existsSync(destination)) {
   const secret = () => randomBytes(32).toString('hex');
   fs.writeFileSync(destination, [
     'HOST=0.0.0.0', 'PORT=1337', `APP_KEYS=${secret()},${secret()}`,

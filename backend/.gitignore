@@ -122,6 +122,10 @@ coverage
 ############################
 
 .env
+.env.*.local
+.agents/
+.claude/
+skills-lock.json
 license.txt
 exports
 .strapi
@@ -129,3 +133,5 @@ dist
 build
 .strapi-updater.json
 .strapi-cloud.json
+.vercel
+.env*

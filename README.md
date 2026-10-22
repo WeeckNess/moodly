@@ -4,6 +4,8 @@ Application mobile du projet Moodly. Chaque collaborateur partage son moral sous
 
 **React Native + Expo + TypeScript · Strapi v5 · SQLite.** React Native remplace Vue 3 + Capacitor à la demande du porteur du projet. Cet écart au brief reste à valider avec l’encadrant.
 
+Le backend hébergé sur Vercel utilise PostgreSQL Neon ; SQLite reste réservé au développement local. Configuration et republication dans [le guide Vercel](docs/deploiement-vercel.md).
+
 ## Lancer l’application
 
 Prérequis : Node.js 24, npm, Expo Go compatible avec le SDK 57 ou un simulateur.

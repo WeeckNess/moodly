@@ -2,6 +2,8 @@
 
 Strapi 5.57.0, Node.js 24, TypeScript et SQLite pour le MVP local Moodly.
 
+L'hébergement Vercel utilise un conteneur et PostgreSQL Neon, avec une base indépendante du développement local. Voir [le guide de déploiement](../docs/deploiement-vercel.md) pour la configuration, la purge quotidienne et les commandes de publication.
+
 ## Démarrer depuis la racine du dépôt
 
 ```sh
