@@ -1,34 +1,35 @@
 # Déploiement web de Moodly sur Vercel
 
-Adresse publique : **https://moodly-pearl.vercel.app**.
+Adresse publique actuelle : **https://moodly-front.vercel.app**.
 
-Le projet Vercel **moodly**, dans l’espace **weeckness-projects**, contient uniquement le dossier `mobile/`. Le backend existant reste à `https://moodly-backend-theta.vercel.app`.
+Le projet Vercel **moodly-front**, dans **Téo's team** (`teo-s-team1`), construit le dossier `mobile/` du dépôt [WeeckNess/moodly](https://github.com/WeeckNess/moodly). Les paramètres du projet sont :
 
-## Configuration
-
-- Dossier à déployer : `mobile/` (ou Root Directory `mobile` en cas d’import du dépôt Git).
 - Framework : Other.
+- Root Directory : `mobile`.
 - Installation : `npm ci`.
-- Construction : `npm run build` (export web de production Expo).
+- Construction : `npm run build` (export web Expo).
 - Sortie : `dist`.
+- Node.js : 24.x.
 - Variable publique Vercel, production et preview : `EXPO_PUBLIC_API_URL=/`.
 
-Les requêtes `/api/*` du front sont relayées vers le backend par `mobile/vercel.json`. Le navigateur reste sur le même domaine et n’a pas besoin d’un changement CORS côté Strapi. Les routes conservent l’authentification du backend ; aucune base de données ni service Strapi n’est déployé dans ce projet. Les réponses API sont marquées privées et non mises en cache.
+Les requêtes `/api/*` passent par le domaine du front, avec authentification JWT Strapi. `mobile/vercel.json` définit le backend réel comme destination par défaut. La règle du projet `CDN → Routing Rules → Backend Strapi` permet de choisir la démo ; elle reste prioritaire lors des redéploiements. Voir [la bascule réel/démo](environnement-demo.md).
 
-Les fichiers `.env*`, `.expo`, les dépendances locales et les sorties de construction ne sont pas envoyés. Les secrets Vercel locaux et les données du profil de simulation restent hors du déploiement.
+## Source GitHub
 
-## Redéployer depuis le Mac
+Le workflow **Deploy front and demo backend to Vercel** est préparé dans `.github/workflows/deploy-vercel.yml`. Il déploie le front et le backend de démonstration depuis le commit testé de `main`, avec construction distante et vérification avant promotion. L'activation nécessite la protection de `main`, l'environnement GitHub `production` et son secret `VERCEL_TOKEN` : [procédure complète](deploiement-github.md).
 
-Depuis `mobile/`, vérifier le projet lié avec `vercel project inspect --non-interactive`, puis déployer avec `vercel deploy --prod --scope weeckness-projects`. La liaison locale `.vercel` n’est pas versionnée. Une nouvelle machine peut lier explicitement le dossier au projet existant via `vercel link --project moodly --scope weeckness-projects`.
+Les secrets applicatifs restent dans Vercel. Le workflow ne télécharge pas de fichiers `.env` et ne les ajoute pas au dépôt. Les données locales, les dépendances et les sorties de construction ne constituent pas la source du déploiement.
 
-Le déploiement initial utilise le CLI Vercel. Une intégration Git automatique n’a pas été ajoutée.
+## Dépannage depuis le Mac
 
-## Vérification du déploiement initial
+Depuis la racine du dépôt, avec Node 24 et le CLI authentifié, cibler explicitement le projet existant :
 
-- Environnement : production ; état Vercel Ready ; front Expo / React Native Web.
-- Construction distante : environ deux minutes, installation comprise.
-- Page publique : HTTP 200, écran de connexion rendu dans le navigateur.
-- Relais `/api/session` : HTTP 403 sans jeton, réponse Strapi JSON, `Cache-Control: private, no-store`.
-- Formulaire public : un identifiant volontairement inexistant produit le message normal « Adresse ou mot de passe incorrect. », sans erreur CORS. Aucune donnée métier créée et aucun compte réel utilisé pour ce contrôle.
-- Consultation des journaux d’erreur Vercel : aucun journal trouvé au moment de la vérification. Surveillance continue et drains non vérifiés.
-- L’alias technique `moodly-weeckness-projects.vercel.app` conserve la protection Vercel. L’adresse à partager est `moodly-pearl.vercel.app`, accessible sans connexion à Vercel. La protection n’a pas été désactivée.
+```sh
+VERCEL_ORG_ID=team_SLEbao2P3yLYY21T8Uc87kCz \
+VERCEL_PROJECT_ID=prj_gmWpfloa5d6w0S6hsfUC9F7goX7P \
+vercel deploy --prod --scope teo-s-team1 --project moodly-front
+```
+
+Le dossier envoyé doit contenir `mobile/`, puisque le projet utilise cette Root Directory. Une copie ne contenant que les fichiers de `mobile/` ne convient pas avec ce réglage. Les fichiers `.vercel` locaux ne sont pas versionnés ; les identifiants explicites évitent d'utiliser une liaison locale vers un autre projet.
+
+L'ancien déploiement `moodly-pearl.vercel.app`, dans l'espace `weeckness-projects`, est distinct du projet `moodly-front` concerné par ce guide.
