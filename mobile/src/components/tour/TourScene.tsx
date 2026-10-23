@@ -5,6 +5,7 @@ import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Svg, { Circle, Ellipse, G, Path, Rect, Text as SvgText } from 'react-native-svg';
 import { CheckIcon } from '../../icons';
 import { colors as c, moodPalette } from '../../theme';
+import { weathers } from '../../weather';
 import { continuousValueFromPoint, valueFromPoint } from '../../dialMath';
 import { WeatherMorph } from '../WeatherMorph';
 import { type TourSceneKind } from './tourSteps';
@@ -85,7 +86,7 @@ export function TourScene({ scene, reduced, active }: { scene: TourSceneKind; re
       <FloatingDetail progress={progress} scene={scene} />
       {scene === 'mood' && <GestureDetector gesture={drag}><Animated.View accessibilityLabel="Aperçu du geste météo" style={StyleSheet.absoluteFill} /></GestureDetector>}
     </View>
-    {scene === 'mood' && <View style={s.moodStops}>{[1, 2, 3, 4, 5].map((v, i) => <Pressable key={v} accessibilityRole="button" accessibilityLabel={`Essayer la météo ${['Très mal', 'Mal', 'Moyen', 'Bien', 'Très bien'][i]} dans la visite`} onPress={() => choose(v)} style={s.stopTouch}><View style={[s.dot, { backgroundColor: moodPalette.accents[i] }]} /></Pressable>)}</View>}
+    {scene === 'mood' && <View style={s.moodStops}>{weathers.map(weather => <Pressable key={weather.score} accessibilityRole="button" accessibilityLabel={`Essayer la météo ${weather.label} dans la visite. ${weather.feeling}`} onPress={() => choose(weather.score)} style={s.stopTouch}><View style={[s.dot, { backgroundColor: weather.color }]} /></Pressable>)}</View>}
   </View>;
 }
 function RevealGroup({ progress, order, children }: { progress: SharedValue<number>; order: number; children: React.ReactNode }) {

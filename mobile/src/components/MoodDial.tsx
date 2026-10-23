@@ -7,7 +7,7 @@ import Animated, { Easing, ReduceMotion, runOnJS, useAnimatedReaction, useAnimat
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { WeatherMorph } from './WeatherMorph';
 import { useReducedMotion } from '../motionPreferences';
-import { colors as c, mono, moodPalette } from '../theme';
+import { colors as c, moodPalette } from '../theme';
 import { continuousValueFromPoint, crossedStops, dialGeometry, pointForValue, sweepDuration, valueFromPoint } from '../dialMath';
 
 export const moodBackgrounds = moodPalette.backgrounds;
@@ -88,8 +88,8 @@ export function MoodDial({ score, onChange, motion, compact = false }: { score: 
   return <View style={styles.wrapper}>
     <GestureDetector gesture={gesture}><View onLayout={event => setWidth(event.nativeEvent.layout.width)} style={[styles.touchArea, { height }, Platform.OS === 'web' && ({ touchAction: 'none', userSelect: 'none' } as any)]}
       {...keyboardProps}
-      accessible accessibilityRole="adjustable" aria-valuemin={1} aria-valuemax={5} aria-valuenow={score} aria-valuetext={`${weather.label}, ${weather.title}`} accessibilityLabel="Ta météo, glisse sur l’arc" accessibilityValue={{ min: 1, max: 5, now: score, text: `${weather.label}, ${weather.title}` }}
-      accessibilityActions={[{ name: 'increment', label: 'Aller vers très bien' }, { name: 'decrement', label: 'Aller vers très mal' }]}
+      accessible accessibilityRole="adjustable" aria-valuemin={1} aria-valuemax={5} aria-valuenow={score} aria-valuetext={`${weather.label}. ${weather.feeling}`} accessibilityLabel="Ta météo, glisse sur l’arc" accessibilityValue={{ min: 1, max: 5, now: score, text: `${weather.label}. ${weather.feeling}` }}
+      accessibilityActions={[{ name: 'increment', label: `Aller vers ${weathers[4].label}` }, { name: 'decrement', label: `Aller vers ${weathers[0].label}` }]}
       onAccessibilityAction={event => change(Math.max(1, Math.min(5, score + (event.nativeEvent.actionName === 'increment' ? 1 : -1))))}>
       <Svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`} pointerEvents="none">
         <Defs><LinearGradient id="moodTrack" x1="0%" x2="100%" y1="0%" y2="0%"><Stop offset="0%" stopColor="#a78acd" /><Stop offset="45%" stopColor="#92b37e" /><Stop offset="100%" stopColor="#e8a16c" /></LinearGradient></Defs>
@@ -103,14 +103,14 @@ export function MoodDial({ score, onChange, motion, compact = false }: { score: 
       <View pointerEvents="none" style={[styles.center, { top: cy - orbSize / 2, left: cx - orbSize / 2, width: orbSize }]}>
         <Animated.View style={[styles.orb, { width: orbSize, height: orbSize, borderRadius: orbSize / 2 }, orbStyle]}><WeatherMorph animate value={motion} size={(compact ? 65 : 78) * 1.25} /></Animated.View>
       </View>
-      <View pointerEvents="none" style={[styles.value, { top: cy + orbSize / 2 + 6, width }]}><Text style={styles.valueTitle}>{weather.label}</Text><Text style={styles.weatherName}>{weather.title.toUpperCase()} · {score}/5</Text></View>
+      <View pointerEvents="none" style={[styles.value, { top: cy + orbSize / 2 + 6, width }]}><Text style={styles.valueTitle}>{weather.label}</Text><Text style={styles.feeling}>{weather.feeling}</Text></View>
     </View></GestureDetector>
-    <View style={styles.ends}><Pressable accessibilityRole="button" accessibilityLabel="Choisir Très mal" onPress={() => change(1)} style={styles.endButton}><Text style={styles.endLabel}>Très mal</Text></Pressable><Pressable accessibilityRole="button" accessibilityLabel="Choisir Très bien" onPress={() => change(5)} style={styles.endButton}><Text style={styles.endLabel}>Très bien</Text></Pressable></View>
+    <View style={styles.ends}><Pressable accessibilityRole="button" accessibilityLabel={`Choisir ${weathers[0].label}`} onPress={() => change(1)} style={styles.endButton}><Text style={styles.endLabel}>{weathers[0].label}</Text></Pressable><Pressable accessibilityRole="button" accessibilityLabel={`Choisir ${weathers[4].label}`} onPress={() => change(5)} style={styles.endButton}><Text style={styles.endLabel}>{weathers[4].label}</Text></Pressable></View>
   </View>;
 }
 const styles = StyleSheet.create({
   wrapper: { width: '100%', maxWidth: 360, alignSelf: 'center' }, touchArea: { width: '100%' },
   center: { position: 'absolute', width: 130, alignItems: 'center' }, orb: { alignItems: 'center', justifyContent: 'center' },
-  value: { position: 'absolute', left: 0, alignItems: 'center', gap: 7 }, valueTitle: { color: c.text, fontSize: 28, lineHeight: 34, fontWeight: '500', letterSpacing: -0.8 }, weatherName: { fontFamily: mono, color: c.muted, fontSize: 10, letterSpacing: 1.5 },
+  value: { position: 'absolute', left: 0, alignItems: 'center', gap: 5 }, valueTitle: { color: c.text, fontSize: 28, lineHeight: 34, fontWeight: '500', letterSpacing: -0.8, textAlign: 'center' }, feeling: { color: c.muted, fontSize: 12, lineHeight: 17, textAlign: 'center', paddingHorizontal: 8 },
   ends: { flexDirection: 'row', justifyContent: 'space-between', marginTop: -4, paddingHorizontal: 8 }, endButton: { minHeight: 44, minWidth: 72, justifyContent: 'center' }, endLabel: { color: c.text, fontSize: 12 },
 });

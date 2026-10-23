@@ -18,7 +18,7 @@ test('Le geste suit les cinq positions de l’arc, y compris ses extrémités', 
   assert.equal(valueFromPoint(240, 300, 160, 146), 5);
   assert.equal(valueFromPoint(80, 300, 160, 146), 1);
 });
-test('Trois Très mal sur des jours distincts déclenchent une seule invitation privée', () => {
+test('Trois météos Orage sur des jours distincts déclenchent une seule invitation privée', () => {
   let state = { lowDays: [], promptedOn: null };
   for (const day of ['2026-10-10', '2026-10-11']) {
     const result = nextSupportState(state, day, 1); assert.equal(result.shouldPrompt, false); state = result.state;
