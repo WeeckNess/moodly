@@ -7,6 +7,13 @@ type ApiConfig = {
 
 export function resolveApiUrl(config: ApiConfig): string {
   const explicit = config.configuredUrl?.trim();
+  // Le front web peut utiliser son propre domaine avec un relais /api sur Vercel.
+  if (explicit === '/') {
+    if (!config.webOrigin) throw new Error('Le relais API nécessite une origine web.');
+    const origin = new URL(config.webOrigin);
+    if (!['http:', 'https:'].includes(origin.protocol) || origin.username || origin.password) throw new Error('Origine web invalide.');
+    return origin.origin;
+  }
   if (explicit) {
     const url = new URL(explicit);
     if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password || url.search || url.hash) {
