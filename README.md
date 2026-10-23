@@ -1,5 +1,3 @@
-<img src="mobile/assets/eclaircie-icon.svg" width="80" alt="Icône Éclaircie">
-
 # Moodly · Éclaircie
 
 ### Prendre la météo du collectif, sans transformer chaque ressenti en suivi individuel.
@@ -9,16 +7,6 @@
 Éclaircie est une application mobile et web de partage du moral en équipe. Chaque collaborateur exprime sa météo du jour, de l’orage au soleil. Le manager dispose d’une vision collective pour ouvrir la discussion et suivre des actions d’équipe.
 
 Le projet associe une **interface gestuelle et animée**, un **espace personnel conservé sur l’appareil** et un **backend qui limite l’accès aux résultats collectifs**. Moodly est le nom du projet ; Éclaircie est l’identité de l’application.
-
-## Aperçu de l’application
-
-![Sélection de la météo du jour](docs/images/meteo.png)
-
-| Vue manager | Récap personnel |
-| --- | --- |
-| <img src="docs/images/manager.png" width="320" alt="Tendance collective et participation sur trente jours"> | <img src="docs/images/profil.png" width="320" alt="Rapport personnel sur trente jours"> |
-
-*Captures de développement et de démonstration : les données affichées sont fictives. Certains détails visuels peuvent évoluer.*
 
 ## Deux usages, une même application
 
