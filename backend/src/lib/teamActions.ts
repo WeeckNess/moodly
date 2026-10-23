@@ -12,7 +12,7 @@ export function validAction(input: any, day: string) {
   return typeof input.title === 'string' && input.title.trim().length >= 3 && input.title.length <= 100 && (input.description === undefined || typeof input.description === 'string' && input.description.length <= 500) && typeof input.dueDay === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(input.dueDay) && Number.isFinite(Date.parse(input.dueDay)) && new Date(input.dueDay + 'T12:00:00Z').toISOString().slice(0, 10) === input.dueDay && input.dueDay >= day && input.dueDay <= shiftDay(day, 90);
 }
 const responseKey = (user: any, action: any) => createHmac('sha256', process.env.JWT_SECRET!).update(`action-feedback:${user.id}:${action.documentId}`).digest('hex');
-async function managed(user: any) { return user.role.type === 'manager' && await q('api::team.team').findOne({ where: { id: user.team.id, manager: user.id } }); }
+async function managed(user: any) { return user.role.type === 'manager' && user.team && await q('api::team.team').findOne({ where: { id: user.team.id } }); }
 export async function listActions(ctx: any, user: any) {
   const day = today();
   const records = await actions().findMany({ where: { team: user.team.id, createdDay: { $gte: shiftDay(day, -120) } }, orderBy: { createdAt: 'desc' }, limit: 30 });

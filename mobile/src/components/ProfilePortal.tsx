@@ -50,6 +50,7 @@ export function ProfilePortal(props: Props) {
   return <SafeAreaView style={s.safe}><StatusBar style="dark" /><View style={s.header}><Pressable accessibilityRole="button" accessibilityLabel={props.session.role === 'manager' ? 'Retour à mon espace manager' : 'Retour à ma météo'} disabled={clearing} onPress={props.onBack} style={s.icon}><ArrowLeftIcon size={22} color={c.text} /></Pressable><Text style={s.headerTitle}>Mon profil</Text><View style={{ width: 44 }} /></View>
     <ScrollView ref={scroll} contentContainerStyle={s.content}>
       <View style={s.identity}><View style={s.avatar}><Text style={s.initial}>{props.session.name.charAt(0).toUpperCase()}</Text></View><View style={{ flex: 1, gap: 6 }}><Text style={s.name}>{props.session.name}</Text><Text style={s.body}>{props.session.team.name}</Text></View><Text style={s.role}>{props.session.role === 'manager' ? 'Manager' : 'Salarié'}</Text></View>
+      {props.session.demoProfile && <Text style={s.caption}>Démonstration · historique personnel fictif.</Text>}
       {props.error ? <Text accessibilityRole="alert" style={s.error}>{props.error}</Text> : null}
       {employee ? <>
         <View style={s.intro}><Text style={s.kicker}>JUSTE POUR TOI</Text><Text accessibilityRole="header" style={s.title}>Tes jours,{ '\n' }ta météo.</Text><Text style={s.body}>Un souvenir de ton ressenti, jour après jour.</Text></View>

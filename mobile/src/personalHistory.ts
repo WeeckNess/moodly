@@ -1,6 +1,6 @@
 import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
-import { advanceGrowth, retainPersonalMoods, type Growth, type PersonalMood } from './personalHistoryLogic';
+import { advanceGrowth, retainPersonalMoods, type DemoPersonalProfile, type Growth, type PersonalMood } from './personalHistoryLogic';
 import { isTreeSpecies, type TreeSpecies } from './treeGeometry';
 const speciesMemory = new Map<string, TreeSpecies>();
 const growthMemory = new Map<string, Growth>();
@@ -66,4 +66,27 @@ export async function saveTreeSpecies(profile: string, species: TreeSpecies) {
   if (!isTreeSpecies(species)) throw new Error('Essence inconnue');
   const key = keyFor(profile);
   await write(`${key}.species`, species); speciesMemory.set(key, species);
+}
+
+// Called only for a fictitious profile explicitly supplied by the demo backend.
+export async function initializeDemoPersonalHistory(profile: string, fixture: DemoPersonalProfile, today: string) {
+  if (fixture.version !== 1 || !Number.isSafeInteger(fixture.growth?.count) || fixture.growth.count < 0 || fixture.growth.count > 110 ||
+      !Array.isArray(fixture.entries) || fixture.entries.length > 29 || typeof fixture.growth.lastDay !== 'string' ||
+      !/^\d{4}-\d{2}-\d{2}$/.test(fixture.growth.lastDay) || fixture.growth.lastDay >= today) return;
+  const entries = retainPersonalMoods(fixture.entries, today).filter(entry => entry.day <= fixture.growth.lastDay!);
+  if (entries.length !== fixture.entries.length || entries.length > fixture.growth.count) return;
+  const existing = await readPersonalHistory(profile, today);
+  const previous = await readGrowth(profile);
+  // Existing local entries take precedence, including a weather submitted during the demo.
+  const merged = retainPersonalMoods([...entries, ...existing], today);
+  const key = keyFor(profile);
+  for (const entry of merged) await write(`${key}.${entry.day}`, JSON.stringify(entry));
+  await write(key, JSON.stringify(merged.map(entry => entry.day)));
+  memory.set(key, merged);
+  const addedDays = existing.filter(entry => entry.day > fixture.growth.lastDay!);
+  const count = Math.max(previous.count, fixture.growth.count + addedDays.length);
+  const lastDay = [previous.lastDay, fixture.growth.lastDay, ...addedDays.map(entry => entry.day)].filter((day): day is string => day !== null).sort().pop()!;
+  const growth = { count, lastDay };
+  await write(`${key}.growth`, JSON.stringify(growth));
+  growthMemory.set(key, growth);
 }

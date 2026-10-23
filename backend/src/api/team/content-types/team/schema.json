@@ -17,7 +17,8 @@
     "manager": {
       "type": "relation",
       "relation": "manyToOne",
-      "target": "plugin::users-permissions.user"
+      "target": "plugin::users-permissions.user",
+      "description": "Référent historique facultatif. Les droits reposent sur le rôle Manager et l’équipe du compte utilisateur ; plusieurs managers sont autorisés."
     },
     "supportContacts": {
       "type": "component",

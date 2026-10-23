@@ -1,6 +1,7 @@
 import { FirstPasswordScreen } from './src/components/FirstPasswordScreen';
 import { OnboardingTour } from './src/components/tour/OnboardingTour';
 import { hydrateSampleProfile, disableSampleProfile } from './src/sampleProfile';
+import { hydrateDemoProfile, disableDemoProfile } from './src/demoProfile';
 import { gardenMilestones } from './src/treeGeometry';
 import { activateHaptics, haptics } from './src/haptics';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -64,7 +65,7 @@ function Eclaircie() {
     setHistory([]); setHistoryError('');
     if (!historyKey || !session || session.mustChangePassword) { setHistoryLoading(false); return; }
     setHistoryLoading(true);
-    void hydrateSampleProfile(historyKey, localDay()).then(() => readPersonalHistory(historyKey, localDay())).then(entries => { if (active) setHistory(entries); }).catch(() => { if (active) setHistoryError('Ton récap local n’a pas pu être chargé. Ta météo collective reste indépendante.'); }).finally(() => { if (active) setHistoryLoading(false); });
+    void hydrateDemoProfile(historyKey, session.demoProfile, localDay()).then(() => hydrateSampleProfile(historyKey, localDay())).then(() => readPersonalHistory(historyKey, localDay())).then(entries => { if (active) setHistory(entries); }).catch(() => { if (active) setHistoryError('Ton récap local n’a pas pu être chargé. Ta météo collective reste indépendante.'); }).finally(() => { if (active) setHistoryLoading(false); });
     return () => { active = false; };
   }, [historyKey, session?.role, session?.day, session?.mustChangePassword]);
   const refreshStats = useCallback(async (background = false) => {
@@ -176,6 +177,7 @@ function Eclaircie() {
   }
   async function clearHistory() {
     if (!historyKey) throw new Error('Profil indisponible');
+    if (session?.demoProfile) await disableDemoProfile(historyKey);
     await disableSampleProfile(historyKey, localDay());
     await clearPersonalHistory(historyKey, localDay());
     await clearPrivateSupport(historyKey);

@@ -1,3 +1,4 @@
+export type DemoPersonalProfile = { version: 1; entries: PersonalMood[]; growth: Growth };
 export type PersonalMood = { day: string; score: number; tags: string[] };
 export function retainPersonalMoods(entries: PersonalMood[], today: string): PersonalMood[] {
   const end = new Date(today + 'T12:00:00Z');

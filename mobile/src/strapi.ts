@@ -1,11 +1,12 @@
 import { NativeModules, Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import { resolveApiUrl } from './apiConfig';
+import type { DemoPersonalProfile } from './personalHistoryLogic';
 export type TeamAction = { id: string; title: string; description: string; dueDay: string; status: 'planned' | 'active' | 'completed'; reviewUntil: string | null; reviewClosed: boolean; hasResponded: boolean; feedback: { count: number; average: number } | null; threshold: number };
 export type Role = 'collaborateur' | 'manager';
 export type MoodTag = { id: string; label: string; icon: string };
 export type SupportContact = { name: string; kind: 'psychologue' | 'prevention' | 'manager' | 'autre'; qualification?: string; details?: string; email?: string; phone?: string; bookingUrl?: string };
-export type Session = { mustChangePassword?: boolean; name: string; role: Role; team: { name: string; supportContacts?: SupportContact[] }; submitted: boolean; day: string; privateSupportKey?: string };
+export type Session = { demoProfile?: DemoPersonalProfile; mustChangePassword?: boolean; name: string; role: Role; team: { name: string; supportContacts?: SupportContact[] }; submitted: boolean; day: string; privateSupportKey?: string };
 export type DailyStat = { day: string; average: number | null };
 export type TeamStats = { data: DailyStat[]; meta: { team: string; threshold: number; participation: number | null; maskedDays: number } };
 export class ApiError extends Error {

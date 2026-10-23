@@ -1,4 +1,18 @@
-# Déployer Strapi sur Vercel
+# Déployer Éclaircie sur Vercel
+
+## Front web
+
+Le front Expo est publié en production sur [moodly-front.vercel.app](https://moodly-front.vercel.app), dans le projet `teo-s-team1/moodly-front` (`prj_gmWpfloa5d6w0S6hsfUC9F7goX7P`). Première publication le 23 octobre 2026 depuis le commit `eaf4bb5`, déploiement `dpl_DjKC3HDRJxQqqBzdgrYAkJ1TYFz4`.
+
+Le projet utilise Node.js 24, le répertoire racine `mobile`, `npm ci`, `npm run build` et le dossier de sortie `dist`. La variable publique `EXPO_PUBLIC_API_URL=/` est configurée sur Production et Preview : `mobile/vercel.json` relaie `/api/*` vers le backend HTTPS. Aucun secret backend ne doit être ajouté au front.
+
+Vérifications de publication : TypeScript et 54 tests réussis, export Expo réussi, accueil et manifeste à HTTP 200, écran de connexion affiché dans le navigateur et `/api/session` à HTTP 403 sans session, conformément au contrôle d'accès. La connexion avec un compte applicatif n'a pas été testée.
+
+Le premier déploiement a été demandé via l'API Vercel depuis le dépôt GitHub et le commit indiqué. Cela ne confirme pas la mise en place de déploiements automatiques à chaque push.
+
+## Backend Strapi
+
+Correction multi-managers publiée le 23 octobre 2026 via [le déploiement ANguq38YCCkCB81C4kZrCtapQfgu](https://vercel.com/teo-s-team1/moodly-backend/ANguq38YCCkCB81C4kZrCtapQfgu), depuis les sources locales modifiées sur la base de `eaf4bb5`. Les droits de gestion reposent sur le rôle Manager et `User.team`, pour les statistiques, les actions et l'ajout de salariés. Plusieurs managers peuvent partager cette équipe ; le champ historique `Team.manager` est conservé sans intervenir dans les droits. Aucun compte ni rattachement de production modifié. Validation locale : 16 tests unitaires, 12 tests API et 1 test du client front contre Strapi, avec base de test isolée. Après publication : `/_health` à 204 et accès aux statistiques de Digis 2029 vérifié dans le front avec la session Téo déjà ouverte, sans refus de policy ; le seuil de cinq réponses reste appliqué.
 
 Le projet Vercel `moodly-backend` appartient à `Téo's team` (`teo-s-team1`). La base PostgreSQL Neon `moodly-db`, offre gratuite, est hébergée à Francfort. Elle a été créée sans importer la base SQLite locale. Le bootstrap ajoute les schémas, rôles, permissions et tags ; les équipes et comptes applicatifs sont à créer dans Strapi.
 

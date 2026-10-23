@@ -9,7 +9,7 @@ export function memberInput(value: unknown): { name: string; email: string } | n
   return { name, email };
 }
 export async function createTeamMember(ctx: any, manager: any) {
-  const team = manager.role?.type === 'manager' && await strapi.db.query('api::team.team').findOne({ where: { id: manager.team.id, manager: manager.id } });
+  const team = manager.role?.type === 'manager' && manager.team && await strapi.db.query('api::team.team').findOne({ where: { id: manager.team.id } });
   if (!team) return ctx.forbidden('Création réservée au manager de cette équipe.');
   const input = memberInput(ctx.request.body?.data);
   if (!input) return ctx.badRequest('Indiquez un nom de 2 à 80 caractères et une adresse e-mail valide.');

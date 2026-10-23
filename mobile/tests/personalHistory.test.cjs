@@ -124,3 +124,28 @@ test('Le jardin enrichit progressivement le sol, la floraison puis les fruits', 
     assert.ok(!path.includes('NaN'));
   }
 });
+
+test('Le jardin de démo reprend une croissance ancienne sans doubler les jours ni écraser une saisie', async () => {
+  for (const os of ['ios', 'web']) {
+    const { api, plain } = harness(os);
+    const fixture = { version: 1, entries: [{ day: '2026-10-14', score: 3, tags: ['Charge'] }], growth: { count: 55, lastDay: '2026-10-14' } };
+    await api.savePersonalMood('demo', { day: '2026-10-15', score: 5, tags: ['Sens'] }, '2026-10-15');
+    await api.initializeDemoPersonalHistory('demo', fixture, '2026-10-15');
+    await api.initializeDemoPersonalHistory('demo', fixture, '2026-10-15');
+    assert.equal((await api.readGrowth('demo')).count, 56);
+    assert.equal((await api.readPersonalHistory('demo', '2026-10-15')).length, 2);
+    assert.equal((await api.readPersonalHistory('demo', '2026-10-15'))[0].score, 5);
+    assert.deepEqual(await api.readGrowth('real'), { count: 0, lastDay: null });
+    assert.deepEqual(await api.readPersonalHistory('real', '2026-10-15'), []);
+    assert.equal(plain.size, 0);
+  }
+});
+test('Une fixture invalide ou future ne modifie pas le jardin', async () => {
+  const { api } = harness('web');
+  for (const fixture of [
+    { version: 2, entries: [], growth: { count: 55, lastDay: '2026-10-14' } },
+    { version: 1, entries: [], growth: { count: 100000, lastDay: '2026-10-14' } },
+    { version: 1, entries: [{ day: '2026-10-16', score: 5, tags: [] }], growth: { count: 55, lastDay: '2026-10-14' } },
+  ]) await api.initializeDemoPersonalHistory('demo', fixture, '2026-10-15');
+  assert.equal((await api.readGrowth('demo')).count, 0);
+});

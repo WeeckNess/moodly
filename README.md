@@ -6,6 +6,8 @@ Application mobile du projet Moodly. Chaque collaborateur partage son moral sous
 
 Le backend hébergé sur Vercel utilise PostgreSQL Neon ; SQLite reste réservé au développement local. Configuration et republication dans [le guide Vercel](docs/deploiement-vercel.md).
 
+Un [backend de démonstration séparé](docs/environnement-demo.md) dispose de ses propres équipes, comptes et historiques fictifs, sans modifier la base réelle ni l'application web réelle.
+
 ## Lancer l’application
 
 Prérequis : Node.js 24, npm, Expo Go compatible avec le SDK 57 ou un simulateur.

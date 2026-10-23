@@ -4,6 +4,10 @@ async function main() {
   process.chdir(path.join(__dirname, '..'));
   process.env.NODE_ENV = 'production';
   require('./setup.cjs');
+  const demoTarget = require('../demo-target.json');
+  if (process.env.MOODLY_ENVIRONMENT === 'demo' || process.env.MOODLY_DEPLOYMENT_PROJECT_ID === demoTarget.vercelProjectId || process.env.VERCEL_PROJECT_ID === demoTarget.vercelProjectId) {
+    require('../dist/src/lib/demoGuard').assertDemoTarget(process.env, demoTarget);
+  }
   if (process.env.DATABASE_CLIENT !== 'postgres' || !process.env.DATABASE_URL || !process.env.DATABASE_URL_UNPOOLED) {
     throw new Error('Le déploiement requiert PostgreSQL, DATABASE_URL et DATABASE_URL_UNPOOLED.');
   }

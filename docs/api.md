@@ -2,7 +2,7 @@
 
 Toutes les routes métier exigent un JWT Strapi valide. Les rôles et permissions sont initialisés au démarrage. Aucun paramètre client ne permet de changer l’équipe consultée ou la date d’une saisie.
 
-La policy `global::is-manager` est attachée à `GET /api/team-stats`, `POST /api/team-actions` et `PATCH /api/team-actions/:documentId`. Elle relit le compte, refuse les comptes bloqués ou sans rôle Manager et exige que `User.team` corresponde à une équipe dont `Team.manager` désigne ce compte. Les contrôleurs conservent leurs vérifications métier. Le refus de policy produit un statut 403.
+La policy `global::is-manager` est attachée à `GET /api/team-stats`, `POST /api/team-members`, `POST /api/team-actions` et `PATCH /api/team-actions/:documentId`. Elle relit le compte, refuse les comptes bloqués ou sans rôle Manager et exige une équipe existante via `User.team`. Plusieurs managers peuvent partager la même équipe ; le champ historique `Team.manager` n'intervient pas dans les droits. Les contrôleurs conservent leurs vérifications métier. Le refus de policy produit un statut 403.
 
 ## POST /api/auth/local
 
@@ -17,6 +17,8 @@ Renvoie un JWT de 8 heures. L’auto-inscription publique est désactivée.
 ## GET /api/session
 
 Compte avec rôle Moodly et équipe requis. Renvoie uniquement le prénom/nom d’affichage, le rôle, le nom de l’équipe, le jour courant Europe/Paris et un booléen indiquant si le compte a répondu aujourd’hui. Aucune note n’est renvoyée. Une `privateSupportKey` opaque, propre au compte, permet de séparer les compteurs d’accompagnement sur un appareil partagé ; elle ne contient aucune réponse et n’est jamais exposée dans les statistiques manager.
+
+Exception réservée aux comptes fictifs du projet de démo : un champ optionnel `demoProfile` contient `{ version: 1, entries: [{ day, score, tags }], growth: { count, lastDay } }` pour simuler le jardin et les rapports personnels. Ces notes sont inventées, indépendantes des réponses anonymes en base. Ce champ est absent pour les comptes ordinaires et hors du projet de démo. Voir [environnement-demo.md](environnement-demo.md).
 
 ## POST /api/mood-entries
 

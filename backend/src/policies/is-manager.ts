@@ -11,7 +11,7 @@ export default async (context: PolicyContext, _config: unknown, { strapi }: { st
   });
   if (!user || user.blocked || user.role?.type !== 'manager' || !user.team) return false;
   const team = await strapi.db.query('api::team.team').findOne({
-    where: { id: user.team.id, manager: user.id }, select: ['id'],
+    where: { id: user.team.id }, select: ['id'],
   });
   return Boolean(team);
 };

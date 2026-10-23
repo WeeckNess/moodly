@@ -22,15 +22,15 @@ Ouvrir [l'administration](http://localhost:1337/admin). À la première ouvertur
 
 L'inscription publique est désactivée. Les comptes sont créés dans **Content Manager → User** (collection du plugin Users & Permissions), et non dans la gestion des administrateurs.
 
-1. Dans **Content Manager → Team**, créer l'équipe avec son `name`. Laisser temporairement `manager` vide.
-2. Dans **User**, créer le compte manager : `username`, `email`, mot de passe, `provider = local`, `confirmed = true`, `blocked = false`, rôle **Manager**, et relation `team` vers cette équipe.
-3. Retourner dans **Team** et renseigner `manager` avec ce compte, puis enregistrer.
+1. Dans **Content Manager → Team**, créer l'équipe avec son `name`.
+2. Dans **User**, créer chaque compte manager : `username`, `email`, mot de passe, `provider = local`, `confirmed = true`, `blocked = false`, rôle **Manager**, et relation `team` vers cette équipe.
+3. Répéter pour les autres managers de la même équipe. Le champ historique `Team.manager` est facultatif et n'accorde aucun droit.
 4. Créer les collaborateurs dans **User** avec le rôle **Collaborateur**, `provider = local`, `confirmed = true`, `blocked = false` et la même relation `team`.
 5. Se connecter à l'app avec ces comptes. Le rôle et l'équipe affichés proviennent de Strapi.
 
-Ne pas utiliser les rôles génériques **Authenticated** ou **Public** pour les comptes Moodly. Pour consulter les statistiques et publier des actions, les deux liens doivent être cohérents : `User.team` désigne l'équipe et `Team.manager` désigne le même utilisateur. Le MVP rattache chaque compte à une seule équipe.
+Ne pas utiliser les rôles génériques **Authenticated** ou **Public** pour les comptes Moodly. Tous les comptes actifs ayant le rôle **Manager** et la même relation `User.team` peuvent consulter les statistiques, gérer les actions collectives et ajouter des salariés dans cette équipe. Chaque compte reste rattaché à une seule équipe.
 
-Un compte sans équipe ne peut pas utiliser les routes métier. Un manager non désigné dans `Team.manager` ne peut pas accéder aux statistiques ni créer ou modifier une action. Pour suspendre un compte, passer `blocked` à `true`. Après un changement de rôle ou d'équipe, se déconnecter et se reconnecter pour actualiser l'interface ; les contrôles serveur relisent déjà le compte actuel.
+Un compte sans équipe ne peut pas utiliser les routes métier. Pour suspendre un compte, passer `blocked` à `true`. Après un changement de rôle ou d'équipe, se déconnecter et se reconnecter pour actualiser l'interface ; les contrôles serveur relisent déjà le compte actuel.
 
 ## Droits applicatifs
 

@@ -3,6 +3,7 @@ import { listActions, createAction, updateAction, actionFeedback } from '../../.
 import { randomUUID, createHmac } from 'node:crypto';
 import { dateRange, safePoints, shiftDay, today, validateMood, THRESHOLD } from '../../../lib/mood';
 import { tagAudience } from '../../../lib/tags';
+import { demoProfileCount, makeDemoPersonalProfile } from '../../../lib/demoPersonalProfile';
 
 const query = (uid: string) => strapi.db.query(uid as any);
 async function getMember(ctx: any, allowInitialPassword = false) {
@@ -36,7 +37,9 @@ export default {
     const user = await getMember(ctx, true); if (!user) return;
     const day = today();
     const log = await query('api::submission-log.submission-log').findOne({ where: { user: user.id, day } });
-    ctx.body = { data: { name: user.displayName || user.username, role: user.role.type, mustChangePassword: Boolean(user.mustChangePassword), team: { name: user.team.name, supportContacts: (user.team.supportContacts ?? []).map((contact: any) => ({ name: contact.name, kind: contact.kind, qualification: contact.qualification, details: contact.details, email: contact.email, phone: contact.phone, bookingUrl: contact.bookingUrl })) }, submitted: Boolean(log), day, privateSupportKey: createHmac('sha256', process.env.JWT_SECRET!).update(`private-support:${user.id}`).digest('hex') } };
+    const count = demoProfileCount(user);
+    const demoProfile = count === null ? undefined : makeDemoPersonalProfile(count, day, (await query('api::tag.tag').findMany({ where: tagAudience(user.role.type), orderBy: { position: 'asc' }, select: ['label'] })).map(tag => tag.label));
+    ctx.body = { data: { ...(demoProfile ? { demoProfile } : {}), name: user.displayName || user.username, role: user.role.type, mustChangePassword: Boolean(user.mustChangePassword), team: { name: user.team.name, supportContacts: (user.team.supportContacts ?? []).map((contact: any) => ({ name: contact.name, kind: contact.kind, qualification: contact.qualification, details: contact.details, email: contact.email, phone: contact.phone, bookingUrl: contact.bookingUrl })) }, submitted: Boolean(log), day, privateSupportKey: createHmac('sha256', process.env.JWT_SECRET!).update(`private-support:${user.id}`).digest('hex') } };
   },
   async create(ctx: any) {
     const user = await getMember(ctx); if (!user) return;
@@ -76,7 +79,7 @@ export default {
     const user = await getMember(ctx); if (!user) return;
     if (user.role.type !== 'manager') return ctx.forbidden('Vue réservée aux managers.');
     // L’équipe est toujours déduite du compte, jamais des paramètres du client.
-    const team = await query('api::team.team').findOne({ where: { id: user.team.id, manager: user.id } });
+    const team = await query('api::team.team').findOne({ where: { id: user.team.id } });
     if (!team) return ctx.forbidden('Vous ne gérez pas cette équipe.');
     const days = dateRange(today());
     const aggregates = await query('api::daily-aggregate.daily-aggregate').findMany({ where: { team: team.id, day: { $gte: days[0], $lte: days[29] } } });

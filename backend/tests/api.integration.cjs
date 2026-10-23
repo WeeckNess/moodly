@@ -192,4 +192,47 @@ test('Parcours API et isolation des rôles sur des comptes fictifs', async t => 
     assert.notEqual(pair.find(result => result.status === 201).body.data.initialPassword, employee.initialPassword);
   });
 
+  await t.test('Deux managers de la même équipe partagent les droits, avec isolation et révocation immédiate', async () => {
+    const Database = require('better-sqlite3');
+    const db = new Database(process.env.TEST_DATABASE_FILENAME);
+    const second = db.prepare('SELECT id FROM up_users WHERE email = ?').get('collaborateur6@eclaircie.test');
+    const managerRole = db.prepare('SELECT id FROM up_roles WHERE type = ?').get('manager');
+    const employeeRole = db.prepare('SELECT id FROM up_roles WHERE type = ?').get('collaborateur');
+    const originalTeam = db.prepare('SELECT team_id FROM up_users_team_lnk WHERE user_id = ?').get(second.id).team_id;
+    const otherTeam = db.prepare('INSERT INTO teams (document_id, name) VALUES (?, ?)').run('other-manager-test', 'Autre équipe').lastInsertRowid;
+    try {
+      db.prepare('UPDATE up_users_role_lnk SET role_id = ? WHERE user_id = ?').run(managerRole.id, second.id);
+      const secondToken = tokens[5];
+      for (const token of [manager, secondToken]) {
+        const stats = await call('/api/team-stats?team=999', token);
+        assert.equal(stats.status, 200);
+        assert.equal(stats.body.meta.team, 'Studio · Démonstration');
+      }
+      const created = await call('/api/team-actions', secondToken, { data: { title: 'Action de plusieurs managers', dueDay: new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Paris' }) } });
+      assert.equal(created.status, 201);
+      const actionPath = `/api/team-actions/${created.body.data.id}`;
+      assert.equal((await call(actionPath, manager, { data: { status: 'active' } }, 'PATCH')).status, 200);
+      assert.equal((await call(actionPath, secondToken, { data: { status: 'completed' } }, 'PATCH')).status, 200);
+      const member = await call('/api/team-members', secondToken, { data: { name: 'Salarié partagé', email: 'multi-manager@example.test' } });
+      assert.equal(member.status, 201);
+      assert.equal(member.body.data.team, 'Studio · Démonstration');
+      db.prepare('UPDATE up_users_team_lnk SET team_id = ? WHERE user_id = ?').run(otherTeam, second.id);
+      const isolated = await call(`/api/team-stats?team=${originalTeam}`, secondToken);
+      assert.equal(isolated.status, 200);
+      assert.equal(isolated.body.meta.team, 'Autre équipe');
+      assert.equal((await call(actionPath, secondToken, { data: { status: 'active' } }, 'PATCH')).status, 404);
+      assert.deepEqual((await call('/api/team-actions', secondToken)).body.data, []);
+      db.prepare('UPDATE up_users SET blocked = 1 WHERE id = ?').run(second.id);
+      assert.ok([401, 403].includes((await call('/api/team-stats', secondToken)).status));
+      db.prepare('UPDATE up_users SET blocked = 0 WHERE id = ?').run(second.id);
+      db.prepare('UPDATE up_users_role_lnk SET role_id = ? WHERE user_id = ?').run(employeeRole.id, second.id);
+      assert.equal((await call('/api/team-stats', secondToken)).status, 403);
+    } finally {
+      db.prepare('UPDATE up_users SET blocked = 0 WHERE id = ?').run(second.id);
+      db.prepare('UPDATE up_users_role_lnk SET role_id = ? WHERE user_id = ?').run(employeeRole.id, second.id);
+      db.prepare('UPDATE up_users_team_lnk SET team_id = ? WHERE user_id = ?').run(originalTeam, second.id);
+      db.prepare('DELETE FROM teams WHERE id = ?').run(otherTeam);
+      db.close();
+    }
+  });
 });
