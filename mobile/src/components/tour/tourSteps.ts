@@ -1,36 +1,31 @@
 export type TourRoute = 'home' | 'profile' | 'support' | 'self' | 'act';
-export type TourStep = { id: string; route: TourRoute; target?: string; title: string; body: string; gesture?: 'swipe' | 'tap' };
+export type TourSceneKind = 'welcome' | 'mood' | 'reasons' | 'profile' | 'garden' | 'calendar' | 'support' | 'team' | 'self' | 'act' | 'finish';
+export type TourStep = { id: TourSceneKind; chapter: string; title: string; body: string; hint: string };
+
 export function tourSteps(manager: boolean): TourStep[] {
-  const personal: TourStep[] = [
-    { id: 'garden', route: 'profile', target: 'garden', title: 'Ton jardin grandit avec toi.', body: 'Chaque journée enregistrée fait avancer ton arbre, quel que soit ton moral. Aucune obligation de te sentir bien, aucune course à la régularité.' },
-    { id: 'calendar', route: 'profile', target: 'calendar', title: 'Un souvenir, jour après jour.', body: 'Touche une date pour retrouver ta météo personnelle. Tes rapports sur 7 et 30 jours t’aident à prendre du recul. Cet historique reste sur ton appareil.', gesture: 'tap' },
-    { id: 'support', route: 'support', target: 'support', title: 'Tu peux en parler.', body: 'Retrouve les interlocuteurs proposés par ton entreprise et prépare un premier échange. Tu décides de prendre contact : aucune alerte automatique à ton manager.' },
-    { id: 'finish', route: 'profile', target: 'guide', title: 'À ton rythme, toujours.', body: 'Tu peux revoir cette visite depuis ton profil. Tu gardes le choix de participer et de prendre du temps pour toi.' },
-  ];
   return [
-    { id: 'welcome', route: 'home', title: 'On fait le tour ensemble ?', body: 'En moins d’une minute, découvre ta météo, ton espace personnel et les ressources à tes côtés.' },
+    { id: 'welcome', chapter: 'UN MOMENT POUR TOI', title: 'Un petit tour.\nÀ ton rythme.', body: 'Découvre les gestes essentiels d’Éclaircie. Tu peux passer la visite et la retrouver dans ton profil.', hint: 'Une minute pour prendre tes repères' },
     ...(manager ? [
-      { id: 'team', route: 'home', target: 'manager-nav', title: 'Écouter ton équipe.', body: 'Mon équipe rassemble les tendances des 30 derniers jours, issues de Strapi. Une journée reste masquée sous cinq réponses. Aucune météo individuelle n’est accessible.' },
-      { id: 'self', route: 'self', target: 'manager-nav', title: 'Ton équilibre compte aussi.', body: 'Dans Pour moi, prends ta météo personnelle, retrouve tes rapports et prépare tes propres échanges. Ta météo de manager reste privée sur cet appareil.', gesture: 'tap' },
-      { id: 'act', route: 'act', target: 'manager-nav', title: 'De l’écoute aux actes.', body: 'Prépare une discussion, décide d’une action collective et fais son bilan avec l’équipe. Le ressenti ouvre une conversation, il ne mesure pas la performance.' },
+      { id: 'team', chapter: 'ÉCOUTER LE COLLECTIF', title: 'Une tendance.\nPas des personnes.', body: 'Retrouve la météo de ton équipe sur 30 jours. Sous cinq réponses, la journée est masquée. Aucun ressenti individuel n’est visible.', hint: 'Les données restent collectives' },
+      { id: 'self', chapter: 'TON ÉQUILIBRE AUSSI', title: 'Manager.\nEt humain, surtout.', body: 'L’espace « Pour moi » accueille ta propre météo, ton jardin et tes rapports. Ce ressenti reste privé sur ton appareil.', hint: 'Ton espace personnel reste à toi' },
+      { id: 'act', chapter: 'DE L’ÉCOUTE AUX ACTES', title: 'Un petit pas.\nEnsemble.', body: 'Prépare une discussion, propose une action et fais son bilan avec l’équipe. Le moral ouvre le dialogue, il ne mesure pas la performance.', hint: 'Écouter · agir · faire le bilan' },
     ] as TourStep[] : [
-      { id: 'mood', route: 'home', target: 'mood', title: 'Un geste pour ta météo.', body: 'Fais glisser le curseur sur l’arc, de Très mal à Très bien. Si tu as déjà partagé aujourd’hui, « Refaire la sélection » permet un essai privé.', gesture: 'swipe' },
-      { id: 'reasons', route: 'home', target: 'continue', title: 'Ce qui joue, si tu le souhaites.', body: 'Continuer ouvre les raisons facultatives. Les tags prédéfinis accompagnent la réponse collective ; ta raison libre reste un brouillon privé. La visite n’envoie aucune réponse.', gesture: 'tap' },
+      { id: 'mood', chapter: '01 / TA MÉTÉO', title: 'Un geste.\nCe que tu ressens.', body: 'Fais glisser le curseur de l’orage au soleil. Toutes les météos ont leur place, même les jours plus difficiles.', hint: 'Suis le rond lumineux, puis essaie à ton tour' },
+      { id: 'reasons', chapter: '02 / CE QUI JOUE', title: 'Un peu de contexte.\nSi tu en as envie.', body: 'Après ta météo, choisis des raisons facultatives. Ta propre raison reste un brouillon privé, puis s’efface après l’envoi.', hint: 'Tu peux aussi continuer sans raison' },
     ] as TourStep[]),
-    { id: 'profile', route: 'home', target: 'profile', title: 'Ton espace, juste pour toi.', body: 'Cette icône ouvre ton jardin, ton calendrier, tes rapports personnels et tes réglages.', gesture: 'tap' },
-    ...personal,
+    { id: 'profile', chapter: 'TON ESPACE PERSONNEL', title: 'Tout commence\npar toi.', body: 'L’icône de profil ouvre ton jardin, ton calendrier et tes rapports personnels. Tu y retrouves aussi tes réglages.', hint: 'Le profil, en haut à droite de l’app' },
+    { id: 'garden', chapter: 'PRENDRE LE TEMPS', title: 'Jour après jour,\nça prend racine.', body: 'Chaque journée enregistrée fait grandir ton arbre, quel que soit ton moral. Sans série à tenir, sans obligation de te sentir bien.', hint: 'Ta progression suit le temps, pas ta note' },
+    { id: 'calendar', chapter: 'PRENDRE DU RECUL', title: 'Tes journées.\nUn peu de recul.', body: 'Touche une date pour retrouver ta météo. Les rapports sur 7 et 30 jours éclairent ta tendance personnelle, sur ton appareil.', hint: 'Un souvenir personnel pour chaque jour partagé' },
+    { id: 'support', chapter: 'NE PAS RESTER SEUL', title: 'Une conversation\npeut tout changer.', body: 'Retrouve les contacts proposés par ton entreprise. Tu choisis de prendre contact : aucune alerte automatique à ton manager.', hint: 'Toi seul décides de faire le premier pas' },
+    { id: 'finish', chapter: 'TE VOILÀ CHEZ TOI', title: 'On commence\npar ta journée ?', body: 'Tu gardes le choix de participer. Cette visite reste accessible depuis ton profil, quand tu en as besoin.', hint: 'La visite n’a envoyé aucune réponse' },
   ];
 }
-export type TourRect = { x: number; y: number; w: number; h: number };
-export function fitTourRect(rect: TourRect, width: number, height: number): TourRect | null {
-  if (rect.w <= 0 || rect.h <= 0 || rect.y >= height || rect.y + rect.h <= 0 || rect.x >= width || rect.x + rect.w <= 0) return null;
-  const x = Math.max(8, rect.x - 6), y = Math.max(8, rect.y - 6);
-  return { x, y, w: Math.max(0, Math.min(width - 8, rect.x + rect.w + 6) - x), h: Math.max(0, Math.min(height - 8, rect.y + rect.h + 6) - y) };
-}
-export function tourCardTop(rect: TourRect | null, height: number, cardHeight: number, inset: number) {
-  const top = inset + 12, bottom = Math.max(top, height - cardHeight - inset - 12);
-  if (!rect) return Math.max(top, (height - cardHeight) / 2);
-  if (rect.y + rect.h + 16 + cardHeight <= height - inset - 12) return rect.y + rect.h + 16;
-  if (rect.y - cardHeight - 16 >= top) return rect.y - cardHeight - 16;
-  return rect.y + rect.h / 2 > height / 2 ? top : bottom;
+
+// Reserve space for text and fixed controls before sizing the illustration.
+export function tourLayout(width: number, height: number, top: number, bottom: number) {
+  const wide = width >= 900 && height >= 620;
+  const compact = height - top - bottom < 700;
+  const gutter = width < 360 ? 20 : 28;
+  const stageHeight = wide ? Math.min(440, height - top - bottom - 190) : Math.min(310, Math.max(152, height - top - bottom - 440), (width - gutter * 2) * 300 / 360);
+  return { wide, compact, gutter, stageHeight };
 }
