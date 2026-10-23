@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useMemo, useState, type ComponentProps } from 'react';
+import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { cancelAnimation, Easing, interpolateColor, useAnimatedProps, useAnimatedStyle, useSharedValue, withDelay, withRepeat, withSequence, withTiming, type SharedValue } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Svg, { Circle, Ellipse, G, Path, Rect, Text as SvgText } from 'react-native-svg';
@@ -13,9 +13,18 @@ const AGroup = Animated.createAnimatedComponent(G);
 const ACircle = Animated.createAnimatedComponent(Circle);
 const APath = Animated.createAnimatedComponent(Path);
 const ease = Easing.inOut(Easing.cubic);
+// SVG text does not inherit React Native Text's system font on the web.
+const sceneFont = Platform.select({
+  ios: 'System',
+  android: 'sans-serif',
+  default: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif',
+});
+function SceneText(props: ComponentProps<typeof SvgText>) {
+  return <SvgText {...props} fontFamily={sceneFont} />;
+}
 
 export function TourScene({ scene, reduced, active }: { scene: TourSceneKind; reduced: boolean; active: boolean }) {
-  const progress = useSharedValue(0), weather = useSharedValue(3), touchPulse = useSharedValue(0);
+  const progress = useSharedValue(reduced ? 1 : 0), weather = useSharedValue(scene === 'finish' ? 5 : 3), touchPulse = useSharedValue(0);
   const [canvasWidth, setCanvasWidth] = useState(360);
   const drag = useMemo(() => Gesture.Pan().enabled(scene === 'mood').minDistance(0).onBegin(event => {
     const x = event.x * 360 / canvasWidth, y = event.y * 360 / canvasWidth;
@@ -31,12 +40,11 @@ export function TourScene({ scene, reduced, active }: { scene: TourSceneKind; re
   }), [scene, canvasWidth, weather, reduced]);
   const isWeather = ['welcome', 'mood', 'self', 'finish'].includes(scene);
   useEffect(() => {
-    progress.value = reduced ? 1 : 0;
-    if (active && !reduced) progress.value = withTiming(1, { duration: 1400, easing: Easing.out(Easing.cubic) });
+    if (!active) return;
+    progress.value = reduced ? 1 : withTiming(1, { duration: 1400, easing: Easing.out(Easing.cubic) });
     return () => cancelAnimation(progress);
   }, [scene, active, reduced, progress]);
   useEffect(() => {
-    weather.value = scene === 'finish' ? 5 : 3;
     if (active && !reduced && isWeather) weather.value = withRepeat(withSequence(withDelay(1100, withTiming(5, { duration: 1800, easing: ease })), withDelay(1000, withTiming(2, { duration: 2200, easing: ease })), withDelay(1000, withTiming(3, { duration: 1400, easing: ease }))), -1, false);
     return () => cancelAnimation(weather);
   }, [scene, active, reduced, isWeather, weather]);
@@ -61,17 +69,17 @@ export function TourScene({ scene, reduced, active }: { scene: TourSceneKind; re
   function choose(value: number) { cancelAnimation(weather); weather.value = withTiming(value, { duration: reduced ? 0 : 700, easing: ease }); }
   return <View style={s.outer}>
     <View style={s.canvas} onLayout={event => setCanvasWidth(event.nativeEvent.layout.width)}>
-      <Svg width="100%" height="100%" viewBox="0 0 360 300" accessible={false} aria-hidden={true} accessibilityElementsHidden={true}>
+      <Svg width="100%" height="100%" viewBox="0 0 360 300" {...(Platform.OS === 'web' ? { 'aria-hidden': true } : { accessible: false, accessibilityElementsHidden: true })}>
         <Circle cx={180} cy={150} r={138} fill={scene === 'support' ? '#e4e7f8' : scene === 'garden' ? '#e5eddb' : '#eef0e3'} />
         <Ellipse cx={180} cy={275} rx={105} ry={8} fill="#283c3109" />
         {isWeather && <><Path d="M72.6 213 A124 124 0 1 1 287.4 213" fill="none" stroke={c.line} strokeWidth={8} strokeLinecap="round" />{[1, 2, 3, 4, 5].map(v => { const a = (150 + (v - 1) * 60) * Math.PI / 180; return <Circle key={v} cx={180 + 124 * Math.cos(a)} cy={151 + 124 * Math.sin(a)} r={3} fill={c.muted} />; })}{scene === 'mood' && <><ACircle animatedProps={touchGlow} fill={c.yellow} /><ACircle animatedProps={touchHalo} fill={c.yellow} /></>}<ACircle animatedProps={thumb} r={12} fill={c.panel} stroke={c.ink} strokeWidth={scene === 'mood' ? 2 : 3} /></>}
-        {scene === 'profile' && <G><Rect x={54} y={47} width={252} height={210} rx={25} fill={c.panel} stroke={c.line} /><Path d="M54 105H306" stroke={c.line} /><SvgText x={74} y={82} fontSize={18} fill={c.text} fontWeight="600">éclaircie.</SvgText><Circle cx={275} cy={77} r={20} fill={c.yellow} /><Circle cx={275} cy={73} r={6} fill="none" stroke={c.ink} strokeWidth={2} /><Path d="M264 88q11-15 22 0" fill="none" stroke={c.ink} strokeWidth={2} /><SvgText x={180} y={153} fontSize={23} fill={c.text} textAnchor="middle">Mon espace</SvgText>{['Jardin', 'Calendrier', 'Rapports'].map((t,i) => <G key={t}><Rect x={72+i*74} y={173} width={68} height={29} rx={14} fill={c.background} /><SvgText x={106+i*74} y={192} fontSize={10} fill={c.link} textAnchor="middle">{t}</SvgText></G>)}<SvgText x={180} y={232} fontSize={11} fill={c.link} textAnchor="middle">Pour toi uniquement</SvgText></G>}
-        {scene === 'support' && <G><Rect x={131} y={41} width={98} height={81} rx={27} fill={c.lavender} /><Path d="M155 65q0-8 10-8h29q10 0 10 10v15q0 10-10 10h-19l-15 10 3-12q-8-2-8-10Z" stroke={c.ink} strokeWidth={3} fill="none" strokeLinejoin="round" /><Circle cx={170} cy={75} r={2} fill={c.ink} /><Circle cx={180} cy={75} r={2} fill={c.ink} /><Circle cx={190} cy={75} r={2} fill={c.ink} /><Rect x={54} y={141} width={252} height={114} rx={23} fill={c.panel} stroke={c.line} /><SvgText x={180} y={179} fontSize={18} fill={c.text} textAnchor="middle">Et si on prenait</SvgText><SvgText x={180} y={205} fontSize={18} fill={c.text} textAnchor="middle">un moment pour parler ?</SvgText><SvgText x={180} y={235} fontSize={11} fill={c.link} textAnchor="middle">À ton initiative</SvgText></G>}
+        {scene === 'profile' && <G><Rect x={54} y={47} width={252} height={210} rx={25} fill={c.panel} stroke={c.line} /><Path d="M54 105H306" stroke={c.line} /><SceneText x={74} y={82} fontSize={18} fill={c.text} fontWeight="600">éclaircie.</SceneText><Circle cx={275} cy={77} r={20} fill={c.yellow} /><Circle cx={275} cy={73} r={6} fill="none" stroke={c.ink} strokeWidth={2} /><Path d="M264 88q11-15 22 0" fill="none" stroke={c.ink} strokeWidth={2} /><SceneText x={180} y={153} fontSize={23} fill={c.text} textAnchor="middle">Mon espace</SceneText>{['Jardin', 'Calendrier', 'Rapports'].map((t,i) => <G key={t}><Rect x={72+i*74} y={173} width={68} height={29} rx={14} fill={c.background} /><SceneText x={106+i*74} y={192} fontSize={10} fill={c.link} textAnchor="middle">{t}</SceneText></G>)}<SceneText x={180} y={232} fontSize={11} fill={c.link} textAnchor="middle">Pour toi uniquement</SceneText></G>}
+        {scene === 'support' && <G><Rect x={131} y={41} width={98} height={81} rx={27} fill={c.lavender} /><Path d="M155 65q0-8 10-8h29q10 0 10 10v15q0 10-10 10h-19l-15 10 3-12q-8-2-8-10Z" stroke={c.ink} strokeWidth={3} fill="none" strokeLinejoin="round" /><Circle cx={170} cy={75} r={2} fill={c.ink} /><Circle cx={180} cy={75} r={2} fill={c.ink} /><Circle cx={190} cy={75} r={2} fill={c.ink} /><Rect x={54} y={141} width={252} height={114} rx={23} fill={c.panel} stroke={c.line} /><SceneText x={180} y={179} fontSize={18} fill={c.text} textAnchor="middle">Et si on prenait</SceneText><SceneText x={180} y={205} fontSize={18} fill={c.text} textAnchor="middle">un moment pour parler ?</SceneText><SceneText x={180} y={235} fontSize={11} fill={c.link} textAnchor="middle">À ton initiative</SceneText></G>}
         {scene === 'garden' && <GardenDrawing progress={progress} />}
         {scene === 'calendar' && <CalendarDrawing progress={progress} />}
-        {scene === 'reasons' && <G><Rect x={47} y={65} width={266} height={172} rx={27} fill={c.panel} stroke={c.line} /><SvgText x={70} y={98} fontSize={13} fill={c.muted}>CE QUI JOUE POUR TOI</SvgText>{['La charge', 'L’équipe', 'Mon équilibre'].map((label, i) => <RevealGroup key={label} progress={progress} order={i}><Rect x={69} y={113 + i * 34} width={222} height={27} rx={13.5} fill={i === 1 ? c.sage : c.background} /><SvgText x={84} y={131 + i * 34} fontSize={13} fill={c.text}>{label}</SvgText>{i === 1 && <Path d="M268 157l4 4 7-8" fill="none" stroke={c.ink} strokeWidth={2} strokeLinecap="round" />}</RevealGroup>)}</G>}
-        {scene === 'team' && <G><Rect x={38} y={61} width={284} height={180} rx={27} fill={c.panel} stroke={c.line} /><SvgText x={59} y={94} fontSize={13} fill={c.muted}>UNE MÉTÉO COLLECTIVE</SvgText>{[0, 1, 2, 3, 4].map(i => <RevealGroup key={i} progress={progress} order={i}><Circle cx={85 + i * 47} cy={142} r={12} fill={c.sage} /><Path d={`M${72 + i * 47} 180q13-27 26 0`} fill={c.sage} /></RevealGroup>)}<Path d="M84 196q96 36 192 0" stroke={c.link} strokeWidth={2} fill="none" strokeDasharray="3 6" /><Rect x={135} y={207} width={90} height={24} rx={12} fill={c.yellow} /><SvgText x={180} y={223} textAnchor="middle" fontSize={11} fill={c.ink}>5 minimum</SvgText></G>}
-        {scene === 'act' && <G><Rect x={65} y={50} width={230} height={209} rx={26} fill={c.panel} stroke={c.line} />{['Écouter', 'Agir ensemble', 'Faire le bilan'].map((t, i) => <RevealGroup key={t} progress={progress} order={i}><Circle cx={98} cy={99 + i * 58} r={13} fill={[c.sage, c.yellow, c.lavender][i]} /><Path d={`M92 ${99 + i * 58}l4 4 8-9`} stroke={c.ink} strokeWidth={2} fill="none" strokeLinecap="round" /><SvgText x={124} y={104 + i * 58} fontSize={15} fill={c.text}>{t}</SvgText>{i < 2 && <Path d={`M98 ${116 + i * 58}v21`} stroke={c.line} strokeWidth={2} />}</RevealGroup>)}</G>}
+        {scene === 'reasons' && <G><Rect x={47} y={65} width={266} height={172} rx={27} fill={c.panel} stroke={c.line} /><SceneText x={70} y={98} fontSize={13} fill={c.muted}>CE QUI JOUE POUR TOI</SceneText>{['La charge', 'L’équipe', 'Mon équilibre'].map((label, i) => <RevealGroup key={label} progress={progress} order={i}><Rect x={69} y={113 + i * 34} width={222} height={27} rx={13.5} fill={i === 1 ? c.sage : c.background} /><SceneText x={84} y={131 + i * 34} fontSize={13} fill={c.text}>{label}</SceneText>{i === 1 && <Path d="M268 157l4 4 7-8" fill="none" stroke={c.ink} strokeWidth={2} strokeLinecap="round" />}</RevealGroup>)}</G>}
+        {scene === 'team' && <G><Rect x={38} y={61} width={284} height={180} rx={27} fill={c.panel} stroke={c.line} /><SceneText x={59} y={94} fontSize={13} fill={c.muted}>UNE MÉTÉO COLLECTIVE</SceneText>{[0, 1, 2, 3, 4].map(i => <RevealGroup key={i} progress={progress} order={i}><Circle cx={85 + i * 47} cy={142} r={12} fill={c.sage} /><Path d={`M${72 + i * 47} 180q13-27 26 0`} fill={c.sage} /></RevealGroup>)}<Path d="M84 196q96 36 192 0" stroke={c.link} strokeWidth={2} fill="none" strokeDasharray="3 6" /><Rect x={135} y={207} width={90} height={24} rx={12} fill={c.yellow} /><SceneText x={180} y={223} textAnchor="middle" fontSize={11} fill={c.ink}>5 minimum</SceneText></G>}
+        {scene === 'act' && <G><Rect x={65} y={50} width={230} height={209} rx={26} fill={c.panel} stroke={c.line} />{['Écouter', 'Agir ensemble', 'Faire le bilan'].map((t, i) => <RevealGroup key={t} progress={progress} order={i}><Circle cx={98} cy={99 + i * 58} r={13} fill={[c.sage, c.yellow, c.lavender][i]} /><Path d={`M92 ${99 + i * 58}l4 4 8-9`} stroke={c.ink} strokeWidth={2} fill="none" strokeLinecap="round" /><SceneText x={124} y={104 + i * 58} fontSize={15} fill={c.text}>{t}</SceneText>{i < 2 && <Path d={`M98 ${116 + i * 58}v21`} stroke={c.line} strokeWidth={2} />}</RevealGroup>)}</G>}
       </Svg>
       {isWeather && <View pointerEvents="none" style={s.orbPosition}><Animated.View style={[s.orb, orb]}><WeatherMorph value={weather} size={canvasWidth * .26} animate={active && !reduced} /></Animated.View></View>}
       <FloatingDetail progress={progress} scene={scene} />
@@ -100,7 +108,7 @@ function GrowingLeaf({ x, y, r, progress, index }: { x: number; y: number; r: nu
 }
 function CalendarDrawing({ progress }: { progress: SharedValue<number> }) {
   const reveal = useAnimatedProps(() => ({ strokeDashoffset: 170 * (1 - progress.value) }));
-  return <G><Rect x={60} y={49} width={240} height={205} rx={25} fill={c.panel} stroke={c.line} /><SvgText x={82} y={83} fontSize={14} fill={c.text}>Tes journées</SvgText><Path d="M82 99H278" stroke={c.line} />{Array.from({ length: 21 }, (_, i) => <G key={i}><Circle cx={94 + (i % 7) * 29} cy={121 + Math.floor(i / 7) * 32} r={10} fill={i < 12 ? [c.sage, c.yellow, c.blue, c.lavender][i % 4] : c.background} /><SvgText x={94 + (i % 7) * 29} y={125 + Math.floor(i / 7) * 32} fontSize={9} fill={c.text} textAnchor="middle">{i + 1}</SvgText></G>)}<APath animatedProps={reveal} d="M88 226q20-21 40-12t38-6 38 3 50-12" fill="none" stroke={c.link} strokeWidth={3} strokeLinecap="round" strokeDasharray={170} /></G>;
+  return <G><Rect x={60} y={49} width={240} height={205} rx={25} fill={c.panel} stroke={c.line} /><SceneText x={82} y={83} fontSize={14} fill={c.text}>Tes journées</SceneText><Path d="M82 99H278" stroke={c.line} />{Array.from({ length: 21 }, (_, i) => <G key={i}><Circle cx={94 + (i % 7) * 29} cy={121 + Math.floor(i / 7) * 32} r={10} fill={i < 12 ? [c.sage, c.yellow, c.blue, c.lavender][i % 4] : c.background} /><SceneText x={94 + (i % 7) * 29} y={125 + Math.floor(i / 7) * 32} fontSize={9} fill={c.text} textAnchor="middle">{i + 1}</SceneText></G>)}<APath animatedProps={reveal} d="M88 226q20-21 40-12t38-6 38 3 50-12" fill="none" stroke={c.link} strokeWidth={3} strokeLinecap="round" strokeDasharray={170} /></G>;
 }
 const s = StyleSheet.create({
   outer: { flex: 1, alignItems: 'center', justifyContent: 'center' }, canvas: { height: '100%', aspectRatio: 1.2, maxWidth: '100%' },
