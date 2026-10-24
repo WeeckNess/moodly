@@ -39,11 +39,10 @@ export function ManagerPortal({ session, stats, loading, error, onRefresh, onPro
               <Text style={s.period}>{dates}</Text>
               {mean === null && <View style={s.empty}><EyeSlashIcon size={22} color={c.muted} /><Text style={[s.body, { flex: 1 }]}>La météo se dessine à son rythme. Aucune journée ne compte encore assez de réponses pour être affichée.</Text></View>}
               <MoodChart data={stats.data} threshold={stats.meta.threshold} />
-              <View style={s.trust}><ShieldCheckIcon size={16} color={c.muted} /><Text style={[s.caption, { flex: 1 }]}>{stats.meta.maskedDays} jour{stats.meta.maskedDays > 1 ? 's' : ''} masqué{stats.meta.maskedDays > 1 ? 's' : ''} ou sans données. Une moyenne apparaît à partir de {stats.meta.threshold} réponses.</Text></View>
+              <View style={s.trust}><Text style={s.caption}>{stats.meta.maskedDays} jour{stats.meta.maskedDays > 1 ? 's' : ''} masqué{stats.meta.maskedDays > 1 ? 's' : ''} ou sans données. Une moyenne apparaît à partir de {stats.meta.threshold} réponses.</Text></View>
             </> : <View style={s.state}><Text style={s.body}>La météo collective est indisponible.</Text><Pressable accessibilityRole="button" onPress={onRefresh} style={s.retry}><Text style={s.retryText}>Charger la météo</Text></Pressable></View>}
           </View>
           <Pressable accessibilityRole="button" accessibilityLabel="Ouvrir le guide pour agir ensemble" onPress={onHelp} style={({ pressed }) => [s.actionCard, pressed && { opacity: 0.8 }]}><View style={s.actionIcon}><ChatsCircleIcon size={24} color={c.ink} /></View><View style={{ flex: 1, gap: 7 }}><Text style={s.actionTitle}>Une éclaircie se construit ensemble.</Text><Text style={s.body}>Ouvre la discussion, puis choisissez une petite action concrète.</Text></View><ArrowRightIcon size={20} color={c.text} /></Pressable>
-          <Text style={s.disclaimer}>Un ressenti collectif, à écouter avec l’équipe. Aucune réponse individuelle ni liste de participants dans ce portail.</Text>
         </ScrollView>
       </View>
     </View>
@@ -75,7 +74,7 @@ const s = StyleSheet.create({
   participation: { paddingLeft: 16, borderLeftWidth: 1, borderColor: c.line, gap: 8 },
   percentage: { fontSize: 25, letterSpacing: -0.7, color: c.text },
   period: { color: c.muted, fontSize: 11 },
-  trust: { paddingTop: 16, borderTopWidth: 1, borderColor: c.line, flexDirection: 'row', alignItems: 'flex-start', gap: 9 },
+  trust: { paddingTop: 16, borderTopWidth: 1, borderColor: c.line },
   state: { minHeight: 260, alignItems: 'center', justifyContent: 'center', gap: 22 },
   error: { color: c.error, fontSize: 13, lineHeight: 21, textAlign: 'center' },
   retry: { minHeight: 48, paddingHorizontal: 22, borderRadius: 16, backgroundColor: c.accent, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 16 },
@@ -83,6 +82,5 @@ const s = StyleSheet.create({
   empty: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   actionCard: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 20, borderRadius: 22, backgroundColor: c.surface, borderWidth: 1, borderColor: c.line },
   actionIcon: { width: 44, height: 44, borderRadius: 22, backgroundColor: c.sage, alignItems: 'center', justifyContent: 'center' },
-  actionTitle: { color: c.text, fontSize: 17, lineHeight: 23, letterSpacing: -0.3 },
-  disclaimer: { color: c.muted, fontSize: 11, lineHeight: 18, maxWidth: 560 }
+  actionTitle: { color: c.text, fontSize: 17, lineHeight: 23, letterSpacing: -0.3 }
 });

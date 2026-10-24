@@ -9,7 +9,7 @@ import { TeamActions } from './TeamActions';
 import { SupportResources } from './SupportResources';
 import { BrandMark } from './BrandMark';
 import { HeaderActions } from './HeaderActions';
-import { CaretRightIcon, HeartIcon, ShieldCheckIcon, SunIcon, BookOpenIcon } from '../icons';
+import { CaretRightIcon, HeartIcon, SunIcon, BookOpenIcon } from '../icons';
 import { colors as c, mono } from '../theme';
 import { personalTrend, type PersonalMood } from '../personalHistoryLogic';
 import { localDay } from '../date';
@@ -26,7 +26,7 @@ export function ManagerWorkspace(props: Props) {
   return <SafeAreaView style={s.safe}><StatusBar style="dark" /><View style={s.header}><BrandMark /><HeaderActions onProfile={props.onProfile} /></View>{navigation}<ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={s.content}>
     {section === 'self' ? <>
       <Text style={s.kicker}>TON ÉQUILIBRE COMPTE AUSSI</Text><Text accessibilityRole="header" style={s.title}>Avant l’équipe,{ '\n' }un moment pour toi.</Text><Text style={s.body}>Tu accompagnes les autres. Tu as aussi le droit de souffler, de demander des moyens et de recevoir du soutien.</Text>
-      <View style={[s.card, { backgroundColor: c.selected }]}><View style={s.row}><View style={s.round}><SunIcon size={30} color={c.ink} /></View><View style={{ flex: 1, gap: 5 }}><Text style={s.cardTitle}>Ma météo personnelle</Text><Text style={s.caption}>{submitted ? 'Ton moment du jour est enregistré.' : 'Comment te sens-tu aujourd’hui ?'}</Text></View></View><Pressable accessibilityRole="button" onPress={props.onMood} style={s.primary}><Text style={s.primaryText}>{submitted ? 'Retrouver ma météo' : 'Prendre mon moment'}</Text><CaretRightIcon size={20} color={c.ink} weight="bold" /></Pressable><View style={s.row}><ShieldCheckIcon size={16} color={c.link} /><Text style={[s.caption, { flex: 1 }]}>Privé. Cette météo ne rejoint aucun graphe d’équipe et n’est transmise ni aux RH ni à ta hiérarchie.</Text></View></View>
+      <View style={[s.card, { backgroundColor: c.selected }]}><View style={s.row}><View style={s.round}><SunIcon size={30} color={c.ink} /></View><View style={{ flex: 1, gap: 5 }}><Text style={s.cardTitle}>Ma météo personnelle</Text><Text style={s.caption}>{submitted ? 'Ton moment du jour est enregistré.' : 'Comment te sens-tu aujourd’hui ?'}</Text></View></View><Pressable accessibilityRole="button" onPress={props.onMood} style={s.primary}><Text style={s.primaryText}>{submitted ? 'Retrouver ma météo' : 'Prendre mon moment'}</Text><CaretRightIcon size={20} color={c.ink} weight="bold" /></Pressable></View>
       <Pressable accessibilityRole="button" onPress={props.onProfile} style={s.card}><View style={s.row}><HeartIcon size={26} color={c.link} /><Text style={[s.cardTitle, { flex: 1 }]}>Mon jardin & mes rapports</Text><CaretRightIcon size={20} color={c.link} /></View><Text style={s.body}>{trend.count ? `${trend.count} météo${trend.count > 1 ? 's' : ''} sur les 7 derniers jours · moyenne personnelle ${trend.average!.toFixed(1).replace('.', ',')} / 5.` : 'Ton arbre et tes rapports personnels se construisent à ton rythme.'}</Text><Text style={s.caption}>{Platform.OS === 'web' ? 'Historique dans cette session web uniquement.' : 'Historique privé dans le stockage sécurisé de ce téléphone.'}</Text></Pressable>
       <MeetingPlanner personal />
       <SupportResources contacts={props.session.team.supportContacts} />
