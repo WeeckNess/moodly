@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import Animated, { interpolateColor, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, { cancelAnimation, Easing, interpolateColor, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { ArrowLeftIcon, ArrowRightIcon, CaretDownIcon, LockSimpleIcon, ShieldCheckIcon, SignOutIcon, TrashIcon, UserCircleIcon } from '../icons';
 import { colors as c, mono, moodPalette } from '../theme';
 import { weathers } from '../weather';
@@ -13,11 +13,11 @@ import { HapticSettings } from './HapticSettings';
 import { PersonalGarden } from './PersonalGarden';
 import { SupportResources } from './SupportResources';
 import { WeatherMorph } from './WeatherMorph';
+import { useReducedMotion } from '../motionPreferences';
 export type ProfileSection = 'privacy' | 'guide' | 'support' | null;
 type Props = { personalOnly?: boolean; session: Session; today: string; history: PersonalMood[]; loading: boolean; error: string; section: ProfileSection; onBack: () => void; onLogout: () => void; onClear: () => Promise<void> };
 export function ProfilePortal(props: Props) {
   const scroll = useRef<ScrollView>(null);
-  const cardTop = useRef(0);
   const employee = props.session.role === 'collaborateur' || props.personalOnly === true;
   const [selected, setSelected] = useState(props.today);
   useEffect(() => {
@@ -29,8 +29,12 @@ export function ProfilePortal(props: Props) {
   const [clearing, setClearing] = useState(false);
   const [clearError, setClearError] = useState('');
   const entry = props.history.find(day => day.day === selected);
+  const reduced = useReducedMotion();
   const motion = useSharedValue(entry?.score ?? 3);
-  useEffect(() => { motion.value = withTiming(entry?.score ?? 3, { duration: 350 }); }, [entry?.score, motion]);
+  useEffect(() => {
+    motion.value = withTiming(entry?.score ?? 3, { duration: reduced ? 0 : 1100, easing: Easing.inOut(Easing.cubic) });
+    return () => cancelAnimation(motion);
+  }, [entry?.score, reduced, motion]);
   const dayStyle = useAnimatedStyle(() => ({ backgroundColor: interpolateColor(motion.value, [1, 2, 3, 4, 5], moodPalette.accents) }));
   const cutoff = new Date(props.today + 'T12:00:00Z'); cutoff.setUTCDate(cutoff.getUTCDate() - 29);
   const first = cutoff.toISOString().slice(0, 10);
@@ -61,10 +65,10 @@ export function ProfilePortal(props: Props) {
               const mood = props.history.find(entry => entry.day === day);
               const weather = mood ? weathers[mood.score - 1] : null;
               const unavailable = !day || day > props.today || day < first;
-              return <View key={day ?? `blank-${index}`} style={s.cell}>{day && <Pressable accessibilityRole="button" accessibilityLabel={`${new Date(day + 'T12:00:00Z').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}, ${weather?.label ?? 'aucune météo'}`} accessibilityState={{ selected: selected === day, disabled: unavailable }} aria-pressed={selected === day} disabled={unavailable} onPress={() => { setSelected(day); scroll.current?.scrollTo({ y: Math.max(0, cardTop.current - 12), animated: false }); }} style={[s.dayButton, weather && { backgroundColor: weather.color }, selected === day && s.selectedDay, unavailable && { opacity: 0.25 }]}>{weather && <weather.icon size={20} color={c.ink} weight="duotone" />}<Text style={[s.dayNumber, weather && { color: c.ink }, day === props.today && { fontWeight: '700' }]}>{Number(day.slice(-2))}</Text></Pressable>}</View>;
+              return <View key={day ?? `blank-${index}`} style={s.cell}>{day && <Pressable accessibilityRole="button" accessibilityLabel={`${new Date(day + 'T12:00:00Z').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}, ${weather?.label ?? 'aucune météo'}`} accessibilityState={{ selected: selected === day, disabled: unavailable }} aria-pressed={selected === day} disabled={unavailable} onPress={() => setSelected(day)} style={[s.dayButton, weather && { backgroundColor: weather.color }, selected === day && s.selectedDay, unavailable && { opacity: 0.25 }]}>{weather && <weather.icon size={20} color={c.ink} weight="duotone" />}<Text style={[s.dayNumber, weather && { color: c.ink }, day === props.today && { fontWeight: '700' }]}>{Number(day.slice(-2))}</Text></Pressable>}</View>;
             })}</View><Text style={s.calendarHint}>Touche un jour pour retrouver ta météo. Les jours sans réponse restent vides.</Text>
           </TourTarget>
-          <View onLayout={event => { cardTop.current = event.nativeEvent.layout.y; }} accessibilityLiveRegion="polite">{entry ? <Animated.View style={[s.dayCard, dayStyle]}>
+          <View accessibilityLiveRegion="polite">{entry ? <Animated.View style={[s.dayCard, dayStyle]}>
             <View style={s.dayHeader}><Text style={s.dayKicker}>RAPPORT JOURNALIER</Text><View style={s.privatePill}><LockSimpleIcon size={12} color={c.ink} /><Text style={s.privateText}>Privé</Text></View></View>
             <View style={s.dayArt}><WeatherMorph value={motion} size={112} /><View style={s.miniAvatar}><UserCircleIcon size={25} color={c.ink} /><Text style={s.miniAvatarText}>Moi</Text></View></View>
             <Text style={s.dayMood}>{weathers[entry.score - 1].label}</Text><Text style={s.dayDate}>{prettyDay}</Text><Text style={{ color: c.ink, fontSize: 13, lineHeight: 20, marginTop: 12 }}>{weathers[entry.score - 1].message}</Text><Text style={{ color: c.ink, fontSize: 11, lineHeight: 17, marginTop: 12 }}>{entry.tags.length ? "Ce qui a joué dans ta journée :" : "Tu n’as pas ajouté de raison collective à cette météo."}</Text>
