@@ -56,7 +56,10 @@ function Eclaircie() {
     void tokenStore.read().then(async token => {
       if (!token) return;
       try { const info = await strapiApi.session(token); if (active) { accountEpoch.current++; setSession(info); setJwt(token); } }
-      catch { await tokenStore.clear(); }
+      catch (err) {
+        if (err instanceof ApiError && [401, 403].includes(err.status)) await tokenStore.clear();
+        else if (active) setError('Impossible de retrouver ta session pour le moment. Vérifie ta connexion puis réessaie.');
+      }
     }).catch(() => setError('La session n’a pas pu être restaurée. Reconnecte-toi.')).finally(() => { if (active) setRestoring(false); });
     return () => { active = false; };
   }, []);

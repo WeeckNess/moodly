@@ -12,7 +12,7 @@ Authentification native Users & Permissions :
 { "identifier": "utilisateur@entreprise.fr", "password": "mot-de-passe-du-compte" }
 ```
 
-Renvoie un JWT de 8 heures. L’auto-inscription publique est désactivée.
+Renvoie un JWT de 8 heures aux clients natifs. Pour les requêtes web avec `X-Eclaircie-Web-Session: 1` provenant du même domaine, le middleware place le JWT dans un cookie `HttpOnly`, `Secure` en production, `SameSite=Strict`, chemin `/api`, durée de huit heures ; le champ JSON `jwt` contient seulement le marqueur `web-cookie-session`. Les appels suivants utilisent le cookie, y compris après fermeture et réouverture du navigateur. `POST /api/auth/web-logout` expire ce cookie avec les mêmes contrôles d'origine. Le changement de mot de passe renouvelle le cookie et invalide les anciens jetons via la version des identifiants. L’auto-inscription publique est désactivée.
 
 ## GET /api/session
 

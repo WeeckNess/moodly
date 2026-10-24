@@ -12,6 +12,7 @@ export type TeamStats = { data: DailyStat[]; meta: { team: string; threshold: nu
 export class ApiError extends Error {
   constructor(message: string, public status: number) { super(message); }
 }
+const WEB_SESSION = 'web-cookie-session';
 function apiUrl() {
   return resolveApiUrl({
     configuredUrl: process.env.EXPO_PUBLIC_API_URL,
@@ -25,7 +26,7 @@ async function request(path: string, init: RequestInit = {}) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 12000);
   try {
-    const response = await fetch(`${baseUrl}${path}`, { ...init, signal: controller.signal, headers: { 'Content-Type': 'application/json', ...init.headers } });
+    const response = await fetch(`${baseUrl}${path}`, { ...init, ...(Platform.OS === 'web' ? { credentials: 'include' as const } : {}), signal: controller.signal, headers: { 'Content-Type': 'application/json', ...(Platform.OS === 'web' ? { 'X-Eclaircie-Web-Session': '1' } : {}), ...init.headers } });
     const body = await response.json().catch(() => null);
     if (!response.ok) throw new ApiError(body?.error?.message ?? 'Le service est momentanément indisponible.', response.status);
     if (!body) throw new ApiError('La réponse du serveur est illisible. Réessaie dans un instant.', 502);
@@ -35,12 +36,12 @@ async function request(path: string, init: RequestInit = {}) {
     throw new Error('Impossible de joindre le serveur. Vérifie ta connexion et l’adresse de l’API.');
   } finally { clearTimeout(timer); }
 }
-const auth = (jwt: string) => ({ Authorization: `Bearer ${jwt}` });
+const auth = (jwt: string): Record<string, string> => jwt === WEB_SESSION ? {} : { Authorization: `Bearer ${jwt}` };
 export const tokenStore = {
-  // Sur le web, le jeton reste en mémoire uniquement. Sur mobile, stockage sécurisé système.
-  read: () => Platform.OS === 'web' ? Promise.resolve(null) : SecureStore.getItemAsync('eclaircie.jwt'),
+  // Web: ask the API to validate its HttpOnly cookie; no JWT in browser storage.
+  read: () => Platform.OS === 'web' ? Promise.resolve(WEB_SESSION) : SecureStore.getItemAsync('eclaircie.jwt'),
   write: (jwt: string) => Platform.OS === 'web' ? Promise.resolve() : SecureStore.setItemAsync('eclaircie.jwt', jwt),
-  clear: () => Platform.OS === 'web' ? Promise.resolve() : SecureStore.deleteItemAsync('eclaircie.jwt'),
+  clear: () => Platform.OS === 'web' ? request('/api/auth/web-logout', { method: 'POST' }).then(() => {}) : SecureStore.deleteItemAsync('eclaircie.jwt'),
 };
 export type CreatedEmployee = { name: string; email: string; team: string; initialPassword: string };
 export const strapiApi = {

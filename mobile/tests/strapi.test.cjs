@@ -3,6 +3,23 @@ const assert = require('node:assert/strict');
 const { loadStrapiClient } = require('./loadStrapiClient.cjs');
 const { resolveApiUrl } = loadStrapiClient();
 
+test('Le web restaure la session par cookie sans stocker ni renvoyer de JWT dans un bearer', async () => {
+  const calls = [];
+  const { tokenStore, strapiApi } = loadStrapiClient({ fetch: async (url, init) => {
+    calls.push({ url, init });
+    return new Response(JSON.stringify({ data: { role: 'collaborateur' } }), { status: 200 });
+  } });
+  const token = await tokenStore.read();
+  assert.equal(token, 'web-cookie-session');
+  await strapiApi.session(token);
+  assert.equal(calls[0].init.credentials, 'include');
+  assert.equal(calls[0].init.headers['X-Eclaircie-Web-Session'], '1');
+  assert.equal(calls[0].init.headers.Authorization, undefined);
+  await tokenStore.clear();
+  assert.ok(calls[1].url.endsWith('/api/auth/web-logout'));
+  assert.equal(calls[1].init.method, 'POST');
+});
+
 test('L’API suit le PC qui sert le front en développement web et Expo Go', () => {
   assert.equal(resolveApiUrl({ development: true, webOrigin: 'http://192.168.1.20:8081' }), 'http://192.168.1.20:1337');
   assert.equal(resolveApiUrl({ development: true, bundleUrl: 'http://192.168.1.42:8081/index.bundle?platform=ios' }), 'http://192.168.1.42:1337');

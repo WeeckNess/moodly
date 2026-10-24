@@ -20,7 +20,7 @@ React Native + Expo constitue l’app ; Strapi v5 expose l’API et SQLite sert 
 
 Le serveur résout lui-même l’équipe, le rôle et la date Europe/Paris. Il refuse les champs supplémentaires et contrôle le score et les tags. Une transaction crée un journal unique utilisateur/jour, une réponse sans relation utilisateur et un agrégat équipe/jour. Le manager ne dispose d’aucune route de lecture des réponses ou journaux. La policy global::is-manager protège la route agrégée et les écritures d’actions. Elle relit le rôle et vérifie l’équipe effectivement gérée ; les contrôleurs conservent leurs contrôles métier. La route agrégée masque les jours sous cinq réponses. Les trous du graphique ne sont pas reliés.
 
-Le JWT expire après huit heures. Il reste dans le stockage sécurisé système sur mobile et uniquement en mémoire sur le web. La déconnexion supprime la copie locale. HTTPS est nécessaire en déploiement ; le développement local utilise HTTP.
+Le JWT expire après huit heures. Il reste dans le stockage sécurisé système sur mobile. Sur le web, il est conservé dans un cookie persistant `HttpOnly`, `Secure` en production, `SameSite=Strict`, limité au chemin `/api` et à huit heures. Il n'est exposé ni au JavaScript ni au stockage local du navigateur. À la réouverture, `/api/session` valide le cookie et relit les droits actuels. La déconnexion expire le cookie. Les requêtes de session web nécessitent un en-tête dédié et une origine autorisée ; en production elles utilisent le relais `/api` du même domaine. HTTPS est nécessaire en déploiement ; le développement local utilise HTTP. Les souvenirs personnels web restent uniquement en mémoire et ne sont pas conservés par ce cookie.
 
 ## Invitation privée à échanger
 
