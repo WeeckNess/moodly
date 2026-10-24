@@ -20,11 +20,13 @@ test('Le manager découvre le collectif et sa météo privée, le salarié son g
   assert.ok(!employee.some(step => ['team', 'act', 'self'].includes(step.id)));
   assert.ok(manager.some(step => step.id === 'self' && step.body.includes('privé')));
   assert.ok(manager.some(step => step.id === 'team' && step.body.includes('cinq')));
+  assert.ok(employee.find(step => step.id === 'support').body.includes('aucune alerte automatique'));
+  assert.ok(!manager.some(step => step.id === 'support'));
+  assert.equal(manager.length, 8);
   for (const steps of [employee, manager]) {
     assert.equal(steps[0].id, 'welcome');
     assert.equal(steps.at(-1).id, 'finish');
     assert.equal(new Set(steps.map(step => step.id)).size, steps.length);
     assert.ok(steps.every(step => step.chapter && step.hint));
-    assert.ok(steps.find(s => s.id === 'support').body.includes('aucune alerte automatique'));
   }
 });
