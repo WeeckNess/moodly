@@ -5,8 +5,8 @@ import { colors as c, mono } from '../theme';
 import { personalReport, type PersonalMood } from '../personalHistoryLogic';
 import { readGrowth } from '../personalHistory';
 import { weathers } from '../weather';
-import { botanicalStage } from '../gardenAnimation';
-import { BotanicalTree } from './BotanicalTree';
+import { profileStage } from '../profileTree';
+import { SoftGardenTree } from './SoftGardenTree';
 
 export function PersonalGarden({ profile, history, today, tourScroll }: { tourScroll?: RefObject<ScrollView | null>; profile?: string; history: PersonalMood[]; today: string }) {
   const [count, setCount] = useState<number | null>(null);
@@ -21,8 +21,8 @@ export function PersonalGarden({ profile, history, today, tourScroll }: { tourSc
   const report = personalReport(history, today, period);
   return <>
     <TourTarget id="garden" scroll={tourScroll} style={s.garden}>
-      <BotanicalTree days={count ?? 0} label={`Ton arbre : ${botanicalStage(count ?? 0).label.toLowerCase()}. ${count ?? 0} journées enregistrées.`} />
-      <Text accessibilityRole="header" style={s.title}>{`${botanicalStage(count ?? 0).label}. À ton rythme.`}</Text>
+      <SoftGardenTree days={count ?? 0} label={`Ton arbre : ${profileStage(count ?? 0).label.toLowerCase()}. ${count ?? 0} journées enregistrées.`} />
+      <Text accessibilityRole="header" style={s.title}>{`${profileStage(count ?? 0).label}. À ton rythme.`}</Text>
       <Text style={s.body}>{error ? 'Ton arbre n’a pas pu être chargé. Réouvre ton profil pour réessayer.' : count === null ? 'Ton jardin arrive…' : `${count} météo${count > 1 ? 's' : ''} enregistrée${count > 1 ? 's' : ''}. Chaque météo compte, de l’orage au soleil.`}</Text>
       <Text style={s.caption}>Aucun objectif, aucune série à maintenir. Ton arbre ne régresse pas lors d’une pause. {Platform.OS === 'web' ? 'Sur le web, il reste dans cette session.' : 'Il grandit sur cet appareil, sans partager sa progression.'}</Text>
 
